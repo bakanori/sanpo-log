@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <title>SANPO LOG — 散歩の地図</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%23ff4f00'/%3E%3C/svg%3E">
 <style>
@@ -13,7 +13,7 @@
   --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Roboto Mono",monospace;
   --sans:"Helvetica Neue",Helvetica,Arial,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
   --ease:cubic-bezier(.77,0,.18,1);
-  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px); --safe-l:env(safe-area-inset-left,0px); --safe-r:env(safe-area-inset-right,0px);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
@@ -29,7 +29,8 @@ button{background:none;border:0;cursor:pointer}
 #gMuni path{fill:var(--land);stroke:var(--ink);stroke-width:.45;transition:opacity .45s,fill .5s}
 #gTown .cell{stroke:none;transition:opacity .45s,fill .45s}
 #tBorder{fill:none;stroke:#bdbdb6;stroke-width:.5;pointer-events:none}
-#tDots{fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linecap:round;pointer-events:none;transition:opacity .4s}
+#tDots{fill:none;stroke:var(--ink);stroke-linecap:round;pointer-events:none;transition:opacity .4s}
+#map .dot{vector-effect:none}
 #muniEdge{fill:none;stroke:var(--ink);stroke-width:1.1;pointer-events:none}
 .ctx{stroke:var(--ctxline)!important;stroke-width:.8!important}
 .off{pointer-events:none}
@@ -49,7 +50,7 @@ body.ptr #xh,body.ptr #yh{opacity:1}
 #ticks span{position:absolute;white-space:nowrap}
 
 /* ---------- header ---------- */
-#top{position:fixed;left:0;right:0;top:0;padding:calc(18px + var(--safe-t)) 22px 0;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:16px}
+#top{position:fixed;left:0;right:0;top:0;padding:calc(18px + var(--safe-t)) calc(22px + var(--safe-r)) 0 calc(22px + var(--safe-l));display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:16px}
 #top>*{pointer-events:auto}
 .brand{font:500 10px/1 var(--mono);letter-spacing:.22em;display:flex;align-items:center;gap:8px}
 .brand i{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse 2.4s var(--ease) infinite}
@@ -75,12 +76,12 @@ body.ptr #xh,body.ptr #yh{opacity:1}
 #store.cloud i{background:#2bb673}
 
 /* ---------- bottom HUD ---------- */
-#hud{position:fixed;left:22px;bottom:calc(20px + var(--safe-b));pointer-events:none}
+#hud{position:fixed;left:calc(22px + var(--safe-l));bottom:calc(20px + var(--safe-b));pointer-events:none}
 #hName{font-size:15px;font-weight:400;min-height:20px;letter-spacing:.02em;transition:opacity .2s}
 #hCoord{font:10px/1 var(--mono);color:var(--mute);margin-top:6px;letter-spacing:.06em}
 #scale{margin-top:10px;display:flex;align-items:center;gap:8px;font:9px/1 var(--mono);color:var(--mute)}
 #scale i{display:block;height:5px;border:1px solid var(--ink);border-top:0;transition:width .2s}
-#tools{position:fixed;right:22px;bottom:calc(20px + var(--safe-b));display:flex;gap:6px}
+#tools{position:fixed;right:calc(22px + var(--safe-r));bottom:calc(20px + var(--safe-b));display:flex;gap:6px}
 .pill{font:10px/1 var(--mono);letter-spacing:.12em;padding:8px 11px 7px;border:1px solid var(--hair);background:rgba(255,255,255,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:999px;transition:border-color .2s,background .2s,color .2s}
 .pill:hover,.pill.on{border-color:var(--ink);background:var(--ink);color:#fff}
 #hint{position:fixed;left:50%;bottom:calc(24px + var(--safe-b));transform:translateX(-50%);font:10px/1 var(--mono);color:var(--mute);letter-spacing:.1em;pointer-events:none;transition:opacity 1s;white-space:nowrap}
@@ -154,11 +155,11 @@ body.sp #fab{display:flex}
 body.sp.sheet-open #fab,body.sp.drawer-open #fab,body.sp.wsheet-open #fab{transform:scale(0);pointer-events:none}
 #gMe{pointer-events:none}
 #meAcc{fill:rgba(255,79,0,.12);stroke:rgba(255,79,0,.55);stroke-width:.8;vector-effect:non-scaling-stroke}
-#meRing{fill:none;stroke:#fff;stroke-width:17;stroke-linecap:round}
-#meCore{fill:none;stroke:var(--accent);stroke-width:11;stroke-linecap:round;animation:blink 1.6s ease-in-out infinite}
-@keyframes blink{50%{stroke-width:7}}
-#pin{fill:none;stroke:var(--ink);stroke-width:9;stroke-linecap:round;pointer-events:none}
-#pinRing{fill:none;stroke:#fff;stroke-width:14;stroke-linecap:round;pointer-events:none}
+#meRing{fill:none;stroke:#fff;stroke-linecap:round}
+#meCore{fill:none;stroke:var(--accent);stroke-linecap:round;animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{50%{opacity:.45}}
+#pin{fill:none;stroke:var(--ink);stroke-linecap:round;pointer-events:none}
+#pinRing{fill:none;stroke:#fff;stroke-linecap:round;pointer-events:none}
 .seg{display:flex;gap:6px;margin:14px 0 4px}
 .seg button{font:10px/1 var(--mono);letter-spacing:.1em;border:1px solid var(--hair);border-radius:999px;padding:6px 10px 5px;color:var(--mute)}
 .seg button.on{border-color:var(--ink);background:var(--ink);color:#fff}
@@ -220,10 +221,10 @@ body.sp.sheet-open #fab,body.sp.drawer-open #fab,body.sp.wsheet-open #fab{transf
 #gPref path.hl,#gMuni path.hl{stroke:var(--ink)!important;stroke-width:2!important}
 #gTown .cell.hl{stroke:var(--ink);stroke-width:1.8}
 #route{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-dasharray:5 4;pointer-events:none}
-#routeRing{fill:none;stroke:#fff;stroke-width:13;stroke-linecap:round;pointer-events:none}
-#routeDots{fill:none;stroke:var(--ink);stroke-width:8;stroke-linecap:round;pointer-events:none}
-#gLabel path.mk{fill:none;stroke:var(--ink);stroke-width:6;stroke-linecap:round}
-#gLabel path.mkr{fill:none;stroke:#fff;stroke-width:10;stroke-linecap:round}
+#routeRing{fill:none;stroke:#fff;stroke-linecap:round;pointer-events:none}
+#routeDots{fill:none;stroke:var(--ink);stroke-linecap:round;pointer-events:none}
+#gLabel path.mk{fill:none;stroke:var(--ink);stroke-linecap:round}
+#gLabel path.mkr{fill:none;stroke:#fff;stroke-linecap:round}
 #tools,#top{transition:right .55s var(--ease),padding .55s var(--ease)}
 body:not(.sp).sheet-open #tools,body:not(.sp).wsheet-open #tools{right:482px}
 body:not(.sp).sheet-open #top,body:not(.sp).wsheet-open #top{padding-right:482px}
@@ -269,7 +270,7 @@ body:not(.sp).drawer-open #hud{left:342px}
 /* modal */
 #modal{position:fixed;inset:0;background:rgba(239,239,234,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
 #modal.open{display:flex;animation:fade .3s both}
-.card{background:#fff;border:1px solid var(--hair);border-radius:14px;width:min(460px,100%);padding:26px;position:relative;max-height:90vh;overflow:auto}
+.card{background:#fff;border:1px solid var(--hair);border-radius:14px;width:min(460px,100%);padding:26px;position:relative;max-height:90vh;max-height:90dvh;overflow:auto;-webkit-overflow-scrolling:touch}
 .card h3{font-weight:300;font-size:22px}
 .card p{font-size:12px;line-height:1.75;color:#555;margin-top:10px}
 .card .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
@@ -290,16 +291,51 @@ body:not(.sp).drawer-open #hud{left:342px}
   #hud{left:14px;bottom:calc(64px + var(--safe-b))}
   #tools{left:14px;right:14px;bottom:calc(14px + var(--safe-b));justify-content:flex-end}
   #hint{display:none}
-  #sheet,#wsheet,#drawer{left:0;right:0;width:100%;top:auto;max-height:66vh;border:0;border-top:1px solid var(--hair);border-radius:16px 16px 0 0;transform:translateY(102%);box-shadow:0 -10px 40px rgba(0,0,0,.06)}
-  #drawer{height:66vh}
+  #sheet,#wsheet,#drawer{left:0;right:0;width:100%;top:auto;max-height:70vh;max-height:70dvh;border:0;border-top:1px solid var(--hair);border-radius:16px 16px 0 0;transform:translateY(102%);box-shadow:0 -10px 40px rgba(0,0,0,.06)}
+  #drawer,#wsheet{height:66vh;height:66dvh}
   #sheet.open,#wsheet.open,#drawer.open{transform:none}
-  #wsheet{height:66vh}
   #hlbar{left:14px;transform:none;bottom:calc(150px + var(--safe-b))}
-  body.sp.sheet-open #hlbar,body.sp.wsheet-open #hlbar,body.sp.drawer-open #hlbar{bottom:calc(66vh + 12px)}
-  .phead{padding-top:20px}
-  .x{top:12px}
-  .big{font-size:26px}
+  body.sp.sheet-open #hlbar,body.sp.wsheet-open #hlbar,body.sp.drawer-open #hlbar{bottom:calc(66vh + 12px);bottom:calc(66dvh + 12px)}
+  .phead{padding:16px 20px 10px}
+  .pbody{padding:0 20px 18px;min-height:64px}
+  .form{padding:12px 20px calc(14px + var(--safe-b))}
+  .x{top:8px;right:10px}
+  .big{font-size:22px;margin-top:6px}
+  .coord{margin-top:6px}
+  .toggle{margin-top:10px;padding:7px 12px 6px 8px}
+  .rule{margin:12px 0 4px}
 }
+/* phones in landscape: phone features, side panels, compact header */
+@media (max-height:520px) and (min-width:721px){
+  #top{padding:calc(10px + var(--safe-t)) calc(16px + var(--safe-r)) 16px calc(16px + var(--safe-l));background:linear-gradient(to bottom,rgba(239,239,234,.94) 70%,rgba(239,239,234,0))}
+  #crumb{margin-top:8px}
+  #title{margin-top:2px;gap:10px}
+  #name{font-size:22px}
+  #kind{margin-top:4px}
+  #stats{gap:6px 14px;font-size:8px}
+  #stats>div{flex-direction:row;align-items:baseline;gap:5px}
+  #stats b{font-size:13px}
+  #hint{display:none}
+  #hud{left:calc(16px + var(--safe-l));bottom:calc(12px + var(--safe-b))}
+  #tools{right:calc(16px + var(--safe-r));bottom:calc(10px + var(--safe-b))}
+  #fab{right:calc(16px + var(--safe-r));bottom:calc(52px + var(--safe-b));width:52px;height:52px;font-size:28px}
+  #fab small{display:none}
+  #sheet,#wsheet{width:min(420px,50vw);padding-right:var(--safe-r)}
+  #drawer{width:min(340px,45vw);padding-left:var(--safe-l)}
+  body.sheet-open #tools,body.wsheet-open #tools{right:calc(min(420px,50vw) + 12px)}
+  body.sheet-open #top,body.wsheet-open #top{padding-right:calc(min(420px,50vw) + 12px)}
+  body.drawer-open #hud{left:calc(min(340px,45vw) + 12px)}
+  .phead{padding:12px 20px 8px}
+  .x{top:6px;right:10px}
+  .big{font-size:20px;margin-top:4px}
+  #sheet .coord{display:none}
+  .toggle{margin-top:8px;padding:6px 12px 5px 8px}
+  .pbody{padding:0 20px 12px;min-height:64px}
+  .form{padding:10px 20px calc(10px + var(--safe-b))}
+  #fText{min-height:40px}
+  .card{max-height:calc(100dvh - 20px)}
+}
+body.sp input,body.sp textarea{font-size:16px!important}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </head>
@@ -313,11 +349,11 @@ body:not(.sp).drawer-open #hud{left:342px}
   <g id="gMuni"></g>
   <g id="gTown" clip-path="url(#clipMuni)"><g id="gCells"></g><path id="tBorder"/></g>
   <path id="muniEdge"/>
-  <path id="tDots"/>
+  <path id="tDots" class="dot"/>
   <path id="selp"/>
-  <path id="route"/><path id="routeRing"/><path id="routeDots"/>
-  <path id="pinRing"/><path id="pin"/>
-  <g id="gMe"><circle id="meAcc"/><path id="meRing"/><path id="meCore"/></g>
+  <path id="route"/><path id="routeRing" class="dot"/><path id="routeDots" class="dot"/>
+  <path id="pinRing" class="dot"/><path id="pin" class="dot"/>
+  <g id="gMe"><circle id="meAcc"/><path id="meRing" class="dot"/><path id="meCore" class="dot"/></g>
   <path id="hover"/>
   <g id="gLabel"></g>
 </svg>
@@ -373,7 +409,7 @@ body:not(.sp).drawer-open #hud{left:342px}
     <textarea id="fText" rows="2" placeholder="ひとことメモ（#タグも書けます）"></textarea>
     <textarea id="fDetail" class="pc-only" placeholder="くわしく（道順、見つけたもの、天気、寄ったお店、気づいたこと…）"></textarea>
     <div id="fTags" class="pc-only"></div>
-    <div class="row links"><input id="fLinks" type="url" inputmode="url" autocomplete="off" placeholder="写真のリンク（Instagram・Googleフォトなど）"><button type="button" class="mini sp-only" id="fPaste">貼付</button></div>
+    <div class="row links"><input id="fLinks" type="url" inputmode="url" autocomplete="off" placeholder="写真のリンク（Instagramなど）"><button type="button" class="mini sp-only" id="fPaste">貼付</button></div>
     <div class="row" style="margin:10px 0 0"><button class="btn" id="fSave" type="submit">記録する</button><button type="button" class="loc sp-only" id="fLoc">◉ 位置を付ける</button></div>
   </form>
 </aside>
@@ -957,12 +993,21 @@ function muniT(mc) {
 function applyView() {
   const w = W * V.s, h = H * V.s;
   svg.setAttribute('viewBox', `${V.cx - w / 2} ${V.cy - h / 2} ${w} ${h}`);
-  drawGrid(); drawScale();
+  sizeDots(); drawGrid(); drawScale();
+}
+/* dots are zero-length strokes; their size is set in map units here (some mobile browsers ignore
+   non-scaling-stroke for them and would draw them huge). [PC px, phone px] */
+const DOT_PX = { tDots: [2.4, 1.8], routeRing: [13, 9], routeDots: [8, 5.5], pinRing: [14, 10], pin: [9, 6], meRing: [17, 12], meCore: [11, 7.5], mkr: [10, 7], mk: [6, 4] };
+const dotW = id => DOT_PX[id][W < 720 || H < 520 ? 1 : 0] * V.s;
+let dotEls;
+function sizeDots() {
+  dotEls = dotEls || Object.keys(DOT_PX).filter(id => !/^mk/.test(id)).map(id => [id, document.getElementById(id)]);
+  for (const [id, n] of dotEls) n.style.strokeWidth = dotW(id);
 }
 const toWorld = (x, y) => [V.cx + (x - W / 2) * V.s, V.cy + (y - H / 2) * V.s];
 const toScreen = (x, y) => [(x - V.cx) / V.s + W / 2, (y - V.cy) / V.s + H / 2];
 function pads() {
-  return W < 720 ? { t: 168, r: 8, b: 92, l: 8 } : { t: 150, r: 60, b: 90, l: 60 };
+  return W < 720 ? { t: 168, r: 8, b: 92, l: 8 } : H < 520 ? { t: 112, r: 40, b: 56, l: 40 } : { t: 150, r: 60, b: 90, l: 60 };
 }
 function fitView(bb) {
   const p = pads();
@@ -1176,7 +1221,7 @@ function drawLabels() {
   const fsz = W < 720 ? 10 : 11;
   if (S.level === 'japan') D.japanFeats.forEach(f => { if (IX.byPlace.has('p' + f.c)) mk += `M${f.lp[0]} ${f.lp[1] - fsz * 1.5 * V.s}h0`; });
   else if (S.level === 'pref') D.pref[S.pc].feats.forEach(f => { if (IX.byPlace.has('m' + f.c)) mk += `M${f.lp[0]} ${f.lp[1] - fsz * 1.5 * V.s}h0`; });
-  if (mk) { g.appendChild(el('path', { d: mk, class: 'mkr' })); g.appendChild(el('path', { d: mk, class: 'mk' })); }
+  if (mk) { g.appendChild(el('path', { d: mk, class: 'mkr dot', style: 'stroke-width:' + dotW('mkr') })); g.appendChild(el('path', { d: mk, class: 'mk dot', style: 'stroke-width:' + dotW('mk') })); }
   let items = [];
   const fs = W < 720 ? 10 : 11;
   if (S.level === 'japan') items = D.japanFeats.map(f => ({ n: D.prefInfo[f.c].n, lp: f.lp, bb: f.bigbb, v: prefT(f.c) > .6 }));
@@ -2213,8 +2258,10 @@ addEventListener('keydown', e => {
   if (e.key === 'Escape') up();
   else if (e.key === '/' ) { e.preventDefault(); openDrawer('list'); setTimeout(() => $('#dFilter').focus(), 50); }
 });
-const setSP = () => document.body.classList.toggle('sp', W < 720);
+const setSP = () => document.body.classList.toggle('sp', W < 720 || H < 520);
 addEventListener('resize', () => { W = innerWidth; H = innerHeight; setSP(); logBadge(); applyView(); settle(); });
+// iPhone: after the keyboard closes the page can stay shifted; put it back
+addEventListener('focusout', () => setTimeout(() => { if (!document.activeElement || !/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)) window.scrollTo(0, 0); }, 80));
 setSP();
 addEventListener('hashchange', route);
 
