@@ -1,0 +1,2261 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SANPO LOG — 散歩の地図</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%23ff4f00'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#efefea; --land:#ffffff; --ctx:#e3e3dd; --ctxline:#f4f4f0;
+  --ink:#141414; --mute:#8b8b85; --hair:#cfcfc8; --grid:#e2e2dc;
+  --accent:#ff4f00;
+  --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Roboto Mono",monospace;
+  --sans:"Helvetica Neue",Helvetica,Arial,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
+  --ease:cubic-bezier(.77,0,.18,1);
+  --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button,input,textarea{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+.mono{font-family:var(--mono);font-feature-settings:"tnum";letter-spacing:.04em}
+
+/* ---------- map ---------- */
+#map{position:fixed;inset:0;width:100%;height:100%;touch-action:none;user-select:none;-webkit-user-select:none;cursor:crosshair;display:block}
+#map path{vector-effect:non-scaling-stroke;stroke-linejoin:round}
+#grid{fill:none;stroke:var(--grid);stroke-width:.6}
+#gPref path{fill:var(--land);stroke:var(--ink);stroke-width:.5;transition:opacity .5s,fill .5s}
+#gMuni path{fill:var(--land);stroke:var(--ink);stroke-width:.45;transition:opacity .45s,fill .5s}
+#gTown .cell{stroke:none;transition:opacity .45s,fill .45s}
+#tBorder{fill:none;stroke:#bdbdb6;stroke-width:.5;pointer-events:none}
+#tDots{fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linecap:round;pointer-events:none;transition:opacity .4s}
+#muniEdge{fill:none;stroke:var(--ink);stroke-width:1.1;pointer-events:none}
+.ctx{stroke:var(--ctxline)!important;stroke-width:.8!important}
+.off{pointer-events:none}
+.hidden{opacity:0!important;pointer-events:none!important}
+#hover{fill:rgba(20,20,20,.05);stroke:var(--ink);stroke-width:1.4;pointer-events:none}
+#selp{fill:none;stroke:var(--ink);stroke-width:2.2;pointer-events:none}
+#inset{fill:none;stroke:#b5b5ae;stroke-width:.6;stroke-dasharray:2 3;pointer-events:none;transition:opacity .4s}
+#gLabel{pointer-events:none;transition:opacity .25s}
+#gLabel text{fill:var(--ink);paint-order:stroke;stroke:rgba(255,255,255,.92);stroke-linejoin:round;font-family:var(--sans);text-anchor:middle;dominant-baseline:central}
+#gLabel text.v{fill:#fff;stroke:rgba(255,79,0,.9)}
+
+/* ---------- ticks ---------- */
+#xh,#yh{position:fixed;pointer-events:none;background:rgba(20,20,20,.09);opacity:0;transition:opacity .3s}
+#xh{left:0;right:0;height:1px;top:0}#yh{top:0;bottom:0;width:1px;left:0}
+body.ptr #xh,body.ptr #yh{opacity:1}
+#ticks{position:fixed;inset:0;pointer-events:none;font:9px/1 var(--mono);color:#a8a8a2;letter-spacing:.03em}
+#ticks span{position:absolute;white-space:nowrap}
+
+/* ---------- header ---------- */
+#top{position:fixed;left:0;right:0;top:0;padding:calc(18px + var(--safe-t)) 22px 0;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:16px}
+#top>*{pointer-events:auto}
+.brand{font:500 10px/1 var(--mono);letter-spacing:.22em;display:flex;align-items:center;gap:8px}
+.brand i{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse 2.4s var(--ease) infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(.4)}}
+#crumb{margin-top:14px;font:10px/1.2 var(--mono);color:var(--mute);letter-spacing:.06em;display:flex;flex-wrap:wrap;gap:6px;min-height:12px}
+#crumb button{color:var(--mute);padding:2px 0;border-bottom:1px solid transparent;transition:color .2s,border-color .2s}
+#crumb button:hover{color:var(--ink);border-color:var(--ink)}
+#crumb span{color:#c2c2bc}
+#title{display:flex;align-items:baseline;gap:14px;margin-top:6px}
+#name{font-size:34px;font-weight:300;letter-spacing:.02em;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:56vw}
+#name .ch{display:inline-block;animation:rise .55s var(--ease) both}
+@keyframes rise{from{transform:translateY(60%);opacity:0}to{transform:none;opacity:1}}
+#kind{font:10px/1 var(--mono);color:var(--mute);letter-spacing:.12em;margin-top:8px}
+#memoHere{font:10px/1 var(--mono);letter-spacing:.12em;border:1px solid var(--ink);padding:6px 9px 5px;border-radius:999px;transition:background .2s,color .2s;white-space:nowrap}
+#memoHere:hover{background:var(--ink);color:#fff}
+#memoHere.on{border-color:var(--accent);color:var(--accent)}
+#stats{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px 26px;font:9px/1 var(--mono);letter-spacing:.16em;text-align:right;color:var(--mute);max-width:420px}
+#stats>div{display:flex;flex-direction:column;gap:7px;align-items:flex-end}
+#stats b{font-weight:300;color:var(--ink);font-size:22px;letter-spacing:.01em;font-family:var(--mono)}
+#stats b em{font-style:normal;color:#b9b9b3;font-size:10px;letter-spacing:.06em;margin-left:2px}
+#store{flex-basis:100%;flex-direction:row!important;justify-content:flex-end;align-items:center;gap:6px!important;font-size:9px;color:#a5a59f}
+#store i{width:5px;height:5px;border-radius:50%;background:#c9c9c3;display:inline-block}
+#store.cloud i{background:#2bb673}
+
+/* ---------- bottom HUD ---------- */
+#hud{position:fixed;left:22px;bottom:calc(20px + var(--safe-b));pointer-events:none}
+#hName{font-size:15px;font-weight:400;min-height:20px;letter-spacing:.02em;transition:opacity .2s}
+#hCoord{font:10px/1 var(--mono);color:var(--mute);margin-top:6px;letter-spacing:.06em}
+#scale{margin-top:10px;display:flex;align-items:center;gap:8px;font:9px/1 var(--mono);color:var(--mute)}
+#scale i{display:block;height:5px;border:1px solid var(--ink);border-top:0;transition:width .2s}
+#tools{position:fixed;right:22px;bottom:calc(20px + var(--safe-b));display:flex;gap:6px}
+.pill{font:10px/1 var(--mono);letter-spacing:.12em;padding:8px 11px 7px;border:1px solid var(--hair);background:rgba(255,255,255,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:999px;transition:border-color .2s,background .2s,color .2s}
+.pill:hover,.pill.on{border-color:var(--ink);background:var(--ink);color:#fff}
+#hint{position:fixed;left:50%;bottom:calc(24px + var(--safe-b));transform:translateX(-50%);font:10px/1 var(--mono);color:var(--mute);letter-spacing:.1em;pointer-events:none;transition:opacity 1s;white-space:nowrap}
+#bar{position:fixed;left:0;top:0;height:2px;width:0;background:var(--accent);transition:width .3s,opacity .4s;z-index:20}
+#toast{position:fixed;left:50%;top:calc(22px + var(--safe-t));transform:translate(-50%,-10px);font:10px/1 var(--mono);letter-spacing:.1em;background:var(--ink);color:#fff;padding:9px 13px 8px;border-radius:999px;opacity:0;transition:opacity .3s,transform .3s var(--ease);pointer-events:none;z-index:30}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- panels ---------- */
+.panel{position:fixed;top:0;bottom:0;width:380px;background:#fff;display:flex;flex-direction:column;transition:transform .55s var(--ease);z-index:10}
+#sheet,#wsheet{right:0;width:460px;border-left:1px solid var(--hair);transform:translateX(102%)}
+#drawer{left:0;width:320px;border-right:1px solid var(--hair);transform:translateX(-102%)}
+#sheet.open,#wsheet.open,#drawer.open{transform:none}
+.phead{padding:calc(20px + var(--safe-t)) 24px 16px;position:relative}
+.x{position:absolute;right:16px;top:calc(14px + var(--safe-t));width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font:16px/1 var(--mono);color:var(--mute);transition:background .2s,color .2s}
+.x:hover{background:var(--ink);color:#fff}
+.eyebrow{font:10px/1.3 var(--mono);color:var(--mute);letter-spacing:.12em;padding-right:36px}
+.big{font-size:30px;font-weight:300;line-height:1.15;margin-top:10px;word-break:break-all}
+.coord{font:10px/1 var(--mono);color:var(--mute);margin-top:10px;letter-spacing:.05em}
+.sstat{font:10px/1.5 var(--mono);color:var(--mute);margin-top:8px;letter-spacing:.06em}
+.toggle{margin-top:18px;display:inline-flex;align-items:center;gap:10px;font:11px/1 var(--mono);letter-spacing:.12em;padding:9px 14px 8px 10px;border:1px solid var(--ink);border-radius:999px;transition:background .25s,color .25s,border-color .25s}
+.toggle i{width:12px;height:12px;border-radius:50%;border:1px solid currentColor;transition:background .25s,transform .35s var(--ease)}
+.toggle.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.toggle.on i{background:#fff;transform:scale(.7)}
+.toggle[disabled]{cursor:default}
+.pbody{flex:1;overflow:auto;padding:0 24px 24px;-webkit-overflow-scrolling:touch}
+.rule{display:flex;align-items:center;gap:10px;font:10px/1 var(--mono);color:var(--mute);letter-spacing:.12em;margin:18px 0 6px}
+.rule:after{content:"";flex:1;height:1px;background:var(--hair)}
+.entry{padding:14px 0;border-bottom:1px solid #ecece7;display:grid;grid-template-columns:1fr auto;gap:6px 10px;animation:fade .4s var(--ease) both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}}
+.entry .meta{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.entry .d{font:10px/1 var(--mono);color:var(--mute);letter-spacing:.06em}
+.tag{font:9px/1 var(--mono);letter-spacing:.08em;color:var(--mute);border:1px solid var(--hair);border-radius:999px;padding:3px 6px 2px}
+.tag.raw{color:var(--accent);border-color:rgba(255,79,0,.4)}
+button.tag:hover{border-color:var(--ink);color:var(--ink)}
+.entry .acts{display:flex;gap:10px}
+.entry .acts button{font:10px/1 var(--mono);color:#b5b5ae;letter-spacing:.08em}
+.entry .acts button:hover,.entry .del.arm{color:var(--accent)}
+.entry .t{grid-column:1/3;font-size:14px;line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.entry .dx{grid-column:1/3;font-size:13px;line-height:1.85;color:#333;white-space:pre-wrap;word-break:break-word;border-left:2px solid var(--accent);padding:2px 0 2px 12px;margin-top:2px}
+.entry .dx:empty,.entry .ph:empty{display:none}
+.ph{grid-column:1/3;display:flex;flex-wrap:wrap;gap:6px;margin-top:2px}
+.chip{font:9px/1 var(--mono);letter-spacing:.1em;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:999px;padding:5px 8px 4px;transition:background .2s,color .2s}
+.chip:hover{background:var(--ink);color:#fff}
+.edit{grid-column:1/3;display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.edit label{font:9px/1 var(--mono);color:var(--mute);letter-spacing:.12em;margin-top:4px}
+.edit input,.edit textarea{width:100%;border:1px solid var(--hair);border-radius:8px;padding:9px 11px;font-size:14px;line-height:1.6;background:#fff;outline:none}
+.edit input[type=date]{width:auto;font:11px/1 var(--mono);padding:7px 8px}
+.edit textarea{resize:vertical}
+.edit textarea.big{min-height:160px}
+.edit input:focus,.edit textarea:focus{border-color:var(--ink)}
+.edit .row{display:flex;gap:8px;margin-top:4px}
+.empty{font-size:12px;color:var(--mute);padding:14px 0;line-height:1.7}
+.form{border-top:1px solid var(--hair);padding:14px 24px calc(18px + var(--safe-b));background:#fff}
+.form .row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.form input[type=date]{font:11px/1 var(--mono);border:1px solid var(--hair);border-radius:6px;padding:7px 8px;background:#fff;letter-spacing:.04em}
+.form textarea,.form input[type=url]{width:100%;resize:vertical;border:1px solid var(--hair);border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.6;background:#fff;outline:none;transition:border-color .2s}
+#fText{min-height:46px}
+#fDetail{min-height:120px;margin-top:8px}
+.form .links{margin:8px 0 0}
+.form input[type=url]{padding:8px 12px;font-size:13px}
+.form textarea:focus,.form input:focus{border-color:var(--ink);outline:none}
+.mini{flex:none;font:10px/1 var(--mono);letter-spacing:.1em;border:1px solid var(--hair);border-radius:8px;padding:11px 10px 10px}
+.loc{font:10px/1.2 var(--mono);letter-spacing:.06em;color:var(--mute);border:1px dashed var(--hair);border-radius:999px;padding:9px 12px 8px;text-align:left}
+.loc.on{color:var(--accent);border:1px solid rgba(255,79,0,.5)}
+body:not(.sp) .sp-only{display:none!important}
+body.sp .pc-only{display:none!important}
+#fab{display:none;position:fixed;right:16px;bottom:calc(68px + var(--safe-b));width:64px;height:64px;border-radius:50%;background:var(--accent);color:#fff;font:200 34px/1 var(--sans);box-shadow:0 10px 26px rgba(255,79,0,.35);z-index:5;align-items:center;justify-content:center;transition:transform .35s var(--ease)}
+#fab:active{transform:scale(.9)}
+#fab small{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);font:9px/1 var(--mono);letter-spacing:.12em;color:var(--accent);white-space:nowrap}
+body.sp #fab{display:flex}
+body.sp.sheet-open #fab,body.sp.drawer-open #fab,body.sp.wsheet-open #fab{transform:scale(0);pointer-events:none}
+#gMe{pointer-events:none}
+#meAcc{fill:rgba(255,79,0,.12);stroke:rgba(255,79,0,.55);stroke-width:.8;vector-effect:non-scaling-stroke}
+#meRing{fill:none;stroke:#fff;stroke-width:17;stroke-linecap:round}
+#meCore{fill:none;stroke:var(--accent);stroke-width:11;stroke-linecap:round;animation:blink 1.6s ease-in-out infinite}
+@keyframes blink{50%{stroke-width:7}}
+#pin{fill:none;stroke:var(--ink);stroke-width:9;stroke-linecap:round;pointer-events:none}
+#pinRing{fill:none;stroke:#fff;stroke-width:14;stroke-linecap:round;pointer-events:none}
+.seg{display:flex;gap:6px;margin:14px 0 4px}
+.seg button{font:10px/1 var(--mono);letter-spacing:.1em;border:1px solid var(--hair);border-radius:999px;padding:6px 10px 5px;color:var(--mute)}
+.seg button.on{border-color:var(--ink);background:var(--ink);color:#fff}
+.log .tags{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.log .d .tm{margin-left:8px}
+/* v3: scope, tags, walks, highlight */
+.scope{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:10px}
+.scope>span{font:9px/1 var(--mono);color:var(--mute);letter-spacing:.12em;margin-right:2px}
+.sc{font-size:12px;border:1px solid var(--hair);border-radius:999px;padding:5px 10px 4px;color:#555;background:#fff;transition:background .2s,color .2s,border-color .2s}
+.sc.on{border-color:var(--accent);background:var(--accent);color:#fff}
+.tagin{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.tsel,.tsug{display:flex;flex-wrap:wrap;gap:5px}
+.tsel:empty{display:none}
+.tin{border:0;border-bottom:1px solid var(--hair);padding:6px 0;font-size:13px;background:none;outline:none;width:100%}
+.tin:focus{border-color:var(--ink)}
+.tchip{font-size:11px;border:1px solid var(--hair);border-radius:999px;padding:4px 8px 3px;color:#777;background:#fff}
+.tchip:hover{border-color:var(--ink);color:var(--ink)}
+.tchip.on{border-color:var(--ink);background:var(--ink);color:#fff}
+.entry .tg,.phead .tg{grid-column:1/3;display:flex;flex-wrap:wrap;gap:5px}
+.entry .tg:empty,.phead .tg:empty{display:none}
+.phead .tg{margin-top:12px}
+.htag{font-size:11px;color:var(--ink);background:#f0f0eb;border-radius:4px;padding:3px 7px 2px;transition:background .2s,color .2s}
+.htag:hover{background:var(--ink);color:#fff}
+.entry .pl{grid-column:1/3}
+.plink{font-size:12px;color:var(--mute);text-decoration:underline;text-underline-offset:3px;text-decoration-color:#d0d0ca}
+.plink:hover{color:var(--ink)}
+.mlog{width:100%;text-align:left;display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:baseline;padding:9px 0;border-bottom:1px solid #f0f0eb}
+.mlog .d{font:10px/1 var(--mono);color:var(--mute)}
+.mlog .p{font-size:12px;white-space:nowrap}
+.mlog .t{font-size:12px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mlog:hover .p{text-decoration:underline;text-underline-offset:3px}
+.walk{width:100%;text-align:left;display:block;padding:12px 0;border-bottom:1px solid #efefea}
+.walk .d{display:flex;justify-content:space-between;font:10px/1 var(--mono);color:var(--mute);letter-spacing:.06em}
+.walk .d b{font-weight:400}
+.walk .ti{font-size:15px;margin-top:7px}
+.walk .ti.auto,.big.auto{color:#9a9a94}
+.walk .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.walk .tags:empty{display:none}
+.walk.cur .ti,.walk:hover .ti{text-decoration:underline;text-underline-offset:3px}
+.wsum{margin:6px 0 4px;display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.wsum .dx{font-size:13px;line-height:1.85;color:#333;white-space:pre-wrap;border-left:2px solid var(--accent);padding:2px 0 2px 12px;align-self:stretch}
+.tagcloud{display:flex;flex-direction:column;margin-top:10px}
+.tagrow{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px solid #efefea;font-size:14px}
+.tagrow em{font:10px/1 var(--mono);font-style:normal;color:var(--mute)}
+.tagrow:hover span{text-decoration:underline;text-underline-offset:3px}
+.taghead{margin-top:14px}
+.taghead .back{font:10px/1 var(--mono);letter-spacing:.12em;color:var(--mute)}
+.taghead .big{margin-top:12px}
+.taghead .acts{display:flex;gap:6px;margin-top:12px;align-items:center}
+.taghead .acts .tin{max-width:160px}
+.taghead .tag.arm{color:var(--accent);border-color:var(--accent)}
+.li .n em{font:8px/1 var(--mono);font-style:normal;letter-spacing:.1em;color:var(--accent);border:1px solid rgba(255,79,0,.4);border-radius:999px;padding:2px 4px 1px}
+#sForm.collapsed>*:not(#fOpen){display:none!important}
+#fOpen{display:none;width:100%}
+#sForm.collapsed #fOpen{display:block}
+#hlbar{position:fixed;left:50%;bottom:calc(66px + var(--safe-b));transform:translateX(-50%);display:none;align-items:center;gap:10px;background:var(--ink);color:#fff;font:10px/1 var(--mono);letter-spacing:.1em;padding:6px 6px 6px 14px;border-radius:999px;z-index:12}
+#hlbar.on{display:flex;animation:fade .3s both}
+#hlbar button{color:#fff;width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.16);font:12px/1 var(--mono)}
+#gPref path.hl,#gMuni path.hl{stroke:var(--ink)!important;stroke-width:2!important}
+#gTown .cell.hl{stroke:var(--ink);stroke-width:1.8}
+#route{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-dasharray:5 4;pointer-events:none}
+#routeRing{fill:none;stroke:#fff;stroke-width:13;stroke-linecap:round;pointer-events:none}
+#routeDots{fill:none;stroke:var(--ink);stroke-width:8;stroke-linecap:round;pointer-events:none}
+#gLabel path.mk{fill:none;stroke:var(--ink);stroke-width:6;stroke-linecap:round}
+#gLabel path.mkr{fill:none;stroke:#fff;stroke-width:10;stroke-linecap:round}
+#tools,#top{transition:right .55s var(--ease),padding .55s var(--ease)}
+body:not(.sp).sheet-open #tools,body:not(.sp).wsheet-open #tools{right:482px}
+body:not(.sp).sheet-open #top,body:not(.sp).wsheet-open #top{padding-right:482px}
+body:not(.sp).drawer-open #hud{left:342px}
+#hud{transition:left .55s var(--ease)}
+#ghBox input{width:100%;border:1px solid var(--hair);border-radius:8px;padding:10px 12px;font:12px/1.4 var(--mono);margin-top:8px;outline:none}
+#ghBox input:focus{border-color:var(--ink)}
+#ghState{font-size:12px}
+#ghState b{font-weight:500}
+#store.ok i{background:#2bb673}
+#store.busy i{background:var(--accent);animation:pulse 1s infinite}
+#store.err i{background:#d33}
+#drop{position:fixed;inset:0;border:2px dashed var(--accent);background:rgba(255,255,255,.6);display:none;align-items:center;justify-content:center;font:12px/1 var(--mono);letter-spacing:.14em;color:var(--accent);z-index:50;pointer-events:none}
+#drop.on{display:flex}
+.btn{font:11px/1 var(--mono);letter-spacing:.14em;padding:11px 16px 10px;border-radius:999px;background:var(--ink);color:#fff;transition:background .2s,opacity .2s}
+.btn:hover{background:var(--accent)}
+.btn[disabled]{opacity:.35;pointer-events:none}
+.btn.ghost{background:none;color:var(--ink);border:1px solid var(--ink)}
+.btn.ghost:hover{background:var(--ink);color:#fff}
+.form .kbd{font:9px/1 var(--mono);color:#b0b0aa;margin-left:auto;letter-spacing:.06em}
+
+/* drawer */
+.tabs{display:flex;gap:18px;margin-top:4px}
+.tabs button{font:10px/1 var(--mono);letter-spacing:.14em;color:var(--mute);padding:6px 0;border-bottom:1px solid transparent}
+.tabs button.on{color:var(--ink);border-color:var(--ink)}
+.filter{margin-top:14px;width:100%;border:0;border-bottom:1px solid var(--hair);padding:8px 0;font-size:14px;background:none;outline:none}
+.filter:focus{border-color:var(--ink)}
+.li{display:grid;grid-template-columns:1fr auto;gap:5px 10px;align-items:center;width:100%;text-align:left;padding:10px 0;border-bottom:1px solid #efefea}
+.li .n{font-size:14px;display:flex;align-items:center;gap:8px;min-width:0}
+.li .n span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .n i{flex:none;width:7px;height:7px;border-radius:50%;border:1px solid #c9c9c3}
+.li.v .n i{background:var(--accent);border-color:var(--accent)}
+.li .c{font:10px/1 var(--mono);color:var(--mute);letter-spacing:.04em}
+.li .b{grid-column:1/3;height:2px;background:#ecece7;position:relative;overflow:hidden}
+.li .b i{position:absolute;left:0;top:0;bottom:0;background:var(--accent)}
+.li:hover .n{text-decoration:underline;text-underline-offset:3px}
+.log{width:100%;text-align:left;padding:12px 0;border-bottom:1px solid #efefea;display:block}
+.log .d{font:10px/1 var(--mono);color:var(--mute);letter-spacing:.06em}
+.log .p{font-size:13px;margin-top:6px}
+.log .t{font-size:12px;color:#555;margin-top:4px;line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.log:hover .p{text-decoration:underline;text-underline-offset:3px}
+
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(239,239,234,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
+#modal.open{display:flex;animation:fade .3s both}
+.card{background:#fff;border:1px solid var(--hair);border-radius:14px;width:min(460px,100%);padding:26px;position:relative;max-height:90vh;overflow:auto}
+.card h3{font-weight:300;font-size:22px}
+.card p{font-size:12px;line-height:1.75;color:#555;margin-top:10px}
+.card .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.card textarea{width:100%;height:110px;margin-top:12px;border:1px solid var(--hair);border-radius:8px;padding:10px;font:11px/1.5 var(--mono);resize:vertical}
+.card small{display:block;font:10px/1.6 var(--mono);color:var(--mute);margin-top:16px;letter-spacing:.03em}
+
+@media (max-width:720px){
+  #top{padding:calc(12px + var(--safe-t)) 14px 26px;flex-direction:column;gap:8px;background:linear-gradient(to bottom,rgba(239,239,234,.96) 72%,rgba(239,239,234,0))}
+  #crumb{margin-top:10px}
+  #title{margin-top:4px;gap:10px}
+  #name{font-size:24px;max-width:62vw}
+  #kind{margin-top:6px}
+  #stats{justify-content:flex-start;gap:6px 14px;max-width:none;font-size:8px}
+  #stats>div{flex-direction:row;align-items:baseline;gap:5px}
+  #stats b{font-size:13px}
+  #stats b em{font-size:9px}
+  #store{flex-basis:auto;justify-content:flex-start}
+  #hud{left:14px;bottom:calc(64px + var(--safe-b))}
+  #tools{left:14px;right:14px;bottom:calc(14px + var(--safe-b));justify-content:flex-end}
+  #hint{display:none}
+  #sheet,#wsheet,#drawer{left:0;right:0;width:100%;top:auto;max-height:66vh;border:0;border-top:1px solid var(--hair);border-radius:16px 16px 0 0;transform:translateY(102%);box-shadow:0 -10px 40px rgba(0,0,0,.06)}
+  #drawer{height:66vh}
+  #sheet.open,#wsheet.open,#drawer.open{transform:none}
+  #wsheet{height:66vh}
+  #hlbar{left:14px;transform:none;bottom:calc(150px + var(--safe-b))}
+  body.sp.sheet-open #hlbar,body.sp.wsheet-open #hlbar,body.sp.drawer-open #hlbar{bottom:calc(66vh + 12px)}
+  .phead{padding-top:20px}
+  .x{top:12px}
+  .big{font-size:26px}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body data-level="japan">
+<div id="bar"></div>
+<svg id="map" xmlns="http://www.w3.org/2000/svg" aria-label="地図">
+  <defs><clipPath id="clipMuni"><path id="clipPath"/></clipPath></defs>
+  <path id="grid"/>
+  <g id="gPref"></g>
+  <rect id="inset"/>
+  <g id="gMuni"></g>
+  <g id="gTown" clip-path="url(#clipMuni)"><g id="gCells"></g><path id="tBorder"/></g>
+  <path id="muniEdge"/>
+  <path id="tDots"/>
+  <path id="selp"/>
+  <path id="route"/><path id="routeRing"/><path id="routeDots"/>
+  <path id="pinRing"/><path id="pin"/>
+  <g id="gMe"><circle id="meAcc"/><path id="meRing"/><path id="meCore"/></g>
+  <path id="hover"/>
+  <g id="gLabel"></g>
+</svg>
+<div id="ticks"></div><div id="xh"></div><div id="yh"></div>
+
+<header id="top">
+  <div>
+    <div class="brand"><i></i>SANPO LOG</div>
+    <nav id="crumb"></nav>
+    <div id="title"><h1 id="name">日本</h1><button id="memoHere" hidden>＋ MEMO</button></div>
+    <div id="kind">JAPAN</div>
+  </div>
+  <div id="stats">
+    <div><span>PREF</span><b id="cP">0<em>/47</em></b></div>
+    <div><span>CITY</span><b id="cM">0<em>/0</em></b></div>
+    <div><span>TOWN</span><b id="cT">0<em>/0</em></b></div>
+    <div id="store"><i></i><span>LOCAL</span></div>
+  </div>
+</header>
+
+<div id="hud">
+  <div id="hName"></div>
+  <div id="hCoord" class="mono">—</div>
+  <div id="scale"><i></i><span></span></div>
+</div>
+<div id="hint">CLICK TO DIVE · DRAG TO MOVE · SCROLL TO ZOOM · ESC TO RISE</div>
+<div id="tools">
+  <button class="pill sp-only" id="bLoc" title="現在地">◎ HERE</button>
+  <button class="pill" id="bUp" title="上の階層へ (Esc)">↑ UP</button>
+  <button class="pill" id="bList">LIST</button>
+  <button class="pill" id="bLog">LOG</button>
+  <button class="pill" id="bData">DATA</button>
+</div>
+<div id="toast"></div>
+<div id="hlbar"><span></span><button aria-label="ハイライトを消す">×</button></div>
+<button id="fab" aria-label="今いる場所でメモ">＋<small>MEMO HERE</small></button>
+<div id="drop">DROP JSON TO IMPORT</div>
+
+<aside id="sheet" class="panel" aria-label="メモ">
+  <div class="phead">
+    <button class="x" data-close="sheet" aria-label="閉じる">×</button>
+    <div class="eyebrow" id="sEyebrow"></div>
+    <div class="big" id="sName"></div>
+    <div class="coord" id="sCoord"></div>
+    <div class="sstat" id="sStat"></div>
+    <button class="toggle" id="sToggle"><i></i><span>行った</span></button>
+  </div>
+  <div class="pbody"><div class="rule" id="sCount">メモ</div><div id="sEntries"></div></div>
+  <form class="form" id="sForm">
+    <button type="button" id="fOpen" class="btn ghost">＋ 新しいメモを書く</button>
+    <div class="scope" id="fScope"></div>
+    <div class="row pc-only"><input type="date" id="fDate" required><span class="kbd">⌘/CTRL + ENTER</span></div>
+    <textarea id="fText" rows="2" placeholder="ひとことメモ（#タグも書けます）"></textarea>
+    <textarea id="fDetail" class="pc-only" placeholder="くわしく（道順、見つけたもの、天気、寄ったお店、気づいたこと…）"></textarea>
+    <div id="fTags" class="pc-only"></div>
+    <div class="row links"><input id="fLinks" type="url" inputmode="url" autocomplete="off" placeholder="写真のリンク（Instagram・Googleフォトなど）"><button type="button" class="mini sp-only" id="fPaste">貼付</button></div>
+    <div class="row" style="margin:10px 0 0"><button class="btn" id="fSave" type="submit">記録する</button><button type="button" class="loc sp-only" id="fLoc">◉ 位置を付ける</button></div>
+  </form>
+</aside>
+
+<aside id="wsheet" class="panel" aria-label="散歩">
+  <div class="phead">
+    <button class="x" data-close="wsheet" aria-label="閉じる">×</button>
+    <div class="eyebrow" id="wEyebrow"></div>
+    <div class="big" id="wTitle"></div>
+    <div class="sstat" id="wStat"></div>
+    <div class="tg" id="wTags"></div>
+  </div>
+  <div class="pbody" id="wBody"></div>
+</aside>
+
+<aside id="drawer" class="panel" aria-label="一覧">
+  <div class="phead">
+    <button class="x" data-close="drawer" aria-label="閉じる">×</button>
+    <div class="tabs"><button id="t_list" class="on">LIST</button><button id="t_walks">WALKS</button><button id="t_tags">TAGS</button></div>
+    <input class="filter" id="dFilter" placeholder="名前で絞り込み" autocomplete="off">
+  </div>
+  <div class="pbody" id="dBody"></div>
+</aside>
+
+<div id="modal" role="dialog" aria-modal="true">
+  <div class="card">
+    <button class="x" data-close="modal" aria-label="閉じる" style="top:12px">×</button>
+    <h3>データ</h3>
+    <p id="mWhere"></p>
+    <div id="fbBox" hidden>
+      <div class="rule">Googleでログインして同期</div>
+      <p id="fbState"></p>
+      <div class="acts"><button class="btn" id="fbIn">Googleでログイン</button><button class="btn ghost" id="fbNow">今すぐ同期</button><button class="btn ghost" id="fbOut">ログアウト</button></div>
+    </div>
+    <div class="rule" id="ghRule">GitHubと同期</div>
+    <div id="ghBox">
+      <p id="ghState"></p>
+      <div id="ghSetup">
+        <input id="ghToken" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…（合鍵を貼り付け）">
+        <input id="ghRepo" autocomplete="off" spellcheck="false" value="sanpo-data" placeholder="記録用のリポジトリ名">
+        <div class="acts"><button class="btn" id="ghConnect">接続する</button></div>
+      </div>
+      <div class="acts" id="ghActs"><button class="btn" id="ghNow">今すぐ同期</button><button class="btn ghost" id="ghOff">この端末の接続を解除</button></div>
+    </div>
+    <div class="rule">書き出し</div>
+    <div class="acts"><button class="btn sp-only" id="mShare">送る（AirDrop・LINEなど）</button><button class="btn" id="mDown">JSONを保存</button><button class="btn ghost" id="mCopy">コピー</button></div>
+    <div class="rule">読み込み</div>
+    <p>書き出したJSONを選ぶか、下に貼り付けてください。PCではこの画面にファイルをドラッグしてもOK。今ある記録に合流します（消えません）。</p>
+    <div class="acts"><label class="btn ghost" style="cursor:pointer">ファイルを選ぶ<input type="file" id="mFile" accept=".json,application/json" hidden></label><button class="btn ghost" id="mPaste">貼り付けた内容を読む</button></div>
+    <textarea id="mText" placeholder='{"app":"sanpo-log", ...}'></textarea>
+    <small>出典：「国土数値情報（行政区域データ）」（国土交通省）を加工して作成。町丁目の代表点：<a href="https://github.com/geolonia/japanese-addresses" style="color:inherit">Geolonia 住所データ</a>（CC BY 4.0）を加工して作成。町丁目の範囲は代表点からの推定で、実際の境界とは異なります。</small>
+  </div>
+</div>
+
+<script src="firebase-config.js" onerror="this.remove()"></script>
+<script>
+'use strict';
+/* ============================================================
+   SANPO LOG — 歩いた場所を、地図に。
+   Pure SVG, no framework. Data is lazy-loaded per prefecture.
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const svg = $('#map');
+const NS = 'http://www.w3.org/2000/svg';
+
+/* ---------- projection (Mercator, 1 unit = 0.01°) ---------- */
+const K = 100, LNG0 = 137, LAT0 = 36, R2D = 180 / Math.PI;
+const merc = la => Math.log(Math.tan(Math.PI / 4 + la * Math.PI / 360)) * R2D;
+const MY0 = merc(LAT0);
+const PX = lng => (lng - LNG0) * K;
+const PY = lat => -(merc(lat) - MY0) * K;
+const OKI = { dx: PX(135.6) - PX(127.8), dy: PY(31.6) - PY(26.4) };   // Okinawa drawn as an inset south of Kii
+const proj = (lng, lat, o) => o ? [PX(lng) + OKI.dx, PY(lat) + OKI.dy] : [PX(lng), PY(lat)];
+function unproj(x, y, o) {
+  if (o) { x -= OKI.dx; y -= OKI.dy; }
+  return [x / K + LNG0, (2 * Math.atan(Math.exp((-y / K + MY0) / R2D)) - Math.PI / 2) * R2D];
+}
+
+/* ---------- data loading (script tags → works on file:// too) ---------- */
+const SANPO = window.SANPO = { cb: {}, d(name, v) { const f = this.cb[name]; delete this.cb[name]; f && f(v); } };
+const loaded = {};
+function loadScript(src) {
+  return new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = src; s.async = true; s.onload = res; s.onerror = () => rej(new Error(src));
+    document.head.appendChild(s);
+  });
+}
+function loadData(name) {
+  if (!loaded[name]) loaded[name] = new Promise((res, rej) => {
+    SANPO.cb[name] = res;
+    loadScript('data/' + name + '.js').catch(e => { delete loaded[name]; rej(e); });
+  });
+  return loaded[name];
+}
+let d3p;
+const loadD3 = () => d3p || (d3p = window.d3 && window.d3.Delaunay ? Promise.resolve() : loadScript('lib/d3-delaunay.min.js'));
+
+let busy = 0;
+function progress(on) {
+  busy += on ? 1 : -1;
+  const b = $('#bar');
+  if (busy > 0) { b.style.opacity = 1; b.style.width = '30%'; requestAnimationFrame(() => b.style.width = '70%'); }
+  else { b.style.width = '100%'; setTimeout(() => { if (!busy) { b.style.opacity = 0; b.style.width = 0; } }, 300); }
+}
+
+/* ---------- geometry helpers ---------- */
+function topoFeatures(topo, key) {
+  const [sx, sy] = topo.transform.scale, [tx, ty] = topo.transform.translate;
+  const arcs = topo.arcs.map(a => { let x = 0, y = 0; return a.map(p => { x += p[0]; y += p[1]; return [x * sx + tx, y * sy + ty]; }); });
+  const ring = idx => {
+    const pts = [];
+    for (const i of idx) {
+      const a = i >= 0 ? arcs[i] : arcs[~i].slice().reverse();
+      for (let k = pts.length ? 1 : 0; k < a.length; k++) pts.push(a[k]);
+    }
+    return pts;
+  };
+  return topo.objects[key].geometries.map(g => ({
+    c: g.c,
+    polys: g.type === 'Polygon' ? [g.arcs.map(ring)] : g.type === 'MultiPolygon' ? g.arcs.map(p => p.map(ring)) : []
+  }));
+}
+const f3 = v => Math.round(v * 1000) / 1000;
+function prep(polys, oki) {
+  let d = '';
+  const parts = [];
+  const bb = [Infinity, Infinity, -Infinity, -Infinity];
+  for (const poly of polys) {
+    poly.forEach((r, ri) => {
+      const pr = r.map(p => proj(p[0], p[1], oki));
+      d += 'M' + pr.map(p => f3(p[0]) + ' ' + f3(p[1])).join('L') + 'Z';
+      if (ri) return;
+      const b = [Infinity, Infinity, -Infinity, -Infinity];
+      let a = 0;
+      for (let i = 0, j = pr.length - 1; i < pr.length; j = i++) {
+        const p = pr[i];
+        if (p[0] < b[0]) b[0] = p[0]; if (p[1] < b[1]) b[1] = p[1];
+        if (p[0] > b[2]) b[2] = p[0]; if (p[1] > b[3]) b[3] = p[1];
+        a += (pr[j][0] - p[0]) * (pr[j][1] + p[1]);
+      }
+      parts.push({ bb: b, area: Math.abs(a / 2), ring: pr });
+      bb[0] = Math.min(bb[0], b[0]); bb[1] = Math.min(bb[1], b[1]); bb[2] = Math.max(bb[2], b[2]); bb[3] = Math.max(bb[3], b[3]);
+    });
+  }
+  if (!parts.length) return { d, bb: [0, 0, 0, 0], main: [0, 0, 0, 0], lp: [0, 0], area: 0 };
+  const big = parts.reduce((a, b) => b.area > a.area ? b : a);
+  const [x0, y0, x1, y1] = big.bb, m = Math.max(x1 - x0, y1 - y0) * .55;
+  const main = big.bb.slice();
+  for (const p of parts) {
+    const b = p.bb;
+    if (b[2] > x0 - m && b[0] < x1 + m && b[3] > y0 - m && b[1] < y1 + m) {
+      main[0] = Math.min(main[0], b[0]); main[1] = Math.min(main[1], b[1]); main[2] = Math.max(main[2], b[2]); main[3] = Math.max(main[3], b[3]);
+    }
+  }
+  return { d, bb, main, parts, lp: labelPoint(big.ring, big.bb), area: parts.reduce((s, p) => s + p.area, 0), bigbb: big.bb };
+}
+function inside(pt, r) {
+  let c = false;
+  for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+    const [xi, yi] = r[i], [xj, yj] = r[j];
+    if ((yi > pt[1]) !== (yj > pt[1]) && pt[0] < (xj - xi) * (pt[1] - yi) / (yj - yi) + xi) c = !c;
+  }
+  return c;
+}
+function labelPoint(r, b) {
+  let a = 0, cx = 0, cy = 0;
+  for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+    const f = r[j][0] * r[i][1] - r[i][0] * r[j][1];
+    a += f; cx += (r[j][0] + r[i][0]) * f; cy += (r[j][1] + r[i][1]) * f;
+  }
+  if (a) { cx /= 3 * a; cy /= 3 * a; } else { cx = (b[0] + b[2]) / 2; cy = (b[1] + b[3]) / 2; }
+  if (inside([cx, cy], r)) return [cx, cy];
+  // widest horizontal run through a few scanlines
+  let best = null;
+  for (const t of [.5, .35, .65, .2, .8]) {
+    const y = b[1] + (b[3] - b[1]) * t, xs = [];
+    for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+      const [xi, yi] = r[i], [xj, yj] = r[j];
+      if ((yi > y) !== (yj > y)) xs.push(xi + (y - yi) * (xj - xi) / (yj - yi));
+    }
+    xs.sort((p, q) => p - q);
+    for (let k = 0; k + 1 < xs.length; k += 2) if (!best || xs[k + 1] - xs[k] > best[0]) best = [xs[k + 1] - xs[k], (xs[k] + xs[k + 1]) / 2, y];
+  }
+  return best ? [best[1], best[2]] : [cx, cy];
+}
+
+/* ---------- state ---------- */
+const D = { P: [], pref: {}, prefInfo: {}, muni: {}, towns: {} };
+const S = { level: 'japan', pc: null, mc: null, sel: null };
+const V = { cx: 0, cy: 0, s: 1 };
+let W = innerWidth, H = innerHeight;
+let origin = null;           // screen point of last dive click (ripple source)
+let JAPAN_BB;
+
+/* ---------- records: places · notes · walks (+ tags) ----------
+   place : { n: name, l: full label, ll:[lng,lat], v: visited flag, u }
+   note  : { id, k: place key, d:'YYYY-MM-DD', at:'HH:MM', t: memo, x: detail, p:[photo urls], loc:[lat,lng,acc], tags:[], u }
+   walk  : { d, title, sum, tags:[], u }   — one walk = one day, made from that day's notes
+   Everything lives in one JSON object; a server can later store the same three tables. */
+const LS = 'sanpo-log-v2', LS_OLD = 'sanpo-log-v1';
+const enc = s => Array.from(s).map(c => c.codePointAt(0).toString(36)).join('.').slice(0, 180);
+const tKey = (mc, name) => 't' + mc + '_' + enc(name);
+const okKey = k => /^(p\d{2}|m\d{5}|t\d{5}_[0-9a-z.]+)$/.test(k);
+const normTag = s => String(s || '').normalize('NFKC').replace(/^[#＃]+/, '').replace(/\s+/g, '').toLowerCase().slice(0, 24);
+const hashtags = s => [...String(s || '').normalize('NFKC').matchAll(/#([^\s#、。，,．.!！?？「」（）()\[\]]+)/g)].map(m => normTag(m[1])).filter(Boolean);
+const uniq = a => [...new Set(a.filter(Boolean))];
+function cleanPlace(r) {
+  const o = { n: String(r.n || ''), l: String(r.l || ''), v: !!r.v, u: +r.u || 0 };
+  if (Array.isArray(r.ll) && r.ll.length === 2 && r.ll.every(v => Number.isFinite(+v))) o.ll = r.ll.map(Number);
+  return o;
+}
+function cleanNote(x) {
+  const o = { id: String(x.id), k: String(x.k), d: /^\d{4}-\d{2}-\d{2}$/.test(x.d) ? x.d : today(), t: String(x.t || '') };
+  if (x.at) o.at = String(x.at).slice(0, 5);
+  if (x.x) o.x = String(x.x);
+  const p = Array.isArray(x.p) ? x.p.map(String).filter(u => /^https?:\/\//.test(u)).slice(0, 12) : [];
+  if (p.length) o.p = p;
+  if (Array.isArray(x.loc) && x.loc.length >= 2 && x.loc.slice(0, 3).every(v => Number.isFinite(+v))) o.loc = x.loc.slice(0, 3).map(Number);
+  const tags = uniq((Array.isArray(x.tags) ? x.tags : []).map(normTag));
+  if (tags.length) o.tags = tags;
+  o.u = +x.u || Date.now();
+  return o;
+}
+function cleanWalk(w) {
+  return { d: w.d, title: String(w.title || '').slice(0, 80), sum: String(w.sum || ''), tags: uniq((Array.isArray(w.tags) ? w.tags : []).map(normTag)), u: +w.u || Date.now() };
+}
+const Store = {
+  places: new Map(), notes: new Map(), walks: new Map(), deleted: new Map(), ready: true,   // deleted: 'n:<id>' / 'w:<date>' -> time
+  init() {
+    try {
+      const o = JSON.parse(localStorage.getItem(LS) || 'null');
+      if (o) this.absorb(o);
+      else {
+        const old = JSON.parse(localStorage.getItem(LS_OLD) || 'null');   // earlier version: migrate once, keep the old copy
+        if (old && old.r) { this.absorb(old); this.save(); }
+      }
+    } catch (e) {}
+    reindex();
+  },
+  dump() {   // canonical order, so the same records always serialize to the same text
+    const sorted = m => Object.fromEntries([...m.entries()].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+    return { app: 'sanpo-log', v: 2, places: sorted(this.places), notes: sorted(this.notes), walks: sorted(this.walks), deleted: sorted(this.deleted) };
+  },
+  save() { try { localStorage.setItem(LS, JSON.stringify(this.dump())); } catch (e) { toast('保存できませんでした（ブラウザの容量がいっぱいかもしれません）'); } },
+  commit() { this.save(); reindex(); changed(); Sync.soon(); FB.soon(); },
+  /* import / migrate — v1 {r:{key:{n,l,ll,v,e:[]}}} or v2 {places,notes,walks}; the newer copy of each item wins */
+  absorb(o) {
+    let n = 0;
+    const newer = (a, b) => !a || (+b.u || 0) > (+a.u || 0);
+    if (o.r && typeof o.r === 'object') for (const k in o.r) {
+      const r = o.r[k]; if (!okKey(k) || !r || typeof r !== 'object') continue;
+      const pl = cleanPlace(r); if (newer(this.places.get(k), pl)) this.places.set(k, pl);
+      for (const e of (Array.isArray(r.e) ? r.e : [])) {
+        if (!e || !e.id) continue;
+        const nt = cleanNote({ ...e, k, tags: hashtags((e.t || '') + ' ' + (e.x || '')) });
+        if (newer(this.notes.get(nt.id), nt)) { this.notes.set(nt.id, nt); n++; }
+      }
+    }
+    for (const k in (o.places || {})) { if (!okKey(k) || !o.places[k]) continue; const pl = cleanPlace(o.places[k]); if (newer(this.places.get(k), pl)) this.places.set(k, pl); }
+    for (const id in (o.notes || {})) { const x = o.notes[id]; if (!x || !x.id || !okKey(String(x.k))) continue; const nt = cleanNote(x); if (newer(this.notes.get(nt.id), nt)) { this.notes.set(nt.id, nt); n++; } }
+    for (const d in (o.walks || {})) { if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !o.walks[d]) continue; const w = cleanWalk({ ...o.walks[d], d }); if (newer(this.walks.get(d), w)) this.walks.set(d, w); }
+    // deletions travel too, so a memo deleted on one device does not come back from another
+    for (const key in (o.deleted || {})) { const u = +o.deleted[key] || 0; if (/^[nw]:/.test(key) && u > (this.deleted.get(key) || 0)) this.deleted.set(key, u); }
+    for (const [key, u] of this.deleted) {
+      const id = key.slice(2), m = key[0] === 'n' ? this.notes : this.walks, x = m.get(id);
+      if (x && (+x.u || 0) <= u) { m.delete(id); if (key[0] === 'n') n = Math.max(0, n - 1); }
+    }
+    return n;
+  },
+  place(k) { return this.places.get(k); },
+  ensurePlace(k) {   // cache name/label so lists work without loading that area's map data
+    const cur = this.places.get(k), info = placeInfo(k);
+    if (!info) return cur;
+    const pl = { v: false, u: 0, ...(cur || {}), n: info.n, l: info.l, ll: info.ll.map(v => Math.round(v * 1e5) / 1e5) };
+    this.places.set(k, pl); return pl;
+  },
+  setVisited(k, v) { const pl = this.ensurePlace(k) || cleanPlace({}); this.places.set(k, { ...pl, v: !!v, u: Date.now() }); this.commit(); },
+  putNote(n) { this.ensurePlace(n.k); this.notes.set(n.id, cleanNote({ ...n, u: Date.now() })); this.commit(); },
+  delNote(id) { this.notes.delete(id); this.deleted.set('n:' + id, Date.now()); this.commit(); },
+  putWalk(d, w) {
+    const c = cleanWalk({ ...(this.walks.get(d) || {}), ...w, d, u: Date.now() });
+    if (!c.title && !c.sum && !c.tags.length) { if (this.walks.delete(d)) this.deleted.set('w:' + d, Date.now()); } else this.walks.set(d, c);
+    this.commit();
+  },
+  renameTag(from, to) {   // to = '' deletes the tag; renaming onto an existing tag merges them
+    to = normTag(to);
+    const fix = tags => uniq((tags || []).map(t => t === from ? to : t));
+    for (const [id, n] of this.notes) if ((n.tags || []).includes(from)) this.notes.set(id, cleanNote({ ...n, tags: fix(n.tags), u: Date.now() }));
+    for (const [d, w] of this.walks) if ((w.tags || []).includes(from)) this.walks.set(d, cleanWalk({ ...w, tags: fix(w.tags), u: Date.now() }));
+    this.commit();
+  }
+};
+
+/* ---------- index (rebuilt on every change; cheap) ---------- */
+let IX = { byPlace: new Map(), byDate: new Map(), tagN: new Map(), visited: new Set(), raw: 0 };
+const byTime = (a, b) => (a.at || '') < (b.at || '') ? -1 : (a.at || '') > (b.at || '') ? 1 : 0;
+const newestFirst = (a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : -byTime(a, b);
+function reindex() {
+  const byPlace = new Map(), byDate = new Map(), tagN = new Map(), visited = new Set();
+  const push = (m, k, v) => { const a = m.get(k); a ? a.push(v) : m.set(k, [v]); };
+  let raw = 0;
+  for (const n of Store.notes.values()) {
+    push(byPlace, n.k, n); push(byDate, n.d, n); visited.add(n.k);
+    if (!n.x) raw++;
+    for (const t of n.tags || []) tagN.set(t, (tagN.get(t) || 0) + 1);
+  }
+  for (const [k, p] of Store.places) if (p.v) visited.add(k);
+  for (const w of Store.walks.values()) for (const t of w.tags || []) tagN.set(t, (tagN.get(t) || 0) + 1);
+  for (const a of byDate.values()) a.sort(byTime);
+  for (const a of byPlace.values()) a.sort(newestFirst);
+  IX = { byPlace, byDate, tagN, visited, raw };
+}
+const isV = k => IX.visited.has(k);
+const within = (parent, k) => k !== parent && (parent[0] === 'p' ? k.slice(1, 3) === parent.slice(1) : parent[0] === 'm' ? k[0] === 't' && k.slice(1, 6) === parent.slice(1) : false);
+function placeInfo(k) {
+  const pc = k.slice(1, 3), P = D.prefInfo[pc];
+  if (!P) return null;
+  if (k[0] === 'p') { const f = D.japanFeats && D.japanFeats.find(f => f.c === pc); return f ? { n: P.n, l: P.n, ll: unproj(f.lp[0], f.lp[1], pc === '47') } : null; }
+  const mc = k.slice(1, 6), M = D.muni[mc];
+  if (!M) return null;
+  if (k[0] === 'm') return { n: M.n, l: `${P.n} ${M.n}`, ll: unproj(M.lp[0], M.lp[1], pc === '47') };
+  const t = (D.towns[mc] || []).find(t => t.k === k);
+  return t ? { n: t.n, l: `${P.n} ${M.n} ${t.n}`, ll: t.ll } : null;
+}
+const placeName = k => ((Store.place(k) || {}).n) || ((placeInfo(k) || {}).n) || '';
+const placeLabel = k => ((Store.place(k) || {}).l) || ((placeInfo(k) || {}).l) || '';
+function ancestors(k) {
+  const pc = k.slice(1, 3);
+  if (k[0] === 'p') return [k];
+  return k[0] === 'm' ? [k, 'p' + pc] : [k, 'm' + k.slice(1, 6), 'p' + pc];
+}
+const STARTER = ['神社', '寺', '公園', '坂', '川', '商店街', 'カフェ', '路地', '紅葉', '桜', '海', '夜景'];
+function tagSuggestions(q) {
+  const used = [...IX.tagN.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]);
+  const all = [...used, ...STARTER.filter(s => !IX.tagN.has(s))];
+  return q ? all.filter(t => t.includes(q)) : all;
+}
+
+/* ---------- GitHub sync: one JSON file in a private repository ----------
+   GET → merge (newest copy of each item wins; deletions travel as tombstones) → PUT with the file's sha.
+   The token stays in this browser only (localStorage) and is sent to api.github.com only. */
+const Sync = {
+  KEY: 'sanpo-gh', PATH: 'sanpo-log.json', API: 'https://api.github.com',
+  cfg: null, state: 'off', msg: '', last: 0, busy: false, again: false, t: null,
+  load() { try { this.cfg = JSON.parse(localStorage.getItem(this.KEY) || 'null'); } catch (e) { this.cfg = null; } this.state = this.cfg ? 'idle' : 'off'; },
+  on() { return !!(this.cfg && this.cfg.token); },
+  h(extra) { return { Authorization: 'Bearer ' + this.cfg.token, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(extra || {}) }; },
+  async api(path, opt = {}) {
+    const r = await fetch(this.API + path, { ...opt, headers: this.h(opt.headers), cache: 'no-store' });
+    if (r.status === 401) throw Object.assign(new Error('auth'), { code: 401 });
+    return r;
+  },
+  async connect(token, repo) {
+    this.cfg = { token: token.trim(), repo: (repo || 'sanpo-data').trim() };
+    try {
+      const u = await this.api('/user');
+      if (!u.ok) throw new Error('user');
+      this.cfg.owner = (await u.json()).login;
+      const r = await this.api(`/repos/${this.cfg.owner}/${this.cfg.repo}`);
+      if (r.status === 404) throw Object.assign(new Error('repo'), { code: 404 });
+      const info = await r.json();
+      if (!info.private && !confirm2()) throw Object.assign(new Error('public'), { code: 'public' });
+      localStorage.setItem(this.KEY, JSON.stringify(this.cfg));
+      this.state = 'idle'; this.paint();
+      await this.run();
+      return true;
+    } catch (e) {
+      this.cfg = null; this.state = 'off';
+      this.msg = e.code === 401 ? '合鍵が正しくないか、期限が切れています。' : e.code === 404 ? `リポジトリ「${repo}」が見つかりません。合鍵の対象にこのリポジトリを選んだか確認してください。` : e.code === 'public' ? '公開リポジトリには保存しません。非公開（Private）のリポジトリを使ってください。' : 'GitHubにつながりませんでした。通信を確認してください。';
+      this.paint();
+      return false;
+    }
+  },
+  off() { localStorage.removeItem(this.KEY); this.cfg = null; this.state = 'off'; this.msg = ''; this.paint(); },
+  soon(ms) { if (!this.on()) return; clearTimeout(this.t); this.t = setTimeout(() => this.run(), ms == null ? 2500 : ms); },
+  async run() {
+    if (!this.on()) return;
+    if (this.busy) { this.again = true; return; }
+    this.busy = true; this.state = 'busy'; this.paint();
+    const { owner, repo } = this.cfg, url = `/repos/${owner}/${repo}/contents/${this.PATH}`;
+    try {
+      for (let attempt = 0; attempt < 4; attempt++) {
+        const g = await this.api(url);
+        let sha = null, remoteText = null;
+        if (g.ok) {
+          const meta = await g.json();
+          sha = meta.sha;
+          if (meta.content && meta.encoding === 'base64') remoteText = b64dec(meta.content);
+          else { const raw = await this.api(url, { headers: { Accept: 'application/vnd.github.raw+json' } }); remoteText = await raw.text(); }
+        } else if (g.status !== 404) throw new Error('get ' + g.status);
+        if (remoteText) {
+          const before = JSON.stringify(Store.dump());
+          Store.absorb(JSON.parse(remoteText));
+          if (JSON.stringify(Store.dump()) !== before) { Store.save(); reindex(); changed(); }
+        }
+        const local = JSON.stringify(Store.dump());
+        if (remoteText === local) break;   // already the same on both sides
+        const p = await this.api(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: `sanpo-log ${new Date().toISOString().slice(0, 16)} (${W < 720 ? 'phone' : 'pc'})`, content: b64enc(local), ...(sha ? { sha } : {}) }) });
+        if (p.ok) break;
+        if (p.status === 409 || p.status === 422) continue;   // someone else saved first: fetch again and merge
+        throw new Error('put ' + p.status);
+      }
+      this.state = 'ok'; this.last = Date.now(); this.msg = '';
+    } catch (e) {
+      this.state = 'err';
+      this.msg = e.code === 401 ? '合鍵の期限が切れたようです。新しい合鍵を作って接続し直してください。' : navigator.onLine === false ? 'オフラインです。つながったら自動で同期します。' : '同期できませんでした。少しあとでもう一度試します。';
+      if (e.code !== 401) this.soon(60000);
+    } finally {
+      this.busy = false; this.paint();
+      if (this.again) { this.again = false; this.soon(500); }
+    }
+  },
+  paint() {
+    const st = $('#store'); if (!st) return;
+    st.classList.remove('ok', 'busy', 'err');
+    const hm = this.last ? new Date(this.last).toTimeString().slice(0, 5) : '';
+    let txt = 'SAVED · THIS BROWSER';
+    if (FB.user) {
+      const fm = FB.last ? new Date(FB.last).toTimeString().slice(0, 5) : '';
+      if (FB.state === 'busy') { txt = 'SYNCING…'; st.classList.add('busy'); }
+      else if (FB.state === 'err') { txt = 'SYNC ERROR'; st.classList.add('err'); }
+      else { txt = 'SYNCED · CLOUD' + (fm ? ' ' + fm : ''); st.classList.add('ok'); }
+    } else if (this.on()) {
+      if (this.state === 'busy') { txt = 'SYNCING…'; st.classList.add('busy'); }
+      else if (this.state === 'err') { txt = 'SYNC ERROR'; st.classList.add('err'); }
+      else { txt = 'SYNCED · GITHUB' + (hm ? ' ' + hm : ''); st.classList.add('ok'); }
+    }
+    st.querySelector('span').textContent = txt;
+    const fb = $('#fbBox');
+    if (fb) {
+      fb.hidden = !FB.enabled();
+      $('#fbIn').style.display = FB.user ? 'none' : '';
+      $('#fbOut').style.display = $('#fbNow').style.display = FB.user ? '' : 'none';
+      const fm = FB.last ? new Date(FB.last).toTimeString().slice(0, 5) : '';
+      $('#fbState').textContent = FB.user ? `ログイン中：${FB.user.email || FB.user.uid}${fm ? `（最終同期 ${fm}）` : ''}${FB.msg ? '　' + FB.msg : ''}`
+        : (FB.msg || 'Googleアカウントでログインすると、スマホとPCの記録が自動で同じになります。記録はあなた専用の場所に保存され、ほかの人からは見えません。');
+      $('#ghRule').textContent = FB.enabled() ? 'GitHubと同期（上級者向け・どちらか一方でOK）' : 'GitHubと同期';
+    }
+    const box = $('#ghBox'); if (!box) return;
+    $('#ghSetup').style.display = this.on() ? 'none' : '';
+    $('#ghActs').style.display = this.on() ? '' : 'none';
+    $('#ghState').innerHTML = '';
+    const p = $('#ghState');
+    if (this.on()) {
+      p.append('接続中：', Object.assign(document.createElement('b'), { textContent: `${this.cfg.owner}/${this.cfg.repo}` }));
+      p.append(hm ? `（最終同期 ${hm}）` : '');
+      if (this.msg) p.append(document.createElement('br'), this.msg);
+    } else p.textContent = this.msg || '記録用の非公開リポジトリと、その合鍵（Fine-grained token）を使って、スマホとPCの記録を同じにします。合鍵はこの端末の中だけに保存されます。';
+  }
+};
+/* ---------- Firebase sync: sign in with Google, data under users/{uid}/(notes|places|walks|deleted) ----------
+   The SDK is loaded only when this is used. Each item is its own document; the newest copy wins. */
+const FIREBASE_CONFIG = (typeof firebaseConfig !== 'undefined' && firebaseConfig && firebaseConfig.apiKey) ? firebaseConfig : null;   // from firebase-config.js (if present)
+const FB_VER = '13.3.0';
+const FB = {
+  sdk: null, app: null, auth: null, db: null, user: null, state: 'off', msg: '', last: 0, ready: false, busy: false, again: false, t: null, unsubs: [],
+  remote: { notes: new Map(), places: new Map(), walks: new Map(), deleted: new Map() },
+  enabled() { return !!FIREBASE_CONFIG; },
+  load() {
+    if (this.loading) return this.loading;
+    const base = `https://www.gstatic.com/firebasejs/${FB_VER}/`;
+    this.loading = (window.__FBMOCK ? Promise.resolve(window.__FBMOCK) :
+      Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js'), import(base + 'firebase-firestore.js')]).then(m => Object.assign({}, ...m)))
+      .then(s => {
+        this.sdk = s;
+        this.app = s.initializeApp(FIREBASE_CONFIG);
+        this.auth = s.getAuth(this.app);
+        this.db = s.getFirestore(this.app);
+        s.onAuthStateChanged(this.auth, u => this.onUser(u));
+        if (s.getRedirectResult) s.getRedirectResult(this.auth).catch(() => {});
+        return s;
+      }).catch(e => { this.loading = null; throw e; });
+    return this.loading;
+  },
+  signIn() {   // must run inside the click: no await before the popup opens
+    const s = this.sdk, p = new s.GoogleAuthProvider();
+    return s.signInWithPopup(this.auth, p).catch(e => {
+      if (e && (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment')) return s.signInWithRedirect(this.auth, p);
+      throw e;
+    });
+  },
+  signOut() { return this.sdk && this.sdk.signOut(this.auth); },
+  onUser(u) {
+    this.unsubs.forEach(f => f()); this.unsubs = [];
+    Object.values(this.remote).forEach(m => m.clear());
+    this.user = u; this.ready = false;
+    try { u ? localStorage.setItem('sanpo-fb', '1') : localStorage.removeItem('sanpo-fb'); } catch (e) {}
+    if (!u) { this.state = 'off'; Sync.paint(); return; }
+    this.state = 'busy'; this.msg = ''; Sync.paint();
+    const s = this.sdk, first = new Set();
+    ['places', 'notes', 'walks', 'deleted'].forEach(c => {
+      this.unsubs.push(s.onSnapshot(s.collection(this.db, 'users', u.uid, c), snap => {
+        const inc = {};
+        snap.docChanges().forEach(ch => {
+          const id = ch.doc.id;
+          if (ch.type === 'removed') { this.remote[c].delete(id); return; }
+          const data = ch.doc.data();
+          this.remote[c].set(id, +data.u || 0);
+          if (!ch.doc.metadata.hasPendingWrites) inc[id] = c === 'deleted' ? (+data.u || 0) : data;
+        });
+        if (Object.keys(inc).length) {
+          const before = JSON.stringify(Store.dump());
+          Store.absorb({ [c]: inc });
+          if (JSON.stringify(Store.dump()) !== before) { Store.save(); reindex(); changed(); }
+        }
+        if (!first.has(c)) { first.add(c); if (first.size === 4) { this.ready = true; this.push(); } }
+      }, err => { this.state = 'err'; this.msg = '同期できませんでした（' + (err && err.code || 'error') + '）'; Sync.paint(); }));
+    });
+  },
+  soon(ms) { if (!this.user || !this.ready) return; clearTimeout(this.t); this.t = setTimeout(() => this.push(), ms == null ? 1500 : ms); },
+  async push() {
+    if (!this.user || !this.ready) return;
+    if (this.busy) { this.again = true; return; }
+    this.busy = true; this.state = 'busy'; Sync.paint();
+    try {
+      const s = this.sdk, uid = this.user.uid, ops = [];
+      const scan = (c, m) => { for (const [id, x] of m) { const lu = c === 'deleted' ? +x : (+x.u || 0), ru = this.remote[c].get(id); if (ru === undefined || lu > ru) ops.push(['set', c, id, c === 'deleted' ? { u: lu } : JSON.parse(JSON.stringify(x))]); } };
+      scan('places', Store.places); scan('notes', Store.notes); scan('walks', Store.walks); scan('deleted', Store.deleted);
+      for (const key of Store.deleted.keys()) {   // remove documents that were deleted here
+        const id = key.slice(2), c = key[0] === 'n' ? 'notes' : 'walks';
+        if (this.remote[c].has(id) && !(c === 'notes' ? Store.notes : Store.walks).has(id)) ops.push(['del', c, id]);
+      }
+      for (let i = 0; i < ops.length; i += 400) {
+        const b = s.writeBatch(this.db);
+        for (const [op, c, id, data] of ops.slice(i, i + 400)) { const ref = s.doc(this.db, 'users', uid, c, id); op === 'set' ? b.set(ref, data) : b.delete(ref); }
+        await b.commit();
+      }
+      for (const [op, c, id, data] of ops) op === 'set' ? this.remote[c].set(id, +data.u || 0) : this.remote[c].delete(id);
+      this.state = 'ok'; this.last = Date.now(); this.msg = '';
+    } catch (e) {
+      this.state = 'err'; this.msg = navigator.onLine === false ? 'オフラインです。つながったら自動で同期します。' : '同期できませんでした。少しあとでもう一度試します。';
+      this.soon(60000);
+    } finally {
+      this.busy = false; Sync.paint();
+      if (this.again) { this.again = false; this.soon(300); }
+    }
+  }
+};
+
+const b64enc = s => { const b = new TextEncoder().encode(s); let x = ''; for (let i = 0; i < b.length; i += 0x8000) x += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(x); };
+const b64dec = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g, '')), c => c.charCodeAt(0)));
+let confirmPublic = false;
+const confirm2 = () => confirmPublic;
+
+/* ---------- aggregates ---------- */
+let AG = null;
+function aggregate() {
+  const pref = new Map(), muni = new Map();
+  const P = pc => pref.get(pc) || (pref.set(pc, { direct: false, munis: new Set(), towns: 0 }), pref.get(pc));
+  const M = mc => muni.get(mc) || (muni.set(mc, { direct: false, towns: 0 }), muni.get(mc));
+  for (const k of IX.visited) {
+    if (k[0] === 'p') P(k.slice(1)).direct = true;
+    else {
+      const mc = k.slice(1, 6), p = P(mc.slice(0, 2));
+      p.munis.add(mc);
+      if (k[0] === 'm') M(mc).direct = true; else { M(mc).towns++; p.towns++; }
+    }
+  }
+  let towns = 0; for (const m of muni.values()) towns += m.towns;
+  AG = { pref, muni, towns };
+}
+
+const ACC = [255, 79, 0];
+const mix = (base, t) => 'rgb(' + base.map((v, i) => Math.round(v + (ACC[i] - v) * t)).join(',') + ')';
+const WHITE = [255, 255, 255], CTX = [227, 227, 221];
+function prefT(pc) {
+  const a = AG.pref.get(pc); if (!a) return 0;
+  if (!a.munis.size) return .28;
+  return .28 + .72 * Math.sqrt(a.munis.size / Math.max(1, D.prefInfo[pc].m));
+}
+function muniT(mc) {
+  const a = AG.muni.get(mc); if (!a) return 0;
+  const T = D.pref[mc.slice(0, 2)].T[mc] || 0;
+  if (!a.towns) return T ? .28 : 1;
+  return .28 + .72 * Math.sqrt(a.towns / Math.max(1, T));
+}
+
+/* ---------- view ---------- */
+function applyView() {
+  const w = W * V.s, h = H * V.s;
+  svg.setAttribute('viewBox', `${V.cx - w / 2} ${V.cy - h / 2} ${w} ${h}`);
+  drawGrid(); drawScale();
+}
+const toWorld = (x, y) => [V.cx + (x - W / 2) * V.s, V.cy + (y - H / 2) * V.s];
+const toScreen = (x, y) => [(x - V.cx) / V.s + W / 2, (y - V.cy) / V.s + H / 2];
+function pads() {
+  return W < 720 ? { t: 168, r: 8, b: 92, l: 8 } : { t: 150, r: 60, b: 90, l: 60 };
+}
+function fitView(bb) {
+  const p = pads();
+  const bw = Math.max(bb[2] - bb[0], 1e-3), bh = Math.max(bb[3] - bb[1], 1e-3);
+  const s = Math.max(bw / Math.max(60, W - p.l - p.r), bh / Math.max(60, H - p.t - p.b));
+  const ax = (p.l + W - p.r) / 2, ay = (p.t + H - p.b) / 2;
+  return { cx: (bb[0] + bb[2]) / 2 - (ax - W / 2) * s, cy: (bb[1] + bb[3]) / 2 - (ay - H / 2) * s, s };
+}
+const SMIN = .0004, SMAX = 8;
+let anim = null;
+const ease = t => t < .5 ? 8 * t * t * t * t : 1 - Math.pow(-2 * t + 2, 4) / 2;
+function flyTo(T, dur = 950) {
+  cancelAnimationFrame(anim && anim.raf);
+  const F = { ...V }, t0 = performance.now();
+  const ls0 = Math.log(F.s), ls1 = Math.log(T.s);
+  // zoom out a little in the middle when travelling far (feels like a camera)
+  const dist = Math.hypot(T.cx - F.cx, T.cy - F.cy) / Math.max(W * Math.max(F.s, T.s), 1e-9);
+  const bump = Math.min(1.2, dist * .6);
+  $('#gLabel').style.opacity = 0;
+  return new Promise(res => {
+    const step = now => {
+      const t = Math.min(1, (now - t0) / dur), e = ease(t);
+      V.cx = F.cx + (T.cx - F.cx) * e; V.cy = F.cy + (T.cy - F.cy) * e;
+      V.s = Math.exp(ls0 + (ls1 - ls0) * e + bump * Math.sin(Math.PI * t));
+      applyView();
+      if (t < 1) anim = { raf: requestAnimationFrame(step) };
+      else { anim = null; settle(); res(); }
+    };
+    anim = { raf: requestAnimationFrame(step) };
+  });
+}
+function stopAnim() { if (anim) { cancelAnimationFrame(anim.raf); anim = null; } }
+let settleT;
+function settle() { clearTimeout(settleT); settleT = setTimeout(() => { drawLabels(); $('#gLabel').style.opacity = 1; }, 90); }
+
+/* graticule + tick labels */
+const STEPS = [10, 5, 2, 1, .5, .2, .1, .05, .02, .01, .005, .002, .001];
+function drawGrid() {
+  const o = S.pc === '47';
+  const gx = o ? OKI.dx : 0, gy = o ? OKI.dy : 0;
+  const [l0, a1] = unproj(V.cx - W * V.s / 2, V.cy - H * V.s / 2, o), [l1, a0] = unproj(V.cx + W * V.s / 2, V.cy + H * V.s / 2, o);
+  let st = STEPS[0];
+  for (const s of STEPS) { if (s * K / V.s >= 110) st = s; else break; }
+  const dec = Math.max(0, -Math.floor(Math.log10(st) + 1e-9));
+  let d = '', html = '';
+  const y0 = V.cy - H * V.s / 2, y1 = V.cy + H * V.s / 2, x0 = V.cx - W * V.s / 2, x1 = V.cx + W * V.s / 2;
+  const mob = W < 720;
+  for (let g = Math.ceil(l0 / st) * st; g <= l1; g += st) {
+    const x = PX(g) + gx; d += `M${x} ${y0}V${y1}`;
+    const sx = (x - V.cx) / V.s + W / 2;
+    if (!mob) html += `<span style="left:${sx + 4}px;bottom:${6}px">${g.toFixed(dec)}°E</span>`;
+  }
+  for (let g = Math.ceil(a0 / st) * st; g <= a1; g += st) {
+    const y = PY(g) + gy; d += `M${x0} ${y}H${x1}`;
+    const sy = (y - V.cy) / V.s + H / 2;
+    if (!mob && sy > 150 && sy < H - 70) html += `<span style="right:${6}px;top:${sy - 11}px">${g.toFixed(dec)}°N</span>`;
+  }
+  $('#grid').setAttribute('d', d);
+  $('#ticks').innerHTML = html;
+}
+function drawScale() {
+  const [, lat] = unproj(V.cx, V.cy, S.pc === '47');
+  const mpp = V.s * 0.01 * 111320 * Math.cos(lat * Math.PI / 180);
+  const target = mpp * 90;
+  const p = Math.pow(10, Math.floor(Math.log10(target)));
+  const n = [1, 2, 5, 10].map(k => k * p).reverse().find(v => v <= target * 1.4) || p;
+  $('#scale i').style.width = (n / mpp) + 'px';
+  $('#scale span').textContent = n >= 1000 ? (n / 1000) + ' km' : n + ' m';
+}
+
+/* ---------- layers ---------- */
+const el = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+const prefNodes = new Map(), muniNodes = new Map();
+let townNodes = [], townData = null;
+
+function renderPrefs() {
+  const g = $('#gPref');
+  for (const f of D.japanFeats) {
+    const p = el('path', { d: f.d, 'data-k': f.c, 'data-kind': 'p' });
+    g.appendChild(p); prefNodes.set(f.c, p);
+  }
+  // Okinawa inset frame
+  const o = D.japanFeats.find(f => f.c === '47').bb, m = 22;
+  const r = $('#inset');
+  r.setAttribute('x', o[0] - m); r.setAttribute('y', o[1] - m);
+  r.setAttribute('width', o[2] - o[0] + 2 * m); r.setAttribute('height', o[3] - o[1] + 2 * m);
+}
+function renderMunis(pc) {
+  const g = $('#gMuni');
+  if (g.dataset.pc === pc) return;
+  g.textContent = ''; muniNodes.clear(); g.dataset.pc = pc;
+  for (const f of D.pref[pc].feats) {
+    const p = el('path', { d: f.d, 'data-k': f.c, 'data-kind': 'm' });
+    g.appendChild(p); muniNodes.set(f.c, p);
+  }
+}
+function clearTowns() {
+  $('#gCells').textContent = ''; $('#tBorder').removeAttribute('d'); $('#tDots').removeAttribute('d');
+  $('#muniEdge').removeAttribute('d'); $('#clipPath').removeAttribute('d');
+  townNodes = []; townData = null;
+}
+function renderTowns(mc) {
+  clearTowns();
+  const M = D.muni[mc];
+  $('#clipPath').setAttribute('d', M.d); $('#muniEdge').setAttribute('d', M.d);
+  const towns = D.towns[mc] || [];
+  townData = { mc, towns };
+  if (!towns.length) return;
+  const seeds = [], own = [];
+  towns.forEach((t, i) => t.pts.forEach(p => { seeds.push(p); own.push(i); }));
+  const bb = M.bb.slice();
+  for (const p of seeds) { bb[0] = Math.min(bb[0], p[0]); bb[1] = Math.min(bb[1], p[1]); bb[2] = Math.max(bb[2], p[0]); bb[3] = Math.max(bb[3], p[1]); }
+  const pad = Math.max(bb[2] - bb[0], bb[3] - bb[1]) * .08 + .5;
+  const box = [bb[0] - pad, bb[1] - pad, bb[2] + pad, bb[3] + pad];
+  const del = d3.Delaunay.from(seeds), vor = del.voronoi(box);
+  const ds = towns.map(() => ''), tb = towns.map(() => [Infinity, Infinity, -Infinity, -Infinity]);
+  for (let j = 0; j < seeds.length; j++) {
+    const poly = vor.cellPolygon(j); if (!poly) continue;
+    const i = own[j], b = tb[i];
+    ds[i] += 'M' + poly.map(p => f3(p[0]) + ' ' + f3(p[1])).join('L') + 'Z';
+    for (const p of poly) { if (p[0] < b[0]) b[0] = p[0]; if (p[1] < b[1]) b[1] = p[1]; if (p[0] > b[2]) b[2] = p[0]; if (p[1] > b[3]) b[3] = p[1]; }
+  }
+  // borders only between different towns (cells of the same 大字 merge)
+  const { halfedges: he, triangles: tr, points: pt } = del, cc = vor.circumcenters;
+  const far = (box[2] - box[0] + box[3] - box[1]) * 2;
+  let bd = '';
+  for (let e = 0; e < he.length; e++) {
+    const o = he[e];
+    const i = tr[e], j = tr[e % 3 === 2 ? e - 2 : e + 1];
+    if (own[i] === own[j]) continue;
+    const t1 = (e / 3) | 0;
+    const ax = cc[2 * t1], ay = cc[2 * t1 + 1];
+    if (o >= 0) {
+      if (o < e) continue;
+      const t2 = (o / 3) | 0;
+      bd += `M${f3(ax)} ${f3(ay)}L${f3(cc[2 * t2])} ${f3(cc[2 * t2 + 1])}`;
+    } else {
+      // hull edge: ray outward, perpendicular to the edge
+      const dx = pt[2 * j] - pt[2 * i], dy = pt[2 * j + 1] - pt[2 * i + 1];
+      const k = tr[e % 3 === 0 ? e + 2 : e - 1];
+      let nx = dy, ny = -dx;
+      if (nx * (pt[2 * k] - pt[2 * i]) + ny * (pt[2 * k + 1] - pt[2 * i + 1]) > 0) { nx = -nx; ny = -ny; }
+      const L = Math.hypot(nx, ny) || 1;
+      bd += `M${f3(ax)} ${f3(ay)}L${f3(ax + nx / L * far)} ${f3(ay + ny / L * far)}`;
+    }
+  }
+  if (!he.length && towns.length > 1) { // collinear / tiny case: outline every cell
+    bd = ds.join('');
+  }
+  const g = $('#gCells'), frag = document.createDocumentFragment();
+  let dots = '';
+  towns.forEach((t, i) => {
+    t.bb = tb[i];
+    const p = el('path', { d: ds[i] || 'M0 0', class: 'cell', 'data-k': t.k, 'data-kind': 't', 'data-i': i });
+    frag.appendChild(p); townNodes.push(p);
+    dots += `M${f3(t.pts[0][0])} ${f3(t.pts[0][1])}h0`;
+  });
+  g.appendChild(frag);
+  $('#tBorder').setAttribute('d', bd);
+  $('#tDots').setAttribute('d', dots);
+}
+
+/* ripple: children appear outward from the click point */
+function ripple(nodes, feats) {
+  const o = origin || { x: W / 2, y: H / 2 };
+  const maxd = Math.hypot(W, H);
+  nodes.forEach((n, i) => {
+    const f = feats[i]; if (!f) return;
+    const [sx, sy] = toScreen(f.lp[0], f.lp[1]);
+    n.style.transition = 'none'; n.style.opacity = 0;
+    n.dataset.delay = Math.min(520, Math.hypot(sx - o.x, sy - o.y) / maxd * 900);
+  });
+  requestAnimationFrame(() => requestAnimationFrame(() => nodes.forEach(n => {
+    n.style.transition = `opacity .5s ${n.dataset.delay}ms, fill .5s`; n.style.opacity = 1;
+  })));
+}
+
+/* paint fills from records */
+function paint() {
+  aggregate();
+  const lv = S.level;
+  for (const [pc, n] of prefNodes) {
+    const t = prefT(pc);
+    const cur = lv !== 'japan' && pc === S.pc;
+    const ctx = lv !== 'japan';
+    n.classList.toggle('ctx', ctx && !cur);
+    n.classList.toggle('hidden', cur);
+    n.style.fill = ctx ? (t ? mix(CTX, t * .45) : 'var(--ctx)') : (t ? mix(WHITE, t) : '');
+  }
+  for (const [mc, n] of muniNodes) {
+    const t = muniT(mc);
+    const ctx = lv === 'muni' && mc !== S.mc;
+    const cur = lv === 'muni' && mc === S.mc;
+    n.classList.toggle('ctx', ctx);
+    n.classList.toggle('off', cur);
+    n.style.fill = ctx ? (t ? mix(CTX, t * .45) : 'var(--ctx)') : (t ? mix(WHITE, t) : '');
+  }
+  if (townData) townData.towns.forEach((t, i) => { townNodes[i].style.fill = isV(t.k) ? 'var(--accent)' : 'var(--land)'; townNodes[i].classList.toggle('hl', !!HL && HL.keys.has(t.k)); });
+  for (const [pc, n] of prefNodes) n.classList.toggle('hl', !!HL && HL.P.has(pc) && !(lv !== 'japan' && pc === S.pc));
+  for (const [mc, n] of muniNodes) n.classList.toggle('hl', !!HL && HL.M.has(mc) && !(lv === 'muni' && mc === S.mc));
+  $('#gMuni').style.display = lv === 'japan' ? 'none' : '';
+  $('#tDots').classList.toggle('hidden', lv !== 'muni');
+  $('#inset').classList.toggle('hidden', lv !== 'japan');
+  counters();
+}
+
+/* ---------- labels (placed when the view settles) ---------- */
+function drawLabels() {
+  const g = $('#gLabel'); g.textContent = '';
+  let mk = '';
+  const fsz = W < 720 ? 10 : 11;
+  if (S.level === 'japan') D.japanFeats.forEach(f => { if (IX.byPlace.has('p' + f.c)) mk += `M${f.lp[0]} ${f.lp[1] - fsz * 1.5 * V.s}h0`; });
+  else if (S.level === 'pref') D.pref[S.pc].feats.forEach(f => { if (IX.byPlace.has('m' + f.c)) mk += `M${f.lp[0]} ${f.lp[1] - fsz * 1.5 * V.s}h0`; });
+  if (mk) { g.appendChild(el('path', { d: mk, class: 'mkr' })); g.appendChild(el('path', { d: mk, class: 'mk' })); }
+  let items = [];
+  const fs = W < 720 ? 10 : 11;
+  if (S.level === 'japan') items = D.japanFeats.map(f => ({ n: D.prefInfo[f.c].n, lp: f.lp, bb: f.bigbb, v: prefT(f.c) > .6 }));
+  else if (S.level === 'pref') items = D.pref[S.pc].feats.map(f => ({ n: f.n, lp: f.lp, bb: f.bigbb, v: muniT(f.c) > .6 }));
+  else if (townData) items = townData.towns.map(t => ({ n: t.n, lp: t.pts[0], bb: t.bb, v: isV(t.k), dy: -1 }));
+  const placed = [];
+  const x0 = -40, y0 = -20, x1 = W + 40, y1 = H + 20;
+  items.sort((a, b) => (b.bb[2] - b.bb[0]) * (b.bb[3] - b.bb[1]) - (a.bb[2] - a.bb[0]) * (a.bb[3] - a.bb[1]));
+  let count = 0;
+  for (const it of items) {
+    if (count > 260) break;
+    const [sx, sy0] = toScreen(it.lp[0], it.lp[1]);
+    const sy = sy0 + (it.dy ? -fs * .95 : 0);
+    if (sx < x0 || sx > x1 || sy < y0 || sy > y1) continue;
+    const bw = (it.bb[2] - it.bb[0]) / V.s, bh = (it.bb[3] - it.bb[1]) / V.s;
+    const tw = it.n.length * fs * 1.02 + 4, th = fs + 4;
+    if (bw < tw * .8 || bh < th * 1.3) continue;
+    const r = [sx - tw / 2, sy - th / 2, sx + tw / 2, sy + th / 2];
+    if (placed.some(q => r[0] < q[2] && r[2] > q[0] && r[1] < q[3] && r[3] > q[1])) continue;
+    placed.push(r); count++;
+    const [wx, wy] = toWorld(sx, sy);
+    const t = el('text', { x: wx, y: wy, 'font-size': fs * V.s, 'stroke-width': 3 * V.s });
+    if (it.v && S.level === 'muni') t.setAttribute('class', 'v');
+    t.textContent = it.n;
+    g.appendChild(t);
+  }
+}
+
+/* ---------- counters ---------- */
+const tw = {};
+function tick(id, val, tot) {
+  const node = $(id);
+  const from = tw[id] ? tw[id].v : 0;
+  tw[id] = { v: val };
+  const t0 = performance.now();
+  const totS = '/' + tot.toLocaleString('en');
+  const step = now => {
+    const t = Math.min(1, (now - t0) / 700), e = 1 - Math.pow(1 - t, 3);
+    node.innerHTML = Math.round(from + (val - from) * e).toLocaleString('en') + '<em>' + totS + '</em>';
+    if (t < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+let TOT = { m: 0, t: 0 };
+function logBadge() {
+  const n = IX.raw;
+  $('#bLog').textContent = W >= 720 && n ? `LOG · 未整理 ${n}` : 'LOG';
+}
+function counters() {
+  logBadge();
+  tick('#cP', AG.pref.size, 47); tick('#cM', AG.pref.size ? [...AG.pref.values()].reduce((s, p) => s + p.munis.size, 0) : 0, TOT.m); tick('#cT', AG.towns, TOT.t);
+  Sync.paint();
+}
+
+/* ---------- navigation ---------- */
+async function ensurePref(pc) {
+  if (D.pref[pc]) return D.pref[pc];
+  progress(true);
+  try {
+    const topo = await loadData('m' + pc);
+    const oki = pc === '47';
+    const feats = topoFeatures(topo, 'm').map(f => {
+      const g = prep(f.polys, oki);
+      const o = { c: f.c, n: topo.N[f.c], ...g };
+      D.muni[f.c] = o;
+      return o;
+    });
+    D.pref[pc] = { feats, T: topo.T, K: topo.K || {} };
+    return D.pref[pc];
+  } finally { progress(false); }
+}
+async function ensureTowns(mc) {
+  if (D.towns[mc]) return D.towns[mc];
+  const pc = mc.slice(0, 2), P = await ensurePref(pc);
+  if (!P.T[mc]) return (D.towns[mc] = []);
+  progress(true);
+  try {
+    const k = P.K[mc];
+    const [file] = await Promise.all([loadData('t' + pc + (k ? '_' + k : '')), loadD3()]);
+    const oki = pc === '47';
+    for (const c in file) {
+      if (D.towns[c]) continue;
+      const [lat0, lng0, arr] = file[c];
+      D.towns[c] = arr.map(e => {
+        const pts = [];
+        for (let i = 1; i < e.length; i += 2) pts.push(proj(lng0 + e[i + 1] / 1e4, lat0 + e[i] / 1e4, oki));
+        return { n: e[0], k: tKey(c, e[0]), pts, ll: [lng0 + e[2] / 1e4, lat0 + e[1] / 1e4] };
+      });
+    }
+    return D.towns[mc] || (D.towns[mc] = []);
+  } finally { progress(false); }
+}
+
+let navId = 0;
+async function route() {
+  const h = decodeURIComponent(location.hash.slice(1));
+  const id = ++navId;
+  try {
+    if (/^\d{5}$/.test(h) && D.prefInfo[h.slice(0, 2)]) {
+      const pc = h.slice(0, 2);
+      await ensurePref(pc);
+      if (!D.muni[h]) return go('');
+      await ensureTowns(h);
+      if (id !== navId) return;
+      enter('muni', pc, h);
+    } else if (/^\d{2}$/.test(h) && D.prefInfo[h]) {
+      await ensurePref(h);
+      if (id !== navId) return;
+      enter('pref', h, null);
+    } else enter('japan', null, null);
+  } catch (e) { toast('データを読み込めませんでした'); console.error(e); }
+}
+function go(h) { if (location.hash.slice(1) === h) route(); else location.hash = h; }
+
+function enter(level, pc, mc) {
+  const prevLevel = S.level, prevPc = S.pc, prevMc = S.mc;
+  S.level = level; S.pc = pc; S.mc = mc;
+  document.body.dataset.level = level;
+  setHover(null);
+  $('#pin').removeAttribute('d'); $('#pinRing').removeAttribute('d');
+  if (S.sel && (level !== 'muni' || S.sel.mc !== mc)) select(null);
+  let target, nodes = [], feats = [];
+  if (level === 'japan') {
+    clearTowns();
+    target = fitView(JAPAN_BB);
+    if (prevLevel === 'japan' && !origin) { nodes = [...prefNodes.values()]; feats = D.japanFeats; }
+  } else if (level === 'pref') {
+    clearTowns();
+    renderMunis(pc);
+    target = fitView(D.japanFeats.find(f => f.c === pc).main);
+    if (prevLevel === 'japan' || prevPc !== pc) { feats = D.pref[pc].feats; nodes = feats.map(f => muniNodes.get(f.c)); }
+  } else {
+    renderMunis(pc);
+    renderTowns(mc);
+    target = fitView(D.muni[mc].main);
+    if (prevMc !== mc) { nodes = townNodes; feats = townData.towns.map(t => ({ lp: t.pts[0] })); }
+  }
+  paint();
+  if (nodes.length) ripple(nodes, feats);
+  origin = null;
+  updateHeader();
+  if ($('#drawer').classList.contains('open')) renderDrawer();
+  if ($('#sheet').classList.contains('open') && !S.sel) closePanel('sheet');
+  flyTo(target).then(() => {
+    if (pendingSel) { const k = pendingSel; pendingSel = null; selectByKey(k); }
+    else if (pendingFly) { const T = pendingFly; pendingFly = null; flyTo(T, 700); }
+  });
+}
+
+function updateHeader() {
+  const c = $('#crumb'); c.innerHTML = '';
+  const add = (label, h) => { const b = document.createElement('button'); b.textContent = label; b.onclick = () => go(h); c.appendChild(b); const s = document.createElement('span'); s.textContent = '/'; c.appendChild(s); };
+  let name = '日本', kind = 'JAPAN · 47 PREFECTURES';
+  if (S.level !== 'japan') add('JAPAN', '');
+  if (S.level === 'pref') { name = D.prefInfo[S.pc].n; kind = `PREF ${S.pc} · ${D.pref[S.pc].feats.length} CITIES`; }
+  if (S.level === 'muni') {
+    add(D.prefInfo[S.pc].n, S.pc);
+    name = D.muni[S.mc].n;
+    kind = `CITY ${S.mc} · ${(D.towns[S.mc] || []).length} TOWNS`;
+  }
+  const n = $('#name');
+  n.innerHTML = '';
+  Array.from(name).forEach((ch, i) => { const s = document.createElement('span'); s.className = 'ch'; s.style.animationDelay = (i * 35) + 'ms'; s.textContent = ch; n.appendChild(s); });
+  $('#kind').textContent = kind;
+  $('#memoHere').hidden = S.level === 'japan';
+  $('#bUp').style.display = S.level === 'japan' ? 'none' : '';
+  document.title = (S.level === 'japan' ? '' : name + ' — ') + 'SANPO LOG';
+  refreshMemoBtn();
+}
+function refreshMemoBtn() {
+  if (S.level === 'japan') return;
+  const k = S.level === 'pref' ? 'p' + S.pc : 'm' + S.mc;
+  const n = (IX.byPlace.get(k) || []).length;
+  const b = $('#memoHere');
+  b.classList.toggle('on', isV(k));
+  b.textContent = n ? `MEMO ${n}` : isV(k) ? '● VISITED' : '＋ MEMO';
+}
+function up() {
+  if ($('#modal').classList.contains('open')) return closePanel('modal');
+  if ($('#sheet').classList.contains('open')) return closePanel('sheet');
+  if ($('#wsheet').classList.contains('open')) return closePanel('wsheet');
+  if ($('#drawer').classList.contains('open')) return closePanel('drawer');
+  if (S.level === 'muni') go(S.pc); else if (S.level === 'pref') go('');
+}
+
+/* ---------- selection + memo sheet ---------- */
+let pendingSel = null;
+function select(sel) {
+  S.sel = sel;
+  if (!sel) { $('#selp').removeAttribute('d'); return; }
+}
+function selectTown(i, fly) {
+  const t = townData.towns[i];
+  S.sel = { lv: 't', key: t.k, mc: townData.mc, i };
+  $('#selp').setAttribute('d', townNodes[i].getAttribute('d'));
+  openSheet();
+  if (!fly && W < 720) {
+    const [x, y] = t.pts[0], [, sy] = toScreen(x, y);
+    if (sy > H * .3) flyTo({ cx: x, cy: y + H * .22 * V.s, s: V.s }, 600);
+  }
+  if (fly) {
+    const b = t.bb, cur = V.s;
+    const T = fitView([b[0] - (b[2] - b[0]), b[1] - (b[3] - b[1]), b[2] + (b[2] - b[0]), b[3] + (b[3] - b[1])]);
+    if (T.s > cur) T.s = cur;
+    if (W >= 720) T.cx += 210 * T.s; else T.cy = (b[1] + b[3]) / 2 + H * .22 * T.s;
+    flyTo(T, 700);
+  }
+}
+function selectByKey(k) {
+  if (k[0] === 't' && townData) { const i = townData.towns.findIndex(t => t.k === k); if (i >= 0) return selectTown(i, true); }
+  if (k[0] === 'm' || k[0] === 'p') { S.sel = { lv: k[0], key: k, mc: k[0] === 'm' ? k.slice(1) : undefined }; $('#selp').removeAttribute('d'); openSheet(); }
+}
+function currentAreaSel() {
+  S.sel = S.level === 'pref' ? { lv: 'p', key: 'p' + S.pc } : { lv: 'm', key: 'm' + S.mc, mc: S.mc };
+  $('#selp').removeAttribute('d');
+  openSheet();
+}
+function selInfo() {
+  const s = S.sel, info = placeInfo(s.key) || { n: placeName(s.key), l: placeLabel(s.key), ll: [0, 0] };
+  const pc = s.key.slice(1, 3);
+  if (s.lv === 't') return { eyebrow: `TOWN · ${D.prefInfo[pc].n} ${D.muni[s.mc].n}`, ...info, stat: '' };
+  if (s.lv === 'm') {
+    const mc = s.key.slice(1), a = AG.muni.get(mc), T = D.pref[pc].T[mc] || 0;
+    return { eyebrow: `CITY ${mc} · ${D.prefInfo[pc].n}`, ...info, stat: T ? `歩いた町 ${a ? a.towns : 0} / ${T}` : '' };
+  }
+  const a = AG.pref.get(pc), P = D.prefInfo[pc];
+  return { eyebrow: `PREF ${pc}`, ...info, stat: `歩いた市区町村 ${a ? a.munis.size : 0} / ${P.m}　町 ${a ? a.towns : 0} / ${P.t.toLocaleString('en')}` };
+}
+const fmtLL = ll => `${Math.abs(ll[1]).toFixed(4)}°${ll[1] >= 0 ? 'N' : 'S'}  ${ll[0].toFixed(4)}°E`;
+const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const fmtDay = d => d.replace(/-/g, '.') + ' ' + WD[new Date(d + 'T12:00:00').getDay()];
+function openSheet() {
+  if (!S.sel) return;
+  closePanel('wsheet', true);
+  const info = selInfo();
+  $('#sEyebrow').textContent = info.eyebrow;
+  $('#sName').textContent = info.n;
+  $('#sCoord').textContent = fmtLL(info.ll);
+  $('#sStat').textContent = info.stat;
+  editing = null;
+  renderEntries();
+  buildScope();
+  if (!$('#fDate').value) $('#fDate').value = today();
+  fTags.set([]);
+  setFormLoc(quickNext);
+  const has = (IX.byPlace.get(S.sel.key) || []).length > 0;
+  $('#sForm').classList.toggle('collapsed', W >= 720 && has && !quickNext);
+  if (quickNext) setTimeout(() => $('#fText').focus(), 350);
+  quickNext = null;
+  if (W < 720) closePanel('drawer', true);
+  $('#sheet').classList.add('open'); document.body.classList.add('sheet-open');
+}
+
+/* where a new memo goes: this town, its city, or its prefecture */
+let formKey = null;
+function scopeChips(box, keys, cur, onPick) {
+  box.innerHTML = '';
+  const lab = document.createElement('span'); lab.textContent = '記録先'; box.appendChild(lab);
+  keys.forEach(k => {
+    const b = document.createElement('button'); b.type = 'button';
+    b.className = 'sc' + (k === cur ? ' on' : '');
+    b.textContent = placeName(k) || k;
+    b.onclick = () => { box.querySelectorAll('.sc').forEach(x => x.classList.toggle('on', x === b)); onPick(k); };
+    box.appendChild(b);
+  });
+}
+function buildScope() {
+  formKey = S.sel.key;
+  scopeChips($('#fScope'), ancestors(S.sel.key), formKey, k => { formKey = k; });
+}
+
+/* ---- tag input: chips + suggestions (used tags first, then a few starters) ---- */
+function tagInput(host, init) {
+  let tags = uniq((init || []).map(normTag));
+  host.classList.add('tagin');
+  host.innerHTML = '<div class="tsel"></div><input class="tin" placeholder="＃タグ（Enterで追加）" autocomplete="off"><div class="tsug"></div>';
+  const sel = host.querySelector('.tsel'), inp = host.querySelector('.tin'), sug = host.querySelector('.tsug');
+  const add = s => { const t = normTag(s); if (t && !tags.includes(t)) tags.push(t); };
+  const render = () => {
+    sel.innerHTML = '';
+    tags.forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tchip on'; b.textContent = '#' + t + ' ×'; b.onclick = () => { tags = tags.filter(x => x !== t); render(); }; sel.appendChild(b); });
+    sug.innerHTML = '';
+    tagSuggestions(normTag(inp.value)).filter(t => !tags.includes(t)).slice(0, 10).forEach(t => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'tchip'; b.textContent = '#' + t;
+      b.onclick = () => { add(t); inp.value = ''; render(); }; sug.appendChild(b);
+    });
+  };
+  inp.addEventListener('keydown', e => {
+    if (e.isComposing || e.keyCode === 229) return;
+    if (e.key === 'Enter' || e.key === ',' || e.key === '、') {
+      e.preventDefault();
+      if (inp.value.trim()) { add(inp.value); inp.value = ''; render(); }
+    } else if (e.key === 'Backspace' && !inp.value && tags.length) { tags.pop(); render(); }
+  });
+  inp.addEventListener('input', render);
+  render();
+  return { get: () => { if (inp.value.trim()) { add(inp.value); inp.value = ''; } return tags.slice(); }, set: v => { tags = uniq((v || []).map(normTag)); inp.value = ''; render(); }, refresh: render };
+}
+const fTags = tagInput($('#fTags'), []);
+
+/* ---- one memo card (used in place sheet, walk timeline) ---- */
+const host = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } };
+function linkLabel(u) {
+  const h = host(u);
+  if (/(^|\.)instagram\.com$/.test(h)) return 'INSTAGRAM';
+  if (/^photos\.(app\.goo\.gl|google\.com)$/.test(h) || h === 'goo.gl') return 'GOOGLE PHOTOS';
+  if (/(^|\.)(x|twitter)\.com$/.test(h)) return 'X';
+  if (/(^|\.)threads\.(net|com)$/.test(h)) return 'THREADS';
+  if (/(^|\.)flickr\.com$|flic\.kr$/.test(h)) return 'FLICKR';
+  if (/(^|\.)icloud\.com$/.test(h)) return 'ICLOUD';
+  return (h || 'LINK').toUpperCase();
+}
+const parseLinks = s => [...new Set(String(s || '').match(/https?:\/\/[^\s<>"'、。）)]+/g) || [])].slice(0, 12);
+function chips(urls) {
+  const f = document.createDocumentFragment();
+  (urls || []).forEach(u => {
+    const a = document.createElement('a'); a.className = 'chip'; a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    a.textContent = linkLabel(u) + ' ↗'; f.appendChild(a);
+  });
+  return f;
+}
+function tagChips(tags) {
+  const f = document.createDocumentFragment();
+  (tags || []).forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'htag'; b.textContent = '#' + t; b.onclick = () => openTag(t); f.appendChild(b); });
+  return f;
+}
+const fmtLoc = l => `${l[0].toFixed(4)}N ${l[1].toFixed(4)}E` + (l[2] ? ` ±${Math.round(l[2])}m` : '');
+const mkBtn = (txt, cls, fn, title) => { const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = txt; if (title) b.title = title; b.onclick = fn; return b; };
+function entryNode(n, opt = {}) {
+  const d = document.createElement('div'); d.className = 'entry';
+  d.innerHTML = `<div class="meta"><span class="d"></span></div><div class="acts"><button class="ed" type="button">EDIT</button><button class="del" type="button">DELETE</button></div><div class="pl"></div><div class="t"></div><div class="dx"></div><div class="ph"></div><div class="tg"></div>`;
+  d.querySelector('.d').textContent = (opt.timeOnly ? (n.at || '--:--') : n.d.replace(/-/g, '.') + (n.at ? '  ' + n.at : ''));
+  const meta = d.querySelector('.meta');
+  if (!opt.timeOnly) meta.appendChild(mkBtn('WALK ›', 'tag', () => openWalk(n.d), 'この日の散歩を見る'));
+  if (n.loc) meta.appendChild(mkBtn('◉ ' + fmtLoc(n.loc).split(' ±')[0], 'tag', () => showPin(n.loc, n.k), 'この場所を地図で見る'));
+  if (!n.x) { const t = document.createElement('span'); t.className = 'tag raw'; t.textContent = '未整理'; meta.appendChild(t); }
+  const pl = d.querySelector('.pl');
+  if (opt.place) { pl.appendChild(mkBtn(placeLabel(n.k) + ' ›', 'plink', () => jumpTo(n.k))); } else pl.remove();
+  d.querySelector('.t').textContent = n.t || (n.x ? '' : '（メモなし）');
+  d.querySelector('.dx').textContent = n.x || '';
+  d.querySelector('.ph').appendChild(chips(n.p));
+  d.querySelector('.tg').appendChild(tagChips(n.tags));
+  const del = d.querySelector('.del');
+  del.onclick = () => {
+    if (!del.classList.contains('arm')) { del.classList.add('arm'); del.textContent = 'SURE?'; setTimeout(() => { del.classList.remove('arm'); del.textContent = 'DELETE'; }, 2500); return; }
+    Store.delNote(n.id);
+  };
+  d.querySelector('.ed').onclick = () => editEntry(d, n);
+  return d;
+}
+let editing = null;
+function editEntry(node, n) {
+  editing = n.id;
+  node.innerHTML = `<div class="edit">
+    <label>DATE</label><input type="date" class="eD">
+    <div class="scope eK"></div>
+    <label>MEMO</label><textarea class="eT" rows="2"></textarea>
+    <label>DETAIL</label><textarea class="eX big" placeholder="くわしく（道順、見つけたもの、天気、寄ったお店、気づいたこと…）"></textarea>
+    <label>TAGS</label><div class="eG"></div>
+    <label>PHOTO LINKS（1行に1つ）</label><textarea class="eP" rows="2" placeholder="https://www.instagram.com/p/…"></textarea>
+    <div class="row"><button class="btn eS" type="button">保存</button><button class="btn ghost eC" type="button">キャンセル</button></div></div>`;
+  const q = c => node.querySelector(c);
+  let k = n.k;
+  scopeChips(q('.eK'), ancestors(n.k), n.k, x => { k = x; });
+  q('.eD').value = n.d; q('.eT').value = n.t || ''; q('.eX').value = n.x || ''; q('.eP').value = (n.p || []).join('\n');
+  const tg = tagInput(q('.eG'), n.tags);
+  const save = () => {
+    const t = q('.eT').value.trim(), x = q('.eX').value.trim();
+    editing = null;
+    Store.putNote({ ...n, k, d: q('.eD').value || n.d, t, x, p: parseLinks(q('.eP').value), tags: uniq([...tg.get(), ...hashtags(t + ' ' + x)]) });
+    toast(k === n.k ? '保存しました' : `${placeName(k)} に移しました`);
+  };
+  q('.eS').onclick = save;
+  q('.eC').onclick = () => { editing = null; refreshPanels(); };
+  node.querySelectorAll('textarea').forEach(t => t.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); save(); } }));
+  (W < 720 ? q('.eT') : q('.eX')).focus();
+}
+function renderEntries() {
+  if (!S.sel || editing) return;
+  const k = S.sel.key, own = IX.byPlace.get(k) || [];
+  const tg = $('#sToggle');
+  tg.classList.toggle('on', isV(k));
+  tg.disabled = own.length > 0;
+  tg.title = own.length ? 'メモがあるので「行った」になっています' : '';
+  tg.querySelector('span').textContent = isV(k) ? '行った' : 'まだ';
+  const raw = own.filter(x => !x.x).length;
+  $('#sCount').textContent = `メモ ${own.length}` + (raw && W >= 720 ? ` · 未整理 ${raw}` : '');
+  const box = $('#sEntries'); box.innerHTML = '';
+  if (!own.length) box.innerHTML = `<div class="empty">${k[0] === 't' ? 'この町のメモはまだありません。' : 'この' + (k[0] === 'p' ? '県' : '市') + 'そのものへのメモはまだありません。'}<br>${W < 720 ? '下の欄に、ひとことメモを残しましょう。' : '下の「新しいメモを書く」から残せます。'}</div>`;
+  own.forEach(n => box.appendChild(entryNode(n)));
+  // memos written somewhere inside this prefecture / city
+  if (k[0] !== 't') {
+    const inner = [];
+    for (const n of Store.notes.values()) if (within(k, n.k)) inner.push(n);
+    if (inner.length) {
+      inner.sort(newestFirst);
+      const r = document.createElement('div'); r.className = 'rule'; r.textContent = `この中のメモ ${inner.length}`; box.appendChild(r);
+      inner.slice(0, 80).forEach(n => {
+        const b = document.createElement('button'); b.className = 'mlog';
+        b.innerHTML = '<span class="d"></span><span class="p"></span><span class="t"></span>';
+        b.querySelector('.d').textContent = n.d.slice(5).replace('-', '.');
+        b.querySelector('.p').textContent = placeName(n.k);
+        b.querySelector('.t').textContent = n.t || n.x || '';
+        b.onclick = () => jumpTo(n.k);
+        box.appendChild(b);
+      });
+    }
+  }
+}
+const today = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 6e4).toISOString().slice(0, 10); };
+const nowHM = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+$('#sToggle').onclick = () => {
+  if (!S.sel) return;
+  const k = S.sel.key;
+  if ((IX.byPlace.get(k) || []).length) return;
+  const v = !isV(k);
+  Store.setVisited(k, v);
+  if (v) burst();
+};
+$('#memoHere').onclick = currentAreaSel;
+$('#fOpen').onclick = () => { $('#sForm').classList.remove('collapsed'); $('#fText').focus(); };
+$('#sForm').onsubmit = ev => {
+  ev.preventDefault();
+  if (!S.sel) return;
+  const pc = W >= 720;
+  const t = $('#fText').value.trim(), x = pc ? $('#fDetail').value.trim() : '', links = parseLinks($('#fLinks').value);
+  const tags = uniq([...(pc ? fTags.get() : []), ...hashtags(t + ' ' + x)]);
+  if (!t && !x && !links.length) { $('#fText').focus(); toast('メモを書いてください'); return; }
+  const d = pc ? ($('#fDate').value || today()) : today();
+  const k = formKey || S.sel.key;
+  Store.putNote({ id: newId(), k, d, at: d === today() ? nowHM() : '', t, x, p: links, loc: formLoc, tags });
+  $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; fTags.set([]);
+  setFormLoc(null);
+  toast(k === S.sel.key ? '記録しました' : `${placeName(k)} に記録しました`);
+  burst(k);
+  if (pc) $('#sForm').classList.add('collapsed');
+};
+[$('#fText'), $('#fDetail')].forEach(t => t.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); $('#sForm').requestSubmit(); } }));
+$('#fPaste').onclick = async () => {
+  try {
+    const l = parseLinks(await navigator.clipboard.readText());
+    if (l.length) { $('#fLinks').value = [...new Set(parseLinks($('#fLinks').value).concat(l))].join(' '); toast('リンクを貼り付けました'); }
+    else toast('コピーした内容にリンクがありません');
+  } catch (e) { $('#fLinks').focus(); toast('欄を長押しして貼り付けてください'); }
+};
+
+/* small burst at the place that was just recorded */
+function burst(k) {
+  k = k || (S.sel && S.sel.key); if (!k) return;
+  let p = null;
+  if (k[0] === 't' && townData) { const t = townData.towns.find(t => t.k === k); p = t && t.pts[0]; }
+  else if (k[0] === 'm' && D.muni[k.slice(1)]) p = D.muni[k.slice(1)].lp;
+  else if (k[0] === 'p') { const f = D.japanFeats.find(f => f.c === k.slice(1)); p = f && f.lp; }
+  if (!p) return;
+  const g = el('g', {});
+  svg.appendChild(g);
+  const t0 = performance.now();
+  const rings = [0, 1, 2].map(() => { const c = el('circle', { cx: p[0], cy: p[1], fill: 'none', stroke: '#ff4f00' }); g.appendChild(c); return c; });
+  const step = now => {
+    let alive = false;
+    rings.forEach((c, i) => {
+      const t = Math.max(0, Math.min(1, (now - t0 - i * 120) / 700));
+      if (t < 1) alive = true;
+      const e = 1 - Math.pow(1 - t, 3);
+      c.setAttribute('r', (4 + e * 46) * V.s); c.setAttribute('stroke-width', 1.2 * V.s); c.setAttribute('opacity', t ? 1 - t : 0);
+    });
+    if (alive) requestAnimationFrame(step); else g.remove();
+  };
+  requestAnimationFrame(step);
+}
+
+/* ---- location attached to the memo form (SP) ---- */
+let formLoc = null, quickNext = null;
+function setFormLoc(l) {
+  formLoc = l;
+  const b = $('#fLoc');
+  b.classList.toggle('on', !!l);
+  b.textContent = l ? '◉ ' + fmtLoc(l) : '◉ 位置を付ける';
+}
+$('#fLoc').onclick = async () => {
+  if (formLoc) return setFormLoc(null);
+  $('#fLoc').textContent = '◉ 取得中…';
+  try { const p = await getPos(); setFormLoc([+p.lat.toFixed(5), +p.lng.toFixed(5), Math.round(p.acc)]); }
+  catch (e) { setFormLoc(null); geoErr(e); }
+};
+
+/* ---------- GPS: where am I? ---------- */
+let me = null;
+function getPos() {
+  return new Promise((res, rej) => {
+    if (!window.isSecureContext) return rej(new Error('insecure'));
+    if (!('geolocation' in navigator)) return rej(new Error('nogeo'));
+    navigator.geolocation.getCurrentPosition(
+      p => res({ lat: p.coords.latitude, lng: p.coords.longitude, acc: p.coords.accuracy || 0 }),
+      e => rej(e), { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+  });
+}
+function geoErr(e) {
+  toast(e && e.code === 1 ? '位置情報が許可されていません（ブラウザの設定で許可してください）'
+    : e && e.message === 'insecure' ? '現在地は https のページでだけ使えます（GitHub Pagesで開いてください）'
+    : e && e.message === 'outside' ? '日本の外にいるようです'
+    : '現在地を取得できませんでした');
+}
+function exactHits(feats, lng, lat, oki) {
+  const hits = [];
+  for (const f of feats) {
+    const p = proj(lng, lat, oki(f));
+    for (const part of f.parts || []) {
+      const b = part.bb;
+      if (p[0] >= b[0] && p[0] <= b[2] && p[1] >= b[1] && p[1] <= b[3] && inside(p, part.ring)) hits.push({ f, a: part.area });
+    }
+  }
+  return hits.sort((a, b) => a.a - b.a).map(h => h.f);   // smallest first (enclaves win)
+}
+function nearest(feats, lng, lat, oki) {
+  let best = null;
+  for (const f of feats) {
+    const p = proj(lng, lat, oki(f));
+    for (const part of f.parts || []) for (const q of part.ring) {
+      const d = (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2;
+      if (!best || d < best.d) best = { f, d };
+    }
+  }
+  return best && { f: best.f, d: Math.sqrt(best.d) };
+}
+async function locate() {
+  const pos = await getPos();
+  const isOki = f => f.c === '47';
+  // coarse prefecture outlines first, then confirm with detailed city outlines (handles borders & coasts)
+  const exact = exactHits(D.japanFeats, pos.lng, pos.lat, isOki).map(f => f.c);
+  const near = D.japanFeats.map(f => ({ c: f.c, d: (nearest([f], pos.lng, pos.lat, isOki) || { d: 1e9 }).d }))
+    .filter(x => x.d < 40 && !exact.includes(x.c)).sort((a, b) => a.d - b.d).map(x => x.c);
+  const cands = [...exact, ...near].slice(0, 4);
+  if (!cands.length) throw new Error('outside');
+  let mc = null, pc = null, fallback = null;
+  for (const c of cands) {
+    const P = await ensurePref(c);
+    const o = () => c === '47';
+    const hit = exactHits(P.feats, pos.lng, pos.lat, o)[0];
+    if (hit) { mc = hit.c; pc = c; break; }
+    const n = nearest(P.feats, pos.lng, pos.lat, o);
+    if (n && (!fallback || n.d < fallback.d)) fallback = { c, mc: n.f.c, d: n.d };
+  }
+  if (!mc) { if (!fallback || fallback.d > 20) throw new Error('outside'); pc = fallback.c; mc = fallback.mc; }
+  const towns = await ensureTowns(mc);
+  const p = proj(pos.lng, pos.lat, pc === '47');
+  let ti = -1, bd = Infinity;
+  towns.forEach((t, i) => t.pts.forEach(q => { const d = (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2; if (d < bd) { bd = d; ti = i; } }));
+  me = { ...pos, x: p[0], y: p[1] };
+  drawMe();
+  return { pc, mc, key: ti >= 0 ? towns[ti].k : 'm' + mc, name: ti >= 0 ? towns[ti].n : D.muni[mc].n, loc: [+pos.lat.toFixed(5), +pos.lng.toFixed(5), Math.round(pos.acc)] };
+}
+const metersToUnits = (m, lat) => m / (1113.2 * Math.cos(lat * Math.PI / 180));
+function drawMe() {
+  const g = $('#gMe');
+  if (!me) { g.style.display = 'none'; return; }
+  g.style.display = '';
+  const a = $('#meAcc');
+  a.setAttribute('cx', me.x); a.setAttribute('cy', me.y); a.setAttribute('r', metersToUnits(Math.max(me.acc, 5), me.lat));
+  const d = `M${me.x} ${me.y}h0`;
+  $('#meRing').setAttribute('d', d); $('#meCore').setAttribute('d', d);
+}
+function showPin(loc, key) {
+  const pc = key.slice(1, 3);
+  const [x, y] = proj(loc[1], loc[0], pc === '47');
+  const d = `M${x} ${y}h0`;
+  $('#pin').setAttribute('d', d); $('#pinRing').setAttribute('d', d);
+  const s = Math.min(V.s, .012);
+  flyTo({ cx: x + (W >= 720 ? 230 * s : 0), cy: y + (W < 720 ? H * .22 * s : 0), s }, 700);
+}
+let locBusy = false;
+async function goHere(withMemo) {
+  if (locBusy) return;
+  locBusy = true;
+  $('#fab').style.opacity = .5;
+  toast('現在地を確認しています…');
+  try {
+    const r = await locate();
+    toast('◉ ' + D.muni[r.mc].n + ' ' + (r.key[0] === 't' ? r.name : ''));
+    if (withMemo) { quickNext = r.loc; jumpTo(r.key); }
+    else {
+      origin = null;
+      const T = { cx: me.x, cy: me.y + (W < 720 ? 0 : 0), s: Math.min(V.s, .01) };
+      if (location.hash.slice(1) === r.mc) flyTo(T, 800);
+      else { pendingFly = T; go(r.mc); }
+    }
+  } catch (e) { geoErr(e); }
+  finally { locBusy = false; $('#fab').style.opacity = ''; }
+}
+let pendingFly = null;
+$('#fab').onclick = () => goHere(true);
+$('#bLoc').onclick = () => goHere(false);
+
+/* ---------- drawer: LIST · WALKS · TAGS ---------- */
+let dTab = 'list', dRaw = false, dTag = null;
+function walkDays() {
+  const s = new Set([...IX.byDate.keys(), ...Store.walks.keys()]);
+  return [...s].sort().reverse();
+}
+function autoTitle(d) {
+  const ns = IX.byDate.get(d) || [];
+  const names = uniq(ns.map(n => n.k[0] === 'p' ? placeName(n.k) : placeName('m' + n.k.slice(1, 6)) || placeLabel(n.k).split(' ')[1]));
+  if (!names.length) return '散歩';
+  return names.slice(0, 2).join('・') + (names.length > 2 ? ' ほか' : '') + 'の散歩';
+}
+function walkStat(d) {
+  const ns = IX.byDate.get(d) || [];
+  const towns = uniq(ns.filter(n => n.k[0] === 't').map(n => n.k)).length;
+  const raw = ns.filter(n => !n.x).length;
+  return { ns, towns, raw };
+}
+function renderDrawer() {
+  const body = $('#dBody'), q = $('#dFilter').value.trim();
+  ['list', 'walks', 'tags'].forEach(t => $('#t_' + t).classList.toggle('on', dTab === t));
+  $('#dFilter').placeholder = dTab === 'list' ? '名前で絞り込み' : dTab === 'walks' ? '散歩・メモを検索' : 'タグを検索';
+  $('#dFilter').style.display = dTab === 'tags' && dTag ? 'none' : '';
+  body.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  const empty = s => { const d = document.createElement('div'); d.className = 'empty'; d.textContent = s; frag.appendChild(d); };
+  if (dTab === 'list') {
+    let rows = [];
+    if (S.level === 'japan') rows = D.P.map(([pc, n, m]) => { const a = AG.pref.get(pc); return { n, c: a ? `${a.munis.size}/${m}` : `0/${m}`, f: a ? a.munis.size / m : 0, v: !!a, memo: IX.byPlace.has('p' + pc), go: () => { origin = null; go(pc); } }; });
+    else if (S.level === 'pref') rows = D.pref[S.pc].feats.slice().sort((a, b) => a.c < b.c ? -1 : 1).map(f => { const a = AG.muni.get(f.c), T = D.pref[S.pc].T[f.c] || 0; return { n: f.n, c: `${a ? a.towns : 0}/${T}`, f: T && a ? a.towns / T : (a ? 1 : 0), v: !!a, memo: IX.byPlace.has('m' + f.c), go: () => { origin = null; go(f.c); } }; });
+    else if (townData) rows = townData.towns.map((t, i) => ({ n: t.n, c: (IX.byPlace.get(t.k) || []).length || '', v: isV(t.k), go: () => selectTown(i, true) }));
+    rows.filter(r => !q || r.n.includes(q)).slice(0, 3000).forEach(r => {
+      const b = document.createElement('button'); b.className = 'li' + (r.v ? ' v' : '');
+      b.innerHTML = `<span class="n"><i></i><span></span>${r.memo ? '<em>MEMO</em>' : ''}</span><span class="c"></span>` + (r.f !== undefined ? `<span class="b"><i style="width:${Math.round(r.f * 100)}%"></i></span>` : '');
+      b.querySelector('.n span').textContent = r.n; b.querySelector('.c').textContent = r.c;
+      b.onclick = () => { r.go(); if (W < 720) closePanel('drawer'); };
+      frag.appendChild(b);
+    });
+  } else if (dTab === 'walks') {
+    const days = walkDays();
+    const nraw = days.filter(d => walkStat(d).raw).length;
+    const seg = document.createElement('div'); seg.className = 'seg';
+    seg.innerHTML = `<button data-r="0">すべて ${days.length}</button><button data-r="1">未整理あり ${nraw}</button>`;
+    seg.querySelectorAll('button').forEach(b => { b.classList.toggle('on', +b.dataset.r === +dRaw); b.onclick = () => { dRaw = !!+b.dataset.r; renderDrawer(); }; });
+    frag.appendChild(seg);
+    let month = '';
+    const hit = d => {
+      if (!q) return true;
+      const w = Store.walks.get(d) || {};
+      return (w.title || '').includes(q) || (w.sum || '').includes(q) || (w.tags || []).some(t => t.includes(q)) ||
+        (IX.byDate.get(d) || []).some(n => (n.t || '').includes(q) || (n.x || '').includes(q) || placeLabel(n.k).includes(q) || (n.tags || []).some(t => t.includes(q)));
+    };
+    const list = days.filter(d => (!dRaw || walkStat(d).raw) && hit(d));
+    if (!list.length) empty(q ? '見つかりませんでした' : dRaw ? '未整理のメモはありません' : 'まだ散歩の記録はありません');
+    list.forEach(d => {
+      if (d.slice(0, 7) !== month) { month = d.slice(0, 7); const r = document.createElement('div'); r.className = 'rule'; r.textContent = month.replace('-', '.'); frag.appendChild(r); }
+      const w = Store.walks.get(d) || {}, st = walkStat(d);
+      const b = document.createElement('button'); b.className = 'walk' + (curWalk === d ? ' cur' : '');
+      b.innerHTML = '<div class="d"><span></span><b></b></div><div class="ti"></div><div class="tags"></div>';
+      b.querySelector('.d span').textContent = fmtDay(d);
+      b.querySelector('.d b').textContent = `メモ ${st.ns.length}` + (st.towns ? ` · 町 ${st.towns}` : '');
+      const ti = b.querySelector('.ti'); ti.textContent = w.title || autoTitle(d); ti.classList.toggle('auto', !w.title);
+      const tg = b.querySelector('.tags');
+      if (st.raw) { const s = document.createElement('span'); s.className = 'tag raw'; s.textContent = '未整理 ' + st.raw; tg.appendChild(s); }
+      if (w.sum) { const s = document.createElement('span'); s.className = 'tag'; s.textContent = 'まとめ済'; tg.appendChild(s); }
+      (w.tags || []).forEach(t => { const s = document.createElement('span'); s.className = 'tag'; s.textContent = '#' + t; tg.appendChild(s); });
+      b.onclick = () => openWalk(d);
+      frag.appendChild(b);
+    });
+  } else if (!dTag) {
+    const tags = [...IX.tagN.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).filter(([t]) => !q || t.includes(normTag(q)));
+    if (!tags.length) empty(q ? '見つかりませんでした' : 'まだタグはありません。メモに「#紅葉」のように書くか、PCのメモ編集でタグを付けられます。');
+    const box = document.createElement('div'); box.className = 'tagcloud';
+    tags.forEach(([t, c]) => { const b = mkBtn('', 'tagrow', () => openTag(t)); b.innerHTML = '<span></span><em></em>'; b.firstChild.textContent = '#' + t; b.lastChild.textContent = c; box.appendChild(b); });
+    frag.appendChild(box);
+  } else {
+    const t = dTag;
+    const head = document.createElement('div'); head.className = 'taghead';
+    head.appendChild(mkBtn('← TAGS', 'back', () => { dTag = null; if (HL && HL.kind === 'tag') setHighlight(null); renderDrawer(); }));
+    const h = document.createElement('div'); h.className = 'big'; h.textContent = '#' + t; head.appendChild(h);
+    const acts = document.createElement('div'); acts.className = 'acts';
+    acts.appendChild(mkBtn('RENAME', 'tag', () => {
+      acts.innerHTML = '';
+      const inp = document.createElement('input'); inp.className = 'tin'; inp.value = t;
+      const ok = () => { const to = normTag(inp.value); if (!to || to === t) return renderDrawer(); const merge = IX.tagN.has(to); Store.renameTag(t, to); dTag = to; openTag(to); toast(merge ? `#${to} にまとめました` : `#${to} に変更しました`); };
+      inp.onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) ok(); if (e.key === 'Escape') renderDrawer(); };
+      acts.appendChild(inp); acts.appendChild(mkBtn('OK', 'tag', ok)); inp.focus(); inp.select();
+    }, '名前を変える（既にあるタグ名にするとまとめられます）'));
+    const del = mkBtn('DELETE', 'tag', () => {
+      if (!del.classList.contains('arm')) { del.classList.add('arm'); del.textContent = 'SURE?'; setTimeout(() => { del.classList.remove('arm'); del.textContent = 'DELETE'; }, 2500); return; }
+      Store.renameTag(t, ''); dTag = null; setHighlight(null); toast(`#${t} を外しました`); renderDrawer();
+    }, 'このタグをすべてのメモから外す（メモは消えません）');
+    acts.appendChild(del);
+    head.appendChild(acts);
+    frag.appendChild(head);
+    const ws = [...Store.walks.values()].filter(w => (w.tags || []).includes(t)).sort((a, b) => a.d < b.d ? 1 : -1);
+    const ns = [...Store.notes.values()].filter(n => (n.tags || []).includes(t)).sort(newestFirst);
+    if (ws.length) {
+      const r = document.createElement('div'); r.className = 'rule'; r.textContent = `散歩 ${ws.length}`; frag.appendChild(r);
+      ws.forEach(w => { const b = document.createElement('button'); b.className = 'walk'; b.innerHTML = '<div class="d"><span></span></div><div class="ti"></div>'; b.querySelector('.d span').textContent = fmtDay(w.d); b.querySelector('.ti').textContent = w.title || autoTitle(w.d); b.onclick = () => openWalk(w.d); frag.appendChild(b); });
+    }
+    const r = document.createElement('div'); r.className = 'rule'; r.textContent = `メモ ${ns.length}`; frag.appendChild(r);
+    ns.forEach(n => {
+      const b = document.createElement('button'); b.className = 'mlog';
+      b.innerHTML = '<span class="d"></span><span class="p"></span><span class="t"></span>';
+      b.querySelector('.d').textContent = n.d.replace(/-/g, '.');
+      b.querySelector('.p').textContent = placeLabel(n.k);
+      b.querySelector('.t').textContent = n.t || n.x || '';
+      b.onclick = () => { jumpTo(n.k); if (W < 720) closePanel('drawer'); };
+      frag.appendChild(b);
+    });
+  }
+  body.appendChild(frag);
+}
+function jumpTo(k) {
+  pendingSel = k;
+  const h = k[0] === 'p' ? k.slice(1) : k.slice(1, 6);
+  origin = null;
+  if (location.hash.slice(1) === h) { pendingSel = null; selectByKey(k); } else go(h);
+}
+function openDrawer(tab) {
+  if ($('#drawer').classList.contains('open') && dTab === tab) return closePanel('drawer');
+  dTab = tab; $('#dFilter').value = '';
+  renderDrawer();
+  if (W < 720) { closePanel('sheet'); closePanel('wsheet', true); }
+  $('#drawer').classList.add('open'); document.body.classList.add('drawer-open');
+  syncTools();
+}
+function syncTools() {
+  const open = $('#drawer').classList.contains('open');
+  $('#bList').classList.toggle('on', open && dTab === 'list');
+  $('#bLog').classList.toggle('on', open && dTab !== 'list');
+}
+function closePanel(id, quiet) {
+  const p = $('#' + id); p.classList.remove('open');
+  document.body.classList.remove(id + '-open');
+  if (id === 'sheet' && !quiet) { select(null); }
+  if (id === 'wsheet') { curWalk = null; editing = null; }
+  if (id === 'drawer') syncTools();
+}
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closePanel(b.dataset.close));
+['list', 'walks', 'tags'].forEach(t => $('#t_' + t).onclick = () => { dTab = t; if (t !== 'tags') dTag = null; $('#dFilter').value = ''; renderDrawer(); syncTools(); });
+$('#dFilter').oninput = () => renderDrawer();
+$('#bList').onclick = () => openDrawer('list');
+$('#bLog').onclick = () => openDrawer('walks');
+$('#bUp').onclick = up;
+
+/* ---------- walk (one day) ---------- */
+let curWalk = null;
+function openWalk(d) {
+  curWalk = d; editing = null;
+  closePanel('sheet');
+  if (W < 720) closePanel('drawer');
+  renderWalk();
+  $('#wsheet').classList.add('open'); document.body.classList.add('wsheet-open');
+  const ns = IX.byDate.get(d) || [];
+  setHighlight({ kind: 'walk', label: 'WALK ' + fmtDay(d), keys: ns.map(n => n.k), route: ns });
+  focusKeys(ns.map(n => n.k), true);
+  if ($('#drawer').classList.contains('open')) renderDrawer();
+}
+function renderWalk() {
+  const d = curWalk; if (!d || editing) return;
+  const w = Store.walks.get(d) || {}, st = walkStat(d);
+  $('#wEyebrow').textContent = 'WALK · ' + fmtDay(d);
+  const ti = $('#wTitle'); ti.textContent = w.title || autoTitle(d); ti.classList.toggle('auto', !w.title);
+  const places = uniq(st.ns.map(n => n.k[0] === 'p' ? placeName(n.k) : placeName('m' + n.k.slice(1, 6))));
+  $('#wStat').textContent = [places.join('・'), st.towns ? `町 ${st.towns}` : '', `メモ ${st.ns.length}`, st.raw ? `未整理 ${st.raw}` : ''].filter(Boolean).join(' · ');
+  const wt = $('#wTags'); wt.innerHTML = ''; wt.appendChild(tagChips(w.tags));
+  const body = $('#wBody'); body.innerHTML = '';
+  // summary
+  const sum = document.createElement('div'); sum.className = 'wsum';
+  if (w.sum) { const p = document.createElement('div'); p.className = 'dx'; p.textContent = w.sum; sum.appendChild(p); }
+  sum.appendChild(mkBtn(w.title || w.sum ? 'EDIT · タイトルとまとめ' : '＋ タイトルとまとめを書く', w.title || w.sum ? 'tag' : 'btn ghost', () => editWalk(sum, d)));
+  body.appendChild(sum);
+  const r = document.createElement('div'); r.className = 'rule'; r.textContent = `メモ ${st.ns.length}`; body.appendChild(r);
+  if (!st.ns.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'この日のメモはありません。'; body.appendChild(e); }
+  st.ns.forEach(n => body.appendChild(entryNode(n, { place: true, timeOnly: true })));
+}
+function editWalk(node, d) {
+  editing = 'walk';
+  const w = Store.walks.get(d) || {};
+  node.innerHTML = `<div class="edit"><label>TITLE</label><input class="wT" placeholder="${autoTitle(d)}">
+    <label>まとめ</label><textarea class="wS big" placeholder="この日の散歩をふりかえって（コース、天気、印象に残ったこと…）"></textarea>
+    <label>TAGS</label><div class="wG"></div>
+    <div class="row"><button class="btn wOk" type="button">保存</button><button class="btn ghost wNo" type="button">キャンセル</button></div></div>`;
+  const q = c => node.querySelector(c);
+  q('.wT').value = w.title || ''; q('.wS').value = w.sum || '';
+  const tg = tagInput(q('.wG'), w.tags);
+  const save = () => { editing = null; const s = q('.wS').value.trim(); Store.putWalk(d, { title: q('.wT').value.trim(), sum: s, tags: uniq([...tg.get(), ...hashtags(s)]) }); toast('保存しました'); };
+  q('.wOk').onclick = save;
+  q('.wNo').onclick = () => { editing = null; renderWalk(); };
+  q('.wS').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); save(); } });
+  (W < 720 ? q('.wT') : q('.wS')).focus();
+}
+function openTag(t) {
+  dTab = 'tags'; dTag = t; $('#dFilter').value = '';
+  const keys = [];
+  for (const n of Store.notes.values()) if ((n.tags || []).includes(t)) keys.push(n.k);
+  for (const w of Store.walks.values()) if ((w.tags || []).includes(t)) for (const n of (IX.byDate.get(w.d) || [])) keys.push(n.k);
+  setHighlight({ kind: 'tag', label: '#' + t, keys: uniq(keys) });
+  if (!$('#drawer').classList.contains('open')) { if (W < 720) { closePanel('sheet'); closePanel('wsheet', true); } $('#drawer').classList.add('open'); document.body.classList.add('drawer-open'); }
+  renderDrawer(); syncTools();
+  focusKeys(uniq(keys), false);
+}
+
+/* ---------- highlight (walk / tag) + walk route ---------- */
+let HL = null;
+function setHighlight(h) {
+  HL = h ? { ...h, keys: new Set(h.keys), P: new Set(h.keys.map(k => k.slice(1, 3))), M: new Set(h.keys.filter(k => k[0] !== 'p').map(k => k.slice(1, 6))) } : null;
+  const bar = $('#hlbar');
+  bar.classList.toggle('on', !!HL);
+  if (HL) bar.querySelector('span').textContent = `${HL.label} · ${HL.keys.size}`;
+  drawRoute(); paint();
+}
+$('#hlbar button').onclick = () => { setHighlight(null); };
+function routePoints(ns) {
+  return ns.map(n => {
+    const oki = n.k.slice(1, 3) === '47';
+    if (n.loc) return proj(n.loc[1], n.loc[0], oki);
+    if (n.k[0] !== 't') return null;   // a city/prefecture memo without GPS has no point on the course
+    const pl = Store.place(n.k), ll = (pl && pl.ll) || (placeInfo(n.k) || {}).ll;
+    return ll ? proj(ll[0], ll[1], oki) : null;
+  }).filter(Boolean);
+}
+function drawRoute() {
+  const pts = HL && HL.route ? routePoints(HL.route) : [];
+  const d = pts.length ? 'M' + pts.map(p => f3(p[0]) + ' ' + f3(p[1])).join('L') : '';
+  const dots = pts.map(p => `M${f3(p[0])} ${f3(p[1])}h0`).join('');
+  ['#route'].forEach(s => d ? $(s).setAttribute('d', d) : $(s).removeAttribute('d'));
+  ['#routeRing', '#routeDots'].forEach(s => dots ? $(s).setAttribute('d', dots) : $(s).removeAttribute('d'));
+}
+function focusKeys(keys, fitRoute) {
+  if (!keys.length) return;
+  const P = uniq(keys.map(k => k.slice(1, 3)));
+  let h = '';
+  if (P.length === 1) {
+    const M = uniq(keys.map(k => k[0] === 'p' ? 'P' : k.slice(1, 6)));
+    h = M.length === 1 && M[0] !== 'P' ? M[0] : P[0];
+  }
+  origin = null;
+  // tighten onto the route when the walk stays inside one city
+  if (fitRoute && h.length === 5 && HL && HL.route) {
+    const pts = routePoints(HL.route);
+    if (pts.length > 1) {
+      const bb = [Math.min(...pts.map(p => p[0])), Math.min(...pts.map(p => p[1])), Math.max(...pts.map(p => p[0])), Math.max(...pts.map(p => p[1]))];
+      const m = Math.max(bb[2] - bb[0], bb[3] - bb[1]) * .35 + .3;
+      const T = fitView([bb[0] - m, bb[1] - m, bb[2] + m, bb[3] + m]);
+      if (W >= 720) T.cx += 230 * T.s; else T.cy += H * .2 * T.s;
+      pendingFly = T;
+    }
+  }
+  if (location.hash.slice(1) === h) { if (pendingFly) { const T = pendingFly; pendingFly = null; flyTo(T, 800); } }
+  else go(h);
+}
+
+/* ---------- data modal ---------- */
+function exportJSON() { return JSON.stringify({ ...Store.dump(), exported: new Date().toISOString() }, null, 1); }
+$('#bData').onclick = () => {
+  if (FB.enabled() && !FB.sdk) FB.load().then(() => Sync.paint()).catch(() => {});
+  Sync.paint();
+  $('#mWhere').textContent = `記録はこのブラウザの中に保存されています（メモ ${Store.notes.size} 件・散歩 ${walkDays().length} 日）。ブラウザのデータを消すと記録も消えるので、時々「JSONを保存」でバックアップしてください。スマホ→PCへ移すときも、書き出し→読み込みでOKです。`;
+  $('#mText').value = '';
+  $('#modal').classList.add('open');
+};
+$('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closePanel('modal'); });
+$('#mDown').onclick = () => {
+  try {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([exportJSON()], { type: 'application/json' }));
+    a.download = `sanpo-log-${today()}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    toast('保存しました（保存されない場合は「コピー」を）');
+  } catch (e) { toast('この環境では保存できません。「コピー」を使ってください'); }
+};
+$('#mCopy').onclick = async () => {
+  const s = exportJSON();
+  try { await navigator.clipboard.writeText(s); toast('コピーしました'); }
+  catch (e) { $('#mText').value = s; $('#mText').select(); toast('下の欄を選択してコピーしてください'); }
+};
+function importText(s) {
+  try {
+    const o = JSON.parse(s);
+    if (!o || (typeof o.r !== 'object' && typeof o.notes !== 'object' && typeof o.places !== 'object')) throw 0;
+    const n = Store.absorb(o);
+    Store.commit();
+    toast(`メモ ${n} 件を読み込みました`); closePanel('modal');
+  } catch (e) { toast('読み込めませんでした（形式を確認してください）'); }
+}
+$('#mShare').onclick = async () => {
+  try {
+    const file = new File([exportJSON()], `sanpo-log-${today()}.json`, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'SANPO LOG' });
+    else $('#mDown').click();
+  } catch (e) { if (e && e.name !== 'AbortError') toast('送れませんでした。「JSONを保存」を使ってください'); }
+};
+let dragN = 0;
+addEventListener('dragenter', e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { dragN++; $('#drop').classList.add('on'); } });
+addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; $('#drop').classList.remove('on'); } });
+addEventListener('dragover', e => e.preventDefault());
+addEventListener('drop', e => {
+  e.preventDefault(); dragN = 0; $('#drop').classList.remove('on');
+  const f = e.dataTransfer && e.dataTransfer.files[0];
+  if (f) f.text().then(importText);
+});
+$('#mFile').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(importText); e.target.value = ''; };
+$('#mPaste').onclick = () => importText($('#mText').value);
+
+$('#ghConnect').onclick = async () => {
+  const t = $('#ghToken').value.trim();
+  if (!t) { toast('合鍵を貼り付けてください'); return; }
+  $('#ghConnect').disabled = true; $('#ghConnect').textContent = '確認中…';
+  const ok = await Sync.connect(t, $('#ghRepo').value);
+  $('#ghConnect').disabled = false; $('#ghConnect').textContent = '接続する';
+  if (ok) { $('#ghToken').value = ''; toast('GitHubと同期しました'); }
+};
+$('#ghNow').onclick = () => Sync.run();
+$('#fbIn').onclick = () => {
+  if (!FB.sdk) { toast('準備しています…もう一度押してください'); FB.load().catch(() => toast('Firebaseを読み込めませんでした')); return; }
+  FB.signIn().catch(e => { FB.msg = e && e.code === 'auth/popup-closed-by-user' ? '' : 'ログインできませんでした（' + (e && e.code || 'error') + '）'; Sync.paint(); });
+};
+$('#fbOut').onclick = () => { FB.signOut(); toast('ログアウトしました（記録はこの端末に残っています）'); };
+$('#fbNow').onclick = () => FB.push();
+$('#ghOff').onclick = () => { Sync.off(); toast('この端末の接続を解除しました（記録はこの端末に残っています）'); };
+addEventListener('visibilitychange', () => {
+  if (!Sync.on()) return;
+  if (document.visibilityState === 'visible') { if (Date.now() - Sync.last > 20000) Sync.soon(0); }
+  else if (Sync.t) Sync.soon(0);   // leaving the page with unsent changes: send now
+});
+addEventListener('online', () => { Sync.soon(0); FB.soon(0); });
+addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && FB.t) FB.soon(0); });
+
+let toastT;
+function toast(s, ms) { const t = $('#toast'); t.textContent = s; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms || 2400); }
+
+/* ---------- pointer: hover, click, pan, pinch, wheel ---------- */
+let hoverEl = null;
+function setHover(n) {
+  if (n === hoverEl) return;
+  hoverEl = n;
+  const h = $('#hover');
+  if (!n) { h.removeAttribute('d'); $('#hName').textContent = ''; return; }
+  h.setAttribute('d', n.getAttribute('d'));
+  const k = n.dataset.k, kind = n.dataset.kind;
+  let name = '';
+  if (kind === 'p') name = D.prefInfo[k].n;
+  else if (kind === 'm') name = D.muni[k].n;
+  else if (kind === 't' && townData) name = townData.towns[+n.dataset.i].n;
+  const nn = (IX.byPlace.get(kind === 'p' ? 'p' + k : kind === 'm' ? 'm' + k : k) || []).length;
+  $('#hName').textContent = name + (nn ? `  ·  MEMO ${nn}` : '');
+}
+function hoverAt(e) {
+  $('#xh').style.transform = `translateY(${e.clientY}px)`; $('#yh').style.transform = `translateX(${e.clientX}px)`;
+  document.body.classList.add('ptr');
+  const [wx, wy] = toWorld(e.clientX, e.clientY);
+  const oki = S.pc === '47' || (S.level === 'japan' && insetHit(wx, wy));
+  $('#hCoord').textContent = fmtLL(unproj(wx, wy, oki));
+  const t = e.target.closest ? e.target.closest('[data-k]') : null;
+  setHover(t && !t.classList.contains('off') && !t.classList.contains('hidden') ? t : null);
+}
+function insetHit(x, y) {
+  const r = $('#inset');
+  const rx = +r.getAttribute('x'), ry = +r.getAttribute('y');
+  return x >= rx && y >= ry && x <= rx + +r.getAttribute('width') && y <= ry + +r.getAttribute('height');
+}
+const ptrs = new Map();
+let drag = null, pinch = null;
+svg.addEventListener('pointerdown', e => {
+  if (e.button > 0) return;
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  try { svg.setPointerCapture(e.pointerId); } catch (_) {}
+  if (ptrs.size === 1) drag = { x: e.clientX, y: e.clientY, cx: V.cx, cy: V.cy, target: e.target, moved: false };
+  else if (ptrs.size === 2) {
+    const [a, b] = [...ptrs.values()];
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), s: V.s, w: toWorld(mx, my) };
+    if (drag) drag.moved = true;
+  }
+});
+svg.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) { if (e.pointerType === 'mouse') hoverAt(e); return; }
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if (pinch && ptrs.size >= 2) {
+    const [a, b] = [...ptrs.values()];
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    V.s = Math.min(SMAX, Math.max(SMIN, pinch.s * pinch.d / Math.max(1, Math.hypot(a.x - b.x, a.y - b.y))));
+    V.cx = pinch.w[0] - (mx - W / 2) * V.s; V.cy = pinch.w[1] - (my - H / 2) * V.s;
+    stopAnim(); applyView(); $('#gLabel').style.opacity = 0; return;
+  }
+  if (drag) {
+    const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+    if (!drag.moved && Math.hypot(dx, dy) > 5) { drag.moved = true; stopAnim(); $('#gLabel').style.opacity = 0; svg.style.cursor = 'grabbing'; }
+    if (drag.moved) { V.cx = drag.cx - dx * V.s; V.cy = drag.cy - dy * V.s; applyView(); }
+  }
+  if (e.pointerType === 'mouse') hoverAt(e);
+});
+function endPtr(e) {
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.delete(e.pointerId);
+  if (ptrs.size === 1 && pinch) {
+    pinch = null;
+    const [a] = [...ptrs.values()];
+    drag = { x: a.x, y: a.y, cx: V.cx, cy: V.cy, target: null, moved: true };
+    return;
+  }
+  if (ptrs.size === 0) {
+    svg.style.cursor = '';
+    if (drag && !drag.moved && e.type === 'pointerup') clickOn(drag.target, e);
+    else if (drag && drag.moved || pinch) settle();
+    drag = null; pinch = null;
+  }
+}
+svg.addEventListener('pointerup', endPtr);
+svg.addEventListener('pointercancel', endPtr);
+svg.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && !ptrs.size) { setHover(null); document.body.classList.remove('ptr'); } });
+svg.addEventListener('wheel', e => {
+  e.preventDefault();
+  stopAnim();
+  const f = Math.exp(e.deltaY * (e.ctrlKey ? .012 : .0018) * (e.deltaMode === 1 ? 16 : 1));
+  const w = toWorld(e.clientX, e.clientY);
+  V.s = Math.min(SMAX, Math.max(SMIN, V.s * f));
+  V.cx = w[0] - (e.clientX - W / 2) * V.s; V.cy = w[1] - (e.clientY - H / 2) * V.s;
+  applyView(); $('#gLabel').style.opacity = 0; settle();
+}, { passive: false });
+
+function clickOn(t, e) {
+  hideHint();
+  const n = t && t.closest ? t.closest('[data-k]') : null;
+  if (!n || n.classList.contains('off') || n.classList.contains('hidden')) return;
+  const k = n.dataset.k, kind = n.dataset.kind;
+  origin = { x: e.clientX, y: e.clientY };
+  if (kind === 'p') go(k);
+  else if (kind === 'm') go(k);
+  else if (kind === 't') { origin = null; selectTown(+n.dataset.i, false); }
+}
+function hideHint() { $('#hint').style.opacity = 0; }
+setTimeout(hideHint, 9000);
+
+addEventListener('keydown', e => {
+  if (e.target.matches('input,textarea')) { if (e.key === 'Escape') e.target.blur(); return; }
+  if (e.key === 'Escape') up();
+  else if (e.key === '/' ) { e.preventDefault(); openDrawer('list'); setTimeout(() => $('#dFilter').focus(), 50); }
+});
+const setSP = () => document.body.classList.toggle('sp', W < 720);
+addEventListener('resize', () => { W = innerWidth; H = innerHeight; setSP(); logBadge(); applyView(); settle(); });
+setSP();
+addEventListener('hashchange', route);
+
+/* ---------- re-render on data change ---------- */
+let chT;
+function changed() {
+  clearTimeout(chT);
+  chT = setTimeout(() => {
+    if (!D.japanFeats) return;
+    paint(); refreshMemoBtn(); refreshPanels(); drawRoute();
+    if (!anim) drawLabels();
+  }, 30);
+}
+
+function refreshPanels() {
+  if (S.sel && $('#sheet').classList.contains('open')) { renderEntries(); $('#sStat').textContent = selInfo().stat; fTags.refresh(); }
+  if (curWalk && $('#wsheet').classList.contains('open')) renderWalk();
+  if ($('#drawer').classList.contains('open')) { const f = document.activeElement === $('#dFilter'); renderDrawer(); if (f) $('#dFilter').focus(); }
+}
+
+/* ---------- boot ---------- */
+(async function boot() {
+  progress(true);
+  try {
+    const J = await loadData('japan');
+    D.P = J.P;
+    for (const [pc, n, m, t] of J.P) { D.prefInfo[pc] = { n, m, t }; TOT.m += m; TOT.t += t; }
+    D.japanFeats = topoFeatures(J, 'p').map(f => ({ c: f.c, ...prep(f.polys, f.c === '47') }));
+    const ok = D.japanFeats.find(f => f.c === '47').bb;
+    JAPAN_BB = [Math.min(PX(129.3), ok[0] - 10), PY(45.55), Math.max(PX(145.85), ok[2]), Math.max(PY(31.0), ok[3] + 10)];
+    renderPrefs(); drawMe();
+    Store.init();
+    Sync.load(); Sync.paint();
+    try { if (FB.enabled() && localStorage.getItem('sanpo-fb')) FB.load().catch(() => {}); } catch (e) {}
+    Object.assign(V, fitView(JAPAN_BB)); V.s *= 1.6; applyView();
+    aggregate();
+  } catch (e) { toast('地図データを読み込めませんでした'); console.error(e); return; }
+  finally { progress(false); }
+  await route();
+  Sync.soon(0);
+})();
+</script>
+</body>
+</html>
