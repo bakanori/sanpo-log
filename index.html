@@ -52,7 +52,11 @@ body.ptr #xh,body.ptr #yh{opacity:1}
 /* ---------- header ---------- */
 #top{position:fixed;left:0;right:0;top:0;padding:calc(18px + var(--safe-t)) calc(22px + var(--safe-r)) 0 calc(22px + var(--safe-l));display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;gap:16px}
 #top>*{pointer-events:auto}
-.brand{font:500 10px/1 var(--mono);letter-spacing:.22em;display:flex;align-items:center;gap:8px}
+.brand{font:500 10px/1 var(--mono);letter-spacing:.22em;display:flex;align-items:center;gap:8px;padding:0}
+#bHome{display:inline-flex;align-items:center;gap:6px}
+#bHome svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:1.3;stroke-linejoin:round;stroke-linecap:round;margin-top:-1px}
+body.sp #bHome span{display:none}
+body.sp #bHome{padding-left:10px;padding-right:10px}
 .brand i{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse 2.4s var(--ease) infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(.4)}}
 #crumb{margin-top:14px;font:10px/1.2 var(--mono);color:var(--mute);letter-spacing:.06em;display:flex;flex-wrap:wrap;gap:6px;min-height:12px}
@@ -230,6 +234,10 @@ body:not(.sp).sheet-open #tools,body:not(.sp).wsheet-open #tools{right:482px}
 body:not(.sp).sheet-open #top,body:not(.sp).wsheet-open #top{padding-right:482px}
 body:not(.sp).drawer-open #hud{left:342px}
 #hud{transition:left .55s var(--ease)}
+#ghWrap>summary{list-style:none;cursor:pointer}
+#ghWrap>summary::-webkit-details-marker{display:none}
+#ghWrap>summary:before{content:'＋';margin-right:-4px}
+#ghWrap[open]>summary:before{content:'－'}
 #ghBox input{width:100%;border:1px solid var(--hair);border-radius:8px;padding:10px 12px;font:12px/1.4 var(--mono);margin-top:8px;outline:none}
 #ghBox input:focus{border-color:var(--ink)}
 #ghState{font-size:12px}
@@ -361,7 +369,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 
 <header id="top">
   <div>
-    <div class="brand"><i></i>SANPO LOG</div>
+    <button class="brand" id="brand" title="日本全体へ"><i></i>SANPO LOG</button>
     <nav id="crumb"></nav>
     <div id="title"><h1 id="name">日本</h1><button id="memoHere" hidden>＋ MEMO</button></div>
     <div id="kind">JAPAN</div>
@@ -382,6 +390,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <div id="hint">CLICK TO DIVE · DRAG TO MOVE · SCROLL TO ZOOM · ESC TO RISE</div>
 <div id="tools">
   <button class="pill sp-only" id="bLoc" title="現在地">◎ HERE</button>
+  <button class="pill" id="bHome" title="日本全体へ" aria-label="日本全体へ"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 6.2 6 2l4.5 4.2M3 5v5h6V5"/></svg><span>HOME</span></button>
   <button class="pill" id="bUp" title="上の階層へ (Esc)">↑ UP</button>
   <button class="pill" id="bList">LIST</button>
   <button class="pill" id="bLog">LOG</button>
@@ -444,7 +453,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
       <p id="fbState"></p>
       <div class="acts"><button class="btn" id="fbIn">Googleでログイン</button><button class="btn ghost" id="fbNow">今すぐ同期</button><button class="btn ghost" id="fbOut">ログアウト</button></div>
     </div>
-    <div class="rule" id="ghRule">GitHubと同期</div>
+    <details id="ghWrap"><summary class="rule" id="ghRule">GitHubと同期</summary>
     <div id="ghBox">
       <p id="ghState"></p>
       <div id="ghSetup">
@@ -453,7 +462,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
         <div class="acts"><button class="btn" id="ghConnect">接続する</button></div>
       </div>
       <div class="acts" id="ghActs"><button class="btn" id="ghNow">今すぐ同期</button><button class="btn ghost" id="ghOff">この端末の接続を解除</button></div>
-    </div>
+    </div></details>
     <div class="rule">書き出し</div>
     <div class="acts"><button class="btn sp-only" id="mShare">送る（AirDrop・LINEなど）</button><button class="btn" id="mDown">JSONを保存</button><button class="btn ghost" id="mCopy">コピー</button></div>
     <div class="rule">読み込み</div>
@@ -848,7 +857,9 @@ const Sync = {
       const fm = FB.last ? new Date(FB.last).toTimeString().slice(0, 5) : '';
       $('#fbState').textContent = FB.user ? `ログイン中：${FB.user.email || FB.user.uid}${fm ? `（最終同期 ${fm}）` : ''}${FB.msg ? '　' + FB.msg : ''}`
         : (FB.msg || 'Googleアカウントでログインすると、スマホとPCの記録が自動で同じになります。記録はあなた専用の場所に保存され、ほかの人からは見えません。');
-      $('#ghRule').textContent = FB.enabled() ? 'GitHubと同期（上級者向け・どちらか一方でOK）' : 'GitHubと同期';
+      $('#ghRule').textContent = FB.enabled() ? 'ほかの同期方法：GitHub（使わなくてOK）' : 'GitHubと同期';
+      if (!FB.enabled() || this.on()) $('#ghWrap').open = true;
+      if ($('#modal').classList.contains('open')) whereText();
     }
     const box = $('#ghBox'); if (!box) return;
     $('#ghSetup').style.display = this.on() ? 'none' : '';
@@ -1388,6 +1399,7 @@ function updateHeader() {
   $('#kind').textContent = kind;
   $('#memoHere').hidden = S.level === 'japan';
   $('#bUp').style.display = S.level === 'japan' ? 'none' : '';
+  $('#bHome').style.display = S.level === 'muni' ? '' : 'none';   // at the prefecture level UP already goes home
   document.title = (S.level === 'japan' ? '' : name + ' — ') + 'SANPO LOG';
   refreshMemoBtn();
 }
@@ -1962,6 +1974,14 @@ $('#dFilter').oninput = () => renderDrawer();
 $('#bList').onclick = () => openDrawer('list');
 $('#bLog').onclick = () => openDrawer('walks');
 $('#bUp').onclick = up;
+function whereText() {
+  const cnt = `メモ ${Store.notes.size} 件・散歩 ${walkDays().length} 日`;
+  $('#mWhere').textContent = FB.user ? `記録はこの端末と、Googleアカウントのクラウドに保存されています（${cnt}）。スマホとPCで自動で同じになります。`
+    : FB.enabled() ? `記録は今、このブラウザの中だけに保存されています（${cnt}）。「Googleでログイン」をすると、クラウドにも保存されて、スマホとPCで同じになります。`
+    : `記録はこのブラウザの中に保存されています（${cnt}）。ブラウザのデータを消すと記録も消えるので、時々「JSONを保存」でバックアップしてください。スマホ→PCへ移すときも、書き出し→読み込みでOKです。`;
+}
+function home() { ['modal', 'sheet', 'wsheet', 'drawer'].forEach(id => { if ($('#' + id).classList.contains('open')) closePanel(id, true); }); origin = null; go(''); }
+$('#bHome').onclick = home; $('#brand').onclick = home;
 
 /* ---------- walk (one day) ---------- */
 let curWalk = null;
@@ -2076,7 +2096,7 @@ function exportJSON() { return JSON.stringify({ ...Store.dump(), exported: new D
 $('#bData').onclick = () => {
   if (FB.enabled() && !FB.sdk) FB.load().then(() => Sync.paint()).catch(() => {});
   Sync.paint();
-  $('#mWhere').textContent = `記録はこのブラウザの中に保存されています（メモ ${Store.notes.size} 件・散歩 ${walkDays().length} 日）。ブラウザのデータを消すと記録も消えるので、時々「JSONを保存」でバックアップしてください。スマホ→PCへ移すときも、書き出し→読み込みでOKです。`;
+  whereText();
   $('#mText').value = '';
   $('#modal').classList.add('open');
 };
