@@ -283,6 +283,12 @@ body:not(.sp).drawer-open #hud{left:342px}
 .btn[disabled]{opacity:.35;pointer-events:none}
 .btn.ghost{background:none;color:var(--ink);border:1px solid var(--ink)}
 .btn.ghost:hover{background:var(--ink);color:#fff}
+.share{display:inline-flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;border:1px dashed #c9c9c3;border-radius:999px;padding:7px 13px 6px 9px;color:#777;background:#fff;transition:background .2s,color .2s,border-color .2s}
+.share i{flex:none;width:11px;height:11px;border-radius:50%;border:1.5px solid currentColor;transition:background .2s}
+.share.on{border-style:solid;color:#fff}
+.share.on i{background:currentColor}
+.share.on.lt{color:var(--ink)}
+.share[hidden]{display:none}
 .form .kbd{font:9px/1 var(--mono);color:#b0b0aa;margin-left:auto;letter-spacing:.06em}
 
 /* drawer */
@@ -459,6 +465,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <textarea id="fDetail" class="pc-only" placeholder="くわしく（道順、見つけたもの、天気、寄ったお店、気づいたこと…）"></textarea>
     <div id="fTags" class="pc-only"></div>
     <div class="row links"><input id="fLinks" type="url" inputmode="url" autocomplete="off" placeholder="写真のリンク（Instagramなど）"><button type="button" class="mini sp-only" id="fPaste">貼付</button></div>
+    <button type="button" class="share" id="fShare" hidden><i></i><span></span></button>
     <div class="row" style="margin:10px 0 0"><button class="btn" id="fSave" type="submit">記録する</button><button type="button" class="loc sp-only" id="fLoc">◉ 位置を付ける</button></div>
   </form>
 </aside>
@@ -499,7 +506,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <h3 id="joinTitle">グループに招待されています</h3>
     <p id="joinText"></p>
     <div class="acts"><button class="btn" id="joinOk">参加する</button><button class="btn ghost" id="joinNo">やめる</button></div>
-    <small>参加すると、あなたの行った場所とメモ（正確な位置はのぞく）がグループの人に見えるようになります。抜けるのはいつでも DATA からできます。</small>
+    <small>参加しても、あなたのメモは「自分だけ」のままです。グループ名のタグを付けたメモだけが、グループの人に見えます（正確な位置はのぞく）。抜けるのはいつでも DATA からできます。</small>
   </div>
 </div>
 <div id="modal" role="dialog" aria-modal="true">
@@ -517,10 +524,11 @@ body.sp input,body.sp textarea{font-size:16px!important}
       <p id="grState"></p>
       <div id="grNew"><input id="grName" maxlength="24" autocomplete="off" placeholder="グループ名（例：散歩部）"><div class="acts"><button class="btn" id="grMake">グループを作る</button></div></div>
       <div id="grIn">
+        <div id="grNameRow"><label class="lbl" for="grGName">グループ名（タグの名前にもなります）</label><input id="grGName" maxlength="24" autocomplete="off"></div>
         <div id="grMembers"></div>
         <label class="lbl" for="grMyName">あなたの表示名</label><input id="grMyName" maxlength="20" autocomplete="off">
         <div class="acts"><button class="btn" id="grInvite">招待リンクを送る</button><button class="btn ghost" id="grLeave">グループを抜ける</button></div>
-        <small>グループの人に見えるもの：行った場所、メモ（ひとこと・くわしく・写真リンク・タグ）、散歩のタイトルとまとめ。メモに付けた正確な位置（GPS）は共有しません。</small>
+        <small id="grWhat"></small>
       </div>
     </div>
     <details id="ghWrap"><summary class="rule" id="ghRule">GitHubと同期</summary>
@@ -825,7 +833,7 @@ function ancestors(k) {
 const STARTER = ['神社', '寺', '公園', '坂', '川', '商店街', 'カフェ', '路地', '紅葉', '桜', '海', '夜景'];
 function tagSuggestions(q) {
   const used = [...IX.tagN.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]);
-  const all = [...used, ...STARTER.filter(s => !IX.tagN.has(s))];
+  const all = uniq([GR.on() ? GR.gtag() : '', ...used, ...STARTER.filter(s => !IX.tagN.has(s))]);   // the group tag first
   return q ? all.filter(t => t.includes(q)) : all;
 }
 
@@ -1049,7 +1057,8 @@ const b64dec = s => new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/
    groups/{gid}            : { name, owner, created, members: { uid: { name, c: colour index, joined } } }
    groups/{gid}/notes|places|walks/{uid}_{id} : a copy of each member's own records (written only by that member, no GPS).
    Anyone who opens the invite link (?g=gid) can join; the group id is long and random. */
-const GCOL = ['#ff4f00', '#2f6bff', '#10a37f', '#9b51e0', '#e5397f', '#c79400', '#0aa1c4', '#6f6f68'];
+const GCOL = ['#1f3bff', '#ee1c25', '#00a651', '#ffc400', '#e5007e', '#00a3e0', '#7b2fd6', '#8c8c86'];   // 群青 赤 緑 黄 マゼンタ 空 紫 (+灰)
+const isLight = h => { const [r, g, b] = hexRGB(h); return .299 * r + .587 * g + .114 * b > 170; };
 const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const dayOf = u => u ? new Date(u - new Date(u).getTimezoneOffset() * 6e4).toISOString().slice(0, 10) : '9999-99-99';
 const GR = {
@@ -1062,7 +1071,7 @@ const GR = {
   members() { return this.g ? Object.entries(this.g.members).map(([uid, m]) => ({ uid, ...m })).sort((a, b) => (a.joined || 0) - (b.joined || 0)) : []; },
   color(uid) {   // a member who has not picked a colour yet gets the first free one (same on every screen)
     const m = this.g && this.g.members[uid]; if (!m) return GCOL[7];
-    if (m.c >= 0) return GCOL[m.c % GCOL.length];
+    if (m.c >= 0) return GCOL[m.c % (GCOL.length - 1)];
     const used = new Set(Object.values(this.g.members).filter(x => x.c >= 0).map(x => x.c));
     for (const x of this.members()) { if (x.c >= 0) continue; let c = 0; while (used.has(c) && c < GCOL.length - 1) c++; used.add(c); if (x.uid === uid) return GCOL[c]; }
     return GCOL[7];
@@ -1070,6 +1079,22 @@ const GR = {
   name(uid) { const m = this.g && this.g.members[uid]; return (m && m.name) || '…'; },
   myName() { const u = FB.user; return ((u && (u.displayName || (u.email || '').split('@')[0])) || 'わたし').slice(0, 20); },
   link() { return location.origin + location.pathname + '?g=' + this.gid; },
+  gtag() { return this.g ? normTag(this.g.name) : ''; },
+  gtags() { return this.g ? uniq([normTag(this.g.name), ...(Array.isArray(this.g.tags) ? this.g.tags.map(normTag) : [])]) : []; },   // current name + earlier names
+  isShared(n) {   // private by default: only memos with the group tag (or on a walk day with the group tag) go to the group
+    const ts = this.gtags(); if (!ts.length) return false;
+    if ((n.tags || []).some(t => ts.includes(t))) return true;
+    const w = Store.walks.get(n.d); return !!(w && (w.tags || []).some(t => ts.includes(t)));
+  },
+  syncTagName() {   // the group was renamed: follow it in my own tags (old names keep working anyway)
+    const cur = this.gtag(); if (!cur) return;
+    const olds = this.gtags().filter(t => t !== cur && IX.tagN.has(t));
+    if (olds.length) olds.forEach(o => Store.renameTag(o, cur));
+  },
+  renameGroup(name) {
+    const s = FB.sdk, nm = name.trim().slice(0, 24);
+    return s.updateDoc(s.doc(FB.db, 'groups', this.gid), { name: nm, tags: uniq([...this.gtags(), normTag(nm)]) });
+  },
   start(gid) {
     if (this.gid === gid && this.unsubs.length) return;
     this.stop(true);
@@ -1080,6 +1105,7 @@ const GR = {
       this.g = snap.data();
       if (!this.g.members || !this.g.members[this.me()]) return this.lost('グループから外れました');
       this.fixColour();
+      this.syncTagName();
       this.refresh();
     }, err => this.lost(err && err.code === 'permission-denied' ? 'グループに参加していません' : null)));
     ['notes', 'places', 'walks'].forEach(c => this.unsubs.push(s.onSnapshot(s.collection(db, 'groups', gid, c), snap => {
@@ -1115,7 +1141,7 @@ const GR = {
     const s = FB.sdk, me = this.me(), now = Date.now();
     if (this.gid) await this.leave(true);
     const ref = s.doc(s.collection(FB.db, 'groups'));
-    await s.setDoc(ref, { name: name.slice(0, 24), owner: me, created: now, members: { [me]: { name: this.myName(), c: 0, joined: now } } });
+    await s.setDoc(ref, { name: name.slice(0, 24), tags: [normTag(name)], owner: me, created: now, members: { [me]: { name: this.myName(), c: 0, joined: now } } });
     await this.setPointer(ref.id);
     this.view = 'group'; this.saveView();
   },
@@ -1159,12 +1185,11 @@ const GR = {
   },
   rename(name) { const s = FB.sdk; return s.updateDoc(s.doc(FB.db, 'groups', this.gid), { ['members.' + this.me() + '.name']: name.slice(0, 20) }); },
   saveView() { try { localStorage.setItem('sanpo-gview', this.view); } catch (e) {} },
-  /* my records -> group (copies without GPS) */
+  /* my shared records -> group (copies without GPS); everything else stays mine only */
   want() {
-    const me = this.me(), out = { notes: new Map(), places: new Map(), walks: new Map() };
-    for (const n of Store.notes.values()) { const { loc, ...r } = n; out.notes.set(me + '_' + n.id, { ...r, by: me }); }
-    for (const [k, pl] of Store.places) if (pl.v) out.places.set(me + '_' + k, { k, v: true, u: pl.u || 0, by: me });
-    for (const w of Store.walks.values()) out.walks.set(me + '_' + w.d, { ...w, by: me });
+    const me = this.me(), ts = this.gtags(), out = { notes: new Map(), places: new Map(), walks: new Map() };
+    for (const n of Store.notes.values()) if (this.isShared(n)) { const { loc, ...r } = n; out.notes.set(me + '_' + n.id, { ...r, by: me }); }
+    for (const w of Store.walks.values()) if ((w.tags || []).some(t => ts.includes(t))) out.walks.set(me + '_' + w.d, { ...w, by: me });
     return out;
   },
   soon(ms) { if (!this.on() || !this.ready) return; clearTimeout(this.t); this.t = setTimeout(() => this.push(), ms == null ? 1500 : ms); },
@@ -1214,10 +1239,8 @@ function groupIndex() {
   if (!GR.on()) { GX = null; return; }
   const me = GR.me(), M = GR.g.members, first = new Map(), others = new Map(), feed = [], towns = new Map();
   const add = (k, uid, d) => { let m = first.get(k); if (!m) first.set(k, m = new Map()); const p = m.get(uid); if (!p || d < p) m.set(uid, d); };
-  for (const n of Store.notes.values()) add(n.k, me, n.d);
-  for (const [k, pl] of Store.places) if (pl.v) add(k, me, dayOf(pl.u));
+  for (const n of Store.notes.values()) if (GR.isShared(n)) add(n.k, me, n.d);   // the group map shows only what was shared
   for (const x of GR.docs.notes.values()) if (x.by !== me && M[x.by] && okKey(String(x.k))) { add(x.k, x.by, x.d); const a = others.get(x.k); a ? a.push(x) : others.set(x.k, [x]); feed.push(x); }
-  for (const x of GR.docs.places.values()) if (x.by !== me && M[x.by] && x.v && okKey(String(x.k))) add(x.k, x.by, dayOf(x.u));
   const order = uid => (M[uid] && M[uid].joined) || 0;
   const own = new Map();
   for (const [k, m] of first) {
@@ -1252,7 +1275,7 @@ function paintGroup() {
       sp.append(i, document.createTextNode(m.name || '…'), b); lg.appendChild(sp);
     });
   }
-  grPaintBox();
+  grPaintBox(); paintShare();
 }
 function grPaintBox() {
   const box = $('#grBox'); if (!box) return;
@@ -1283,6 +1306,8 @@ function grPaintBox() {
     list.appendChild(row);
   });
   const inp = $('#grMyName'); if (document.activeElement !== inp) inp.value = GR.name(me);
+  const gn = $('#grGName'); $('#grNameRow').hidden = !owner; if (document.activeElement !== gn) gn.value = GR.g.name || '';
+  $('#grWhat').textContent = `メモは基本「自分だけ」です。グループに見えるのは、#${GR.gtag()} を付けたメモと、#${GR.gtag()} を付けた日の散歩（その日のメモ全部）だけ。地図のグループ表示も、共有したメモの町だけが塗られます。メモの正確な位置（GPS）は共有しません。`;
 }
 let confirmPublic = false;
 const confirm2 = () => confirmPublic;
@@ -1583,7 +1608,7 @@ function drawLabels() {
     placed.push(r); count++;
     const [wx, wy] = toWorld(sx, sy);
     const t = el('text', { x: wx, y: wy, 'font-size': fs * V.s, 'stroke-width': 3 * V.s });
-    if (it.v && S.level === 'muni') { t.setAttribute('class', 'v'); if (it.c) t.style.stroke = it.c; }
+    if (it.v && S.level === 'muni') { t.setAttribute('class', 'v'); if (it.c) { t.style.stroke = it.c; if (isLight(it.c)) t.style.fill = 'var(--ink)'; } }
     t.textContent = it.n;
     g.appendChild(t);
   }
@@ -1813,6 +1838,7 @@ function openSheet() {
   if (!$('#fDate').value) $('#fDate').value = today();
   fTags.set([]);
   setFormLoc(quickNext);
+  paintShare();
   const has = (IX.byPlace.get(S.sel.key) || []).length > 0;
   $('#sForm').classList.toggle('collapsed', W >= 720 && has && !quickNext);
   if (quickNext) setTimeout(() => $('#fText').focus(), 350);
@@ -1891,7 +1917,12 @@ function chips(urls) {
 }
 function tagChips(tags) {
   const f = document.createDocumentFragment();
-  (tags || []).forEach(t => { const b = document.createElement('button'); b.type = 'button'; b.className = 'htag'; b.textContent = '#' + t; b.onclick = () => openTag(t); f.appendChild(b); });
+  const gt = GR.on() ? GR.gtags() : [], gc = GR.on() ? GR.color(GR.me()) : null;
+  (tags || []).forEach(t => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'htag'; b.textContent = '#' + t; b.onclick = () => openTag(t);
+    if (gt.includes(t)) { b.style.background = gc; b.style.color = isLight(gc) ? 'var(--ink)' : '#fff'; b.title = 'グループに共有中'; }
+    f.appendChild(b);
+  });
   return f;
 }
 const fmtLoc = l => `${l[0].toFixed(4)}N ${l[1].toFixed(4)}E` + (l[2] ? ` ±${Math.round(l[2])}m` : '');
@@ -1904,6 +1935,7 @@ function entryNode(n, opt = {}) {
   const meta = d.querySelector('.meta');
   if (!opt.timeOnly) meta.appendChild(mkBtn('WALK ›', 'tag', () => openWalk(n.d), 'この日の散歩を見る'));
   if (n.loc) meta.appendChild(mkBtn('◉ ' + fmtLoc(n.loc).split(' ±')[0], 'tag', () => showPin(n.loc, n.k), 'この場所を地図で見る'));
+  if (GR.on() && GR.isShared(n)) { const sh = whoChip(GR.me()); sh.lastChild.textContent = '共有中'; sh.title = `#${GR.gtag()} でグループに共有しています`; meta.appendChild(sh); }
   if (!n.x) { const t = document.createElement('span'); t.className = 'tag raw'; t.textContent = '未整理'; meta.appendChild(t); }
   const pl = d.querySelector('.pl');
   if (opt.place) { pl.appendChild(mkBtn(placeLabel(n.k) + ' ›', 'plink', () => jumpTo(n.k))); } else pl.remove();
@@ -2014,19 +2046,31 @@ $('#sToggle').onclick = () => {
 };
 $('#memoHere').onclick = currentAreaSel;
 $('#fOpen').onclick = () => { $('#sForm').classList.remove('collapsed'); $('#fText').focus(); };
+const shareOn = () => { try { return GR.on() && localStorage.getItem('sanpo-share-day') === today(); } catch (e) { return false; } };
+function paintShare() {
+  const b = $('#fShare'); if (!b) return;
+  b.hidden = !GR.on();
+  if (!GR.on()) return;
+  const on = shareOn(), c = GR.color(GR.me());
+  b.classList.toggle('on', on); b.classList.toggle('lt', on && isLight(c));
+  b.style.background = on ? c : ''; b.style.borderColor = on ? c : '';
+  b.querySelector('span').textContent = on ? `#${GR.gtag()} でグループに出す` : `自分だけ（押すと #${GR.gtag()} で共有）`;
+  b.title = on ? '今日はこの設定のまま。明日になると「自分だけ」に戻ります' : '';
+}
+$('#fShare').onclick = () => { try { shareOn() ? localStorage.removeItem('sanpo-share-day') : localStorage.setItem('sanpo-share-day', today()); } catch (e) {} paintShare(); };
 $('#sForm').onsubmit = ev => {
   ev.preventDefault();
   if (!S.sel) return;
   const pc = W >= 720;
   const t = $('#fText').value.trim(), x = pc ? $('#fDetail').value.trim() : '', links = parseLinks($('#fLinks').value);
-  const tags = uniq([...(pc ? fTags.get() : []), ...hashtags(t + ' ' + x)]);
+  const tags = uniq([...(pc ? fTags.get() : []), ...hashtags(t + ' ' + x), ...(shareOn() ? [GR.gtag()] : [])]);
   if (!t && !x && !links.length) { $('#fText').focus(); toast('メモを書いてください'); return; }
   const d = pc ? ($('#fDate').value || today()) : today();
   const k = formKey || S.sel.key;
   Store.putNote({ id: newId(), k, d, at: d === today() ? nowHM() : '', t, x, p: links, loc: formLoc, tags });
   $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; fTags.set([]);
   setFormLoc(null);
-  toast(k === S.sel.key ? '記録しました' : `${placeName(k)} に記録しました`);
+  toast((k === S.sel.key ? '記録しました' : `${placeName(k)} に記録しました`) + (shareOn() ? `（#${GR.gtag()} で共有）` : ''));
   burst(k);
   if (pc) $('#sForm').classList.add('collapsed');
 };
@@ -2295,9 +2339,9 @@ function renderDrawer() {
     if (!GR.on() || !GX) empty('グループに入っていません。DATA からグループを作るか、招待リンクを開いてください。');
     else {
       const me = GR.me();
-      const all = [...[...Store.notes.values()].map(n => ({ ...n, by: me })), ...GX.feed].sort(newestFirst)
+      const all = [...[...Store.notes.values()].filter(n => GR.isShared(n)).map(n => ({ ...n, by: me })), ...GX.feed].sort(newestFirst)
         .filter(n => !q || (n.t || '').includes(q) || (n.x || '').includes(q) || placeLabel(n.k).includes(q) || GR.name(n.by).includes(q)).slice(0, 200);
-      if (!all.length) empty(q ? '見つかりませんでした' : 'まだだれのメモもありません');
+      if (!all.length) empty(q ? '見つかりませんでした' : `まだ共有されたメモはありません。メモに #${GR.gtag()} を付けると、ここに出ます。`);
       let month = '';
       all.forEach(n => {
         if (n.d.slice(0, 7) !== month) { month = n.d.slice(0, 7); const r = document.createElement('div'); r.className = 'rule'; r.textContent = month.replace('-', '.'); frag.appendChild(r); }
@@ -2600,6 +2644,10 @@ $('#grLeave').onclick = () => {
   if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = '本当に抜ける？'; setTimeout(() => { b.classList.remove('arm'); b.textContent = 'グループを抜ける'; }, 3000); return; }
   b.classList.remove('arm'); b.textContent = 'グループを抜ける';
   GR.leave().catch(() => toast('抜けられませんでした。少しあとで試してください'));
+};
+$('#grGName').onchange = () => {
+  const v = $('#grGName').value.trim(); if (!v || !GR.on() || v === GR.g.name) return;
+  GR.renameGroup(v).then(() => toast(`グループ名を「${v}」にしました（タグも #${normTag(v)} になります）`, 3600)).catch(() => toast('変えられませんでした'));
 };
 $('#grMyName').onchange = () => { const v = $('#grMyName').value.trim(); if (v && GR.on()) GR.rename(v).then(() => toast('表示名を変えました')).catch(() => toast('変えられませんでした')); };
 $('#gvMe').onclick = () => { GR.view = 'me'; GR.saveView(); groupIndex(); paintGroup(); changed(); };
