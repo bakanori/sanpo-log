@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <title>SANPO LOG — 散歩の地図</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SANPO LOG">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#efefea">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%23ff4f00'/%3E%3C/svg%3E">
 <style>
 :root{
@@ -480,6 +487,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
       </div>
       <div class="acts" id="ghActs"><button class="btn" id="ghNow">今すぐ同期</button><button class="btn ghost" id="ghOff">この端末の接続を解除</button></div>
     </div></details>
+    <div id="a2hsBox" hidden><div class="rule">ホーム画面に置く（アプリのように使う）</div><p id="a2hs"></p></div>
     <div class="rule">書き出し</div>
     <div class="acts"><button class="btn sp-only" id="mShare">送る（AirDrop・LINEなど）</button><button class="btn" id="mDown">JSONを保存</button><button class="btn ghost" id="mCopy">コピー</button></div>
     <div class="rule">読み込み</div>
@@ -2034,6 +2042,17 @@ function whereText() {
     : FB.enabled() ? `記録は今、このブラウザの中だけに保存されています（${cnt}）。「Googleでログイン」をすると、クラウドにも保存されて、スマホとPCで同じになります。`
     : `記録はこのブラウザの中に保存されています（${cnt}）。ブラウザのデータを消すと記録も消えるので、時々「JSONを保存」でバックアップしてください。スマホ→PCへ移すときも、書き出し→読み込みでOKです。`;
 }
+function a2hsText() {
+  const ua = navigator.userAgent, standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const phone = ios || /Android/.test(ua);
+  $('#a2hsBox').hidden = standalone || !phone;
+  if (standalone || !phone) return;
+  const how = ios && /CriOS/.test(ua) ? 'アドレスバー右の共有ボタン（□に↑）→「ホーム画面に追加」→「追加」。'
+    : ios ? '共有ボタン（□に↑。見当たらなければ「…」の中）→「ホーム画面に追加」→「追加」。'
+    : '右上の︙ →「ホーム画面に追加」（または「アプリをインストール」）。';
+  $('#a2hs').textContent = how + 'アイコンから開くと、ブラウザのバーのない全画面で開きます。ホーム画面版は保存場所がブラウザと別なので、最初に1回「Googleでログイン」をしてください。';
+}
 function home() { ['geo', 'modal', 'sheet', 'wsheet', 'drawer'].forEach(id => { if ($('#' + id).classList.contains('open')) closePanel(id, true); }); origin = null; go(''); }
 $('#bHome').onclick = home; $('#brand').onclick = home;
 
@@ -2150,7 +2169,7 @@ function exportJSON() { return JSON.stringify({ ...Store.dump(), exported: new D
 $('#bData').onclick = () => {
   if (FB.enabled() && !FB.sdk) FB.load().then(() => Sync.paint()).catch(() => {});
   Sync.paint();
-  whereText();
+  whereText(); a2hsText();
   $('#mText').value = '';
   $('#modal').classList.add('open');
 };
