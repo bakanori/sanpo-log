@@ -385,6 +385,8 @@ body:not(.sp).drawer-open #hud{left:342px}
 .mpaste summary::-webkit-details-marker{display:none}
 .mpaste summary:before{content:"＋ "}
 .mpaste[open] summary:before{content:"− "}
+.card .ver{font:10px/1.6 var(--mono);color:var(--ink);letter-spacing:.06em;margin-top:26px;padding-top:12px;border-top:1px solid var(--hair)}
+.card .ver a{color:var(--mute)}
 .card small{display:block;font:10px/1.6 var(--mono);color:var(--mute);margin-top:16px;letter-spacing:.03em}
 
 @media (max-width:720px){
@@ -637,6 +639,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <div class="acts"><button class="btn ghost" id="mPaste">貼り付けた内容を読む</button></div>
     </details>
     </section>
+    <p class="ver"><span id="verTxt"></span> · <a href="https://github.com/bakanori/sanpo-log#更新履歴" target="_blank" rel="noopener">更新履歴 ↗</a></p>
     <small>出典：「国土数値情報（行政区域データ）」（国土交通省）を加工して作成。町丁目の代表点：<a href="https://github.com/geolonia/japanese-addresses" style="color:inherit">Geolonia 住所データ</a>（CC BY 4.0）を加工して作成。町丁目の範囲は代表点からの推定で、実際の境界とは異なります。</small>
   </div>
 </div>
@@ -644,6 +647,8 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script src="firebase-config.js" onerror="this.remove()"></script>
 <script>
 'use strict';
+/* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
+const VERSION = '2.0.1', VERSION_DATE = '2026.11.22';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -2892,6 +2897,7 @@ function focusKeys(keys, fitRoute) {
 
 /* ---------- data modal ---------- */
 function exportJSON() { return JSON.stringify({ ...Store.dump(), exported: new Date().toISOString() }, null, 1); }
+$('#verTxt').textContent = `SANPO LOG v${VERSION}（${VERSION_DATE}）`;
 $('#bData').onclick = () => {
   if (FB.enabled() && !FB.sdk) FB.load().then(() => Sync.paint()).catch(() => {});
   Sync.paint();
