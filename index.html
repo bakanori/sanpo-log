@@ -276,8 +276,13 @@ body:not(.sp).drawer-open #hud{left:342px}
 .log:hover .p{text-decoration:underline;text-underline-offset:3px}
 
 /* modal */
-#modal{position:fixed;inset:0;background:rgba(239,239,234,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
-#modal.open{display:flex;animation:fade .3s both}
+#modal,#geo{position:fixed;inset:0;background:rgba(239,239,234,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
+#modal.open,#geo.open{display:flex;animation:fade .3s both}
+#geo{z-index:45}
+.steps{margin:14px 0 2px 20px;font-size:13px;line-height:1.75;color:#333}
+.steps li{margin:6px 0;padding-left:2px}
+.steps b{font-weight:600}
+.steps li.note{list-style:none;margin-left:-20px;font-size:12px;color:var(--mute)}
 .card{background:#fff;border:1px solid var(--hair);border-radius:14px;width:min(460px,100%);padding:26px;position:relative;max-height:90vh;max-height:90dvh;overflow:auto;-webkit-overflow-scrolling:touch}
 .card h3{font-weight:300;font-size:22px}
 .card p{font-size:12px;line-height:1.75;color:#555;margin-top:10px}
@@ -299,6 +304,8 @@ body:not(.sp).drawer-open #hud{left:342px}
   #hud{left:14px;bottom:calc(64px + var(--safe-b))}
   #tools{left:14px;right:14px;bottom:calc(14px + var(--safe-b));justify-content:flex-end}
   #hint{display:none}
+  #toast{top:auto;bottom:calc(150px + var(--safe-b));max-width:calc(100vw - 40px);white-space:normal;text-align:center;line-height:1.5}
+  body.sheet-open #toast,body.wsheet-open #toast,body.drawer-open #toast{top:calc(14px + var(--safe-t));bottom:auto}
   #sheet,#wsheet,#drawer{left:0;right:0;width:100%;top:auto;max-height:70vh;max-height:70dvh;border:0;border-top:1px solid var(--hair);border-radius:16px 16px 0 0;transform:translateY(102%);box-shadow:0 -10px 40px rgba(0,0,0,.06)}
   #drawer,#wsheet{height:66vh;height:66dvh}
   #sheet.open,#wsheet.open,#drawer.open{transform:none}
@@ -443,6 +450,16 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <div class="pbody" id="dBody"></div>
 </aside>
 
+<div id="geo" role="dialog" aria-modal="true" aria-labelledby="geoTitle">
+  <div class="card">
+    <button class="x" data-close="geo" aria-label="閉じる" style="top:12px">×</button>
+    <h3 id="geoTitle">現在地をオンにする</h3>
+    <p id="geoWhy"></p>
+    <ol class="steps" id="geoSteps"></ol>
+    <div class="acts"><button class="btn" id="geoRetry">もう一度ためす</button><button class="btn ghost" id="geoMap">地図から選ぶ</button></div>
+    <small>現在地は、メモに場所を付けるときと、地図に今いる場所を出すときだけ使います。</small>
+  </div>
+</div>
 <div id="modal" role="dialog" aria-modal="true">
   <div class="card">
     <button class="x" data-close="modal" aria-label="閉じる" style="top:12px">×</button>
@@ -1412,6 +1429,7 @@ function refreshMemoBtn() {
   b.textContent = n ? `MEMO ${n}` : isV(k) ? '● VISITED' : '＋ MEMO';
 }
 function up() {
+  if ($('#geo').classList.contains('open')) return closePanel('geo');
   if ($('#modal').classList.contains('open')) return closePanel('modal');
   if ($('#sheet').classList.contains('open')) return closePanel('sheet');
   if ($('#wsheet').classList.contains('open')) return closePanel('wsheet');
@@ -1718,7 +1736,7 @@ $('#fLoc').onclick = async () => {
   if (formLoc) return setFormLoc(null);
   $('#fLoc').textContent = '◉ 取得中…';
   try { const p = await getPos(); setFormLoc([+p.lat.toFixed(5), +p.lng.toFixed(5), Math.round(p.acc)]); }
-  catch (e) { setFormLoc(null); geoErr(e); }
+  catch (e) { setFormLoc(null); geoErr(e, () => $('#fLoc').onclick()); }
 };
 
 /* ---------- GPS: where am I? ---------- */
@@ -1732,8 +1750,44 @@ function getPos() {
       e => rej(e), { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
   });
 }
-function geoErr(e) {
-  toast(e && e.code === 1 ? '位置情報が許可されていません（ブラウザの設定で許可してください）'
+let geoRetry = null;
+function geoHelp() {
+  const ua = navigator.userAgent;
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const inApp = /Instagram|FBAN|FBAV|Line\/|Twitter|MicroMessenger/.test(ua);
+  const app = /CriOS/.test(ua) ? 'Chrome' : /EdgiOS/.test(ua) ? 'Edge' : /FxiOS/.test(ua) ? 'Firefox' : null;
+  let why = 'このブラウザで位置情報が「許可しない」になっています。', steps;
+  if (inApp) {
+    why = 'アプリの中のブラウザでは、現在地が使えないことがあります。';
+    steps = ['右上（または右下）の <b>…</b> から <b>「ブラウザで開く」</b> を選ぶ', '開いたブラウザで、もう一度 <b>◎ HERE</b> か <b>＋</b> を押して <b>「許可」</b>'];
+  } else if (ios && app) {
+    steps = [`iPhoneの <b>「設定」</b> を開き、<b>「アプリ」→「${app}」→「位置情報」</b>`,
+      '<b>「このAppの使用中」</b> を選ぶ（<b>「正確な位置情報」</b> もオン）',
+      `${app}に戻ってこのページを再読み込みし、<b>「もう一度ためす」</b> → <b>「許可」</b>`,
+      '<li class="note">設定の一覧に「アプリ」がない場合は、そのまま「' + app + '」を探してください。</li>'];
+  } else if (ios) {
+    steps = ['iPhoneの <b>「設定」</b> を開き、<b>「アプリ」→「Safari」→「位置情報」</b> を <b>「確認」</b> か <b>「許可」</b> にする',
+      '<b>「設定」→「プライバシーとセキュリティ」→「位置情報サービス」→「Safari Webサイト」</b> を <b>「このAppの使用中」</b> にする',
+      'Safariに戻ってこのページを再読み込みし、<b>「もう一度ためす」</b> → <b>「許可」</b>',
+      '<li class="note">アドレスバーの <b>ぁあ</b> →「Webサイトの設定」→「位置情報」でも変えられます。</li>'];
+  } else if (/Android/.test(ua)) {
+    steps = ['アドレスバー左のアイコン → <b>「権限」</b>（または「サイトの設定」）→ <b>「位置情報」</b> を許可',
+      'スマホ本体の <b>位置情報</b>（画面上から下に引いて出るクイック設定）がオンか確認',
+      'このページを再読み込みして <b>「もう一度ためす」</b>'];
+  } else {
+    steps = ['アドレスバー左のアイコン（鍵や設定のマーク）→ <b>「位置情報」</b> を <b>「許可」</b>', 'このページを再読み込みして <b>「もう一度ためす」</b>'];
+  }
+  $('#geoWhy').textContent = why;
+  $('#geoSteps').innerHTML = steps.map(x => x.startsWith('<li') ? x : `<li>${x}</li>`).join('');
+  $('#geo').classList.add('open');
+}
+$('#geoRetry').onclick = () => { closePanel('geo'); const f = geoRetry; if (f) f(); };
+$('#geoMap').onclick = () => { closePanel('geo'); toast(S.level === 'muni' ? '地図で町を押すと、その町にメモできます' : '地図を押して、歩いた町まで進んでください', 3200); };
+$('#geo').addEventListener('click', e => { if (e.target.id === 'geo') closePanel('geo'); });
+function geoErr(e, retry) {
+  if (e && e.code === 1) { geoRetry = retry || null; return geoHelp(); }
+  toast(e && e.code === 3 ? '現在地の取得に時間がかかっています。空の見える場所で、もう一度試してください'
+    : e && e.code === 2 ? '現在地を特定できませんでした（屋内では時間がかかることがあります）'
     : e && e.message === 'insecure' ? '現在地は https のページでだけ使えます（GitHub Pagesで開いてください）'
     : e && e.message === 'outside' ? '日本の外にいるようです'
     : '現在地を取得できませんでした');
@@ -1821,7 +1875,7 @@ async function goHere(withMemo) {
       if (location.hash.slice(1) === r.mc) flyTo(T, 800);
       else { pendingFly = T; go(r.mc); }
     }
-  } catch (e) { geoErr(e); }
+  } catch (e) { geoErr(e, () => goHere(withMemo)); }
   finally { locBusy = false; $('#fab').style.opacity = ''; }
 }
 let pendingFly = null;
@@ -1980,7 +2034,7 @@ function whereText() {
     : FB.enabled() ? `記録は今、このブラウザの中だけに保存されています（${cnt}）。「Googleでログイン」をすると、クラウドにも保存されて、スマホとPCで同じになります。`
     : `記録はこのブラウザの中に保存されています（${cnt}）。ブラウザのデータを消すと記録も消えるので、時々「JSONを保存」でバックアップしてください。スマホ→PCへ移すときも、書き出し→読み込みでOKです。`;
 }
-function home() { ['modal', 'sheet', 'wsheet', 'drawer'].forEach(id => { if ($('#' + id).classList.contains('open')) closePanel(id, true); }); origin = null; go(''); }
+function home() { ['geo', 'modal', 'sheet', 'wsheet', 'drawer'].forEach(id => { if ($('#' + id).classList.contains('open')) closePanel(id, true); }); origin = null; go(''); }
 $('#bHome').onclick = home; $('#brand').onclick = home;
 
 /* ---------- walk (one day) ---------- */
