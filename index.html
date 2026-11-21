@@ -316,6 +316,25 @@ body:not(.sp).drawer-open #hud{left:342px}
 #modal,#geo,#join{position:fixed;inset:0;background:rgba(239,239,234,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
 #modal.open,#geo.open,#join.open{display:flex;animation:fade .3s both}
 #geo,#join{z-index:45}
+/* photo viewer — Instagram's own embed page, fetched only when a photo is tapped */
+#ig{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;background:rgba(239,239,234,.94);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:calc(14px + var(--safe-t)) calc(12px + var(--safe-r)) calc(14px + var(--safe-b)) calc(12px + var(--safe-l))}
+#ig.open{display:flex;animation:fade .3s both}
+#ig>*{width:min(540px,100%);flex:none}
+.igbar{display:flex;align-items:center;gap:6px;padding-bottom:8px}
+.igbar .n{font:10px/1 var(--mono);letter-spacing:.12em;color:var(--mute);margin-right:auto}
+.igbar .nv{width:40px;height:40px;border-radius:50%;border:1px solid var(--ink);display:grid;place-items:center;font:16px/1 var(--mono);transition:background .2s,color .2s}
+.igbar .nv:active{background:var(--ink);color:#fff}
+@media (hover:hover){.igbar .nv:hover,.rule .rl:hover{background:var(--ink);color:#fff}}
+.igbar .chip{padding:9px 11px 8px;margin:0 2px}
+#ig .x{position:static;flex:none;width:40px;height:40px;color:var(--ink)}
+.igcap{font-size:12px;line-height:1.5;color:#444;padding:0 2px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.igcap:empty{display:none}
+#ig .igf{flex:0 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;position:relative;background:#fff;border:1px solid var(--hair);border-radius:12px}
+.igf iframe{display:block;width:100%;border:0;background:#fff;opacity:0;transition:opacity .35s}
+.igf iframe.on{opacity:1}
+.igl{position:absolute;left:16px;right:16px;top:120px;text-align:center;font:10px/1.8 var(--mono);letter-spacing:.12em;color:var(--mute);pointer-events:none}
+.igh{font-size:11px;line-height:1.7;color:var(--mute);padding:10px 2px 0}
+.rule .rl{order:2;font:9px/1 var(--mono);letter-spacing:.1em;color:var(--ink);border:1px solid var(--ink);border-radius:999px;padding:5px 8px 4px;transition:background .2s,color .2s}
 .steps{margin:14px 0 2px 20px;font-size:13px;line-height:1.75;color:#333}
 .steps li{margin:6px 0;padding-left:2px}
 .steps b{font-weight:600}
@@ -508,6 +527,12 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <div class="acts"><button class="btn" id="joinOk">参加する</button><button class="btn ghost" id="joinNo">やめる</button></div>
     <small>参加しても、あなたのメモは「自分だけ」のままです。グループ名のタグを付けたメモだけが、グループの人に見えます（正確な位置はのぞく）。抜けるのはいつでも DATA からできます。</small>
   </div>
+</div>
+<div id="ig" role="dialog" aria-modal="true" aria-label="写真">
+  <div class="igbar"><span class="n" id="igN"></span><button class="nv" id="igPrev" aria-label="前の写真">‹</button><button class="nv" id="igNext" aria-label="次の写真">›</button><a class="chip" id="igOut" target="_blank" rel="noopener noreferrer">INSTAGRAM ↗</a><button class="x" data-close="ig" aria-label="閉じる">×</button></div>
+  <div class="igcap" id="igCap"></div>
+  <div class="igf" id="igBox"><div class="igl" id="igL"></div></div>
+  <div class="igh">表示されないときは、非公開のアカウントか、Instagramの設定で「埋め込み」がオフの投稿です。右上の INSTAGRAM ↗ から開けます。</div>
 </div>
 <div id="modal" role="dialog" aria-modal="true">
   <div class="card">
@@ -1765,6 +1790,7 @@ function refreshMemoBtn() {
   b.textContent = n ? `MEMO ${n}` : isV(k) ? '● VISITED' : '＋ MEMO';
 }
 function up() {
+  if (IG.on()) return closePanel('ig');
   if ($('#join').classList.contains('open')) return closePanel('join');
   if ($('#geo').classList.contains('open')) return closePanel('geo');
   if ($('#modal').classList.contains('open')) return closePanel('modal');
@@ -1907,11 +1933,75 @@ function linkLabel(u) {
   return (h || 'LINK').toUpperCase();
 }
 const parseLinks = s => [...new Set(String(s || '').match(/https?:\/\/[^\s<>"'、。）)]+/g) || [])].slice(0, 12);
-function chips(urls) {
+/* Instagram post / reel links open inside the app, through Instagram's own embed page.
+   Nothing is loaded until a photo is tapped, and the frame is thrown away on close. */
+function igPost(u) {
+  let x; try { x = new URL(u); } catch (e) { return null; }
+  if (!/^((www|m)\.)?instagram\.com$|^instagr\.am$/.test(x.hostname)) return null;
+  const m = x.pathname.match(/^\/(?:[\w.]+\/)?(p|reels?|tv)\/([\w-]{5,})/);
+  if (!m) return null;
+  const kind = m[1] === 'p' ? 'p' : m[1] === 'tv' ? 'tv' : 'reel';
+  return { code: m[2], url: `https://www.instagram.com/${kind}/${m[2]}/`, embed: `https://www.instagram.com/p/${m[2]}/embed/?cr=1&v=14` };
+}
+const noteLinks = n => Array.isArray(n.p) ? n.p.filter(u => /^https?:\/\//.test(u)) : [];
+const capOf = n => [n.d ? n.d.slice(5).replace('-', '.') + (n.at ? ' ' + n.at : '') : '', placeName(n.k), n.t].filter(Boolean).join(' · ');
+const igItems = ns => ns.flatMap(n => noteLinks(n).filter(igPost).map(u => ({ u, cap: capOf(n) })));
+const IG = {
+  list: [], i: 0, f: null, t: 0,
+  on: () => $('#ig').classList.contains('open'),
+  open(list, i) {
+    if (!list.length) return;
+    this.list = list; this.i = i || 0;
+    $('#ig').classList.add('open'); document.body.classList.add('ig-open');
+    this.show();
+  },
+  show() {
+    const it = this.list[this.i], p = igPost(it.u), many = this.list.length > 1;
+    $('#igN').textContent = many ? `${this.i + 1} / ${this.list.length}` : '';
+    $('#igPrev').hidden = $('#igNext').hidden = !many;
+    $('#igCap').textContent = it.cap || '';
+    $('#igOut').href = p.url;
+    this.clear();
+    const L = $('#igL'); L.textContent = 'LOADING…';
+    // a new frame each time: changing an iframe's src would add a Back-button step
+    const f = document.createElement('iframe');
+    f.title = 'Instagram'; f.allow = 'autoplay; encrypted-media; picture-in-picture; clipboard-write'; f.allowFullscreen = true;
+    const w = Math.max(326, Math.min(540, $('#igBox').clientWidth - 2 || 360));
+    f.style.height = Math.round(w * 1.25 + 200) + 'px';
+    f.onload = () => { if (this.f !== f) return; clearTimeout(this.t); f.classList.add('on'); L.textContent = ''; };
+    f.src = p.embed + '&wp=' + w;   // with these, the embed reports its real height
+    $('#igBox').appendChild(f); $('#igBox').scrollTop = 0; this.f = f;
+    this.t = setTimeout(() => { if (this.f === f && !f.classList.contains('on')) L.textContent = '読み込めませんでした\nINSTAGRAM ↗ から開いてください'; }, 15000);
+  },
+  step(d) { if (this.list.length < 2) return; this.i = (this.i + d + this.list.length) % this.list.length; this.show(); },
+  clear() { clearTimeout(this.t); if (this.f) { this.f.remove(); this.f = null; } $('#igL').textContent = ''; }
+};
+// Instagram's embed page tells its parent how tall it is
+addEventListener('message', e => {
+  if (!IG.f || e.source !== IG.f.contentWindow || !/^https:\/\/(www\.)?instagram\.com$/.test(e.origin)) return;
+  let m; try { m = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (er) { return; }
+  const h = m && m.type === 'MEASURE' && m.details ? +m.details.height : 0;
+  if (h > 120 && h < 6000) IG.f.style.height = Math.ceil(h) + 'px';
+});
+$('#igPrev').onclick = () => IG.step(-1);
+$('#igNext').onclick = () => IG.step(1);
+$('#ig').addEventListener('click', e => { if (e.target.id === 'ig') closePanel('ig'); });
+function photosBtn(rule, ns) {
+  const it = igItems(ns);
+  if (it.length) rule.appendChild(mkBtn(`PHOTOS ${it.length} ▸`, 'rl', () => IG.open(it, 0), 'この中の写真をまとめて見る'));
+}
+function chips(urls, n) {
   const f = document.createDocumentFragment();
+  const list = (urls || []).filter(igPost).map(u => ({ u, cap: n ? capOf(n) : '' }));
+  let k = 0;
   (urls || []).forEach(u => {
     const a = document.createElement('a'); a.className = 'chip'; a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer';
-    a.textContent = linkLabel(u) + ' ↗'; f.appendChild(a);
+    if (igPost(u)) {
+      const i = k++;
+      a.textContent = 'INSTAGRAM' + (list.length > 1 ? ' ' + (i + 1) : '') + ' ▸'; a.title = 'アプリの中で見る';
+      a.onclick = e => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return; e.preventDefault(); IG.open(list, i); };
+    } else a.textContent = linkLabel(u) + ' ↗';
+    f.appendChild(a);
   });
   return f;
 }
@@ -1941,7 +2031,7 @@ function entryNode(n, opt = {}) {
   if (opt.place) { pl.appendChild(mkBtn(placeLabel(n.k) + ' ›', 'plink', () => jumpTo(n.k))); } else pl.remove();
   d.querySelector('.t').textContent = n.t || (n.x ? '' : '（メモなし）');
   d.querySelector('.dx').textContent = n.x || '';
-  d.querySelector('.ph').appendChild(chips(n.p));
+  d.querySelector('.ph').appendChild(chips(n.p, n));
   d.querySelector('.tg').appendChild(tagChips(n.tags));
   const del = d.querySelector('.del');
   del.onclick = () => {
@@ -1962,7 +2052,7 @@ function otherEntry(n, opt) {   // someone else's memo in the group: read only, 
   d.querySelector('.t').textContent = n.t || '';
   d.querySelector('.dx').textContent = n.x || '';
   d.querySelector('.dx').style.borderLeftColor = GR.color(n.by);
-  d.querySelector('.ph').appendChild(chips(Array.isArray(n.p) ? n.p.filter(u => /^https?:\/\//.test(u)) : []));
+  d.querySelector('.ph').appendChild(chips(noteLinks(n), n));
   d.querySelector('.tg').appendChild(tagChips(Array.isArray(n.tags) ? n.tags : []));
   return d;
 }
@@ -2003,13 +2093,14 @@ function renderEntries() {
   tg.querySelector('span').textContent = isV(k) ? '行った' : 'まだ';
   const raw = own.filter(x => !x.x).length;
   $('#sCount').textContent = `メモ ${own.length}` + (raw && W >= 720 ? ` · 未整理 ${raw}` : '');
+  photosBtn($('#sCount'), own);
   const box = $('#sEntries'); box.innerHTML = '';
   if (!own.length) box.innerHTML = `<div class="empty">${k[0] === 't' ? 'この町のメモはまだありません。' : 'この' + (k[0] === 'p' ? '県' : '市') + 'そのものへのメモはまだありません。'}<br>${W < 720 ? '下の欄に、ひとことメモを残しましょう。' : '下の「新しいメモを書く」から残せます。'}</div>`;
   own.forEach(n => box.appendChild(entryNode(n)));
   const grp = GR.showing();
   if (grp && GX.others.has(k)) {
     const os = GX.others.get(k);
-    const r = document.createElement('div'); r.className = 'rule'; r.textContent = `みんなのメモ ${os.length}`; box.appendChild(r);
+    const r = document.createElement('div'); r.className = 'rule'; r.textContent = `みんなのメモ ${os.length}`; photosBtn(r, os); box.appendChild(r);
     os.forEach(n => box.appendChild(entryNode(n, { other: true })));
   }
   // memos written somewhere inside this prefecture / city
@@ -2424,6 +2515,7 @@ function closePanel(id, quiet) {
   if (id === 'sheet' && !quiet) { select(null); }
   if (id === 'wsheet') { curWalk = null; editing = null; }
   if (id === 'drawer') syncTools();
+  if (id === 'ig') IG.clear();
 }
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closePanel(b.dataset.close));
 ['list', 'walks', 'tags', 'group'].forEach(t => $('#t_' + t).onclick = () => { dTab = t; if (t !== 'tags') dTag = null; $('#dFilter').value = ''; renderDrawer(); syncTools(); });
@@ -2448,7 +2540,7 @@ function a2hsText() {
     : '右上の︙ →「ホーム画面に追加」（または「アプリをインストール」）。';
   $('#a2hs').textContent = how + 'アイコンから開くと、ブラウザのバーのない全画面で開きます。ホーム画面版は保存場所がブラウザと別なので、最初に1回「Googleでログイン」をしてください。';
 }
-function home() { ['join', 'geo', 'modal', 'sheet', 'wsheet', 'drawer'].forEach(id => { if ($('#' + id).classList.contains('open')) closePanel(id, true); }); origin = null; go(''); }
+function home() { ['ig', 'join', 'geo', 'modal', 'sheet', 'wsheet', 'drawer'].forEach(id => { if ($('#' + id).classList.contains('open')) closePanel(id, true); }); origin = null; go(''); }
 $('#bHome').onclick = home; $('#brand').onclick = home;
 
 /* ---------- walk (one day) ---------- */
@@ -2478,7 +2570,7 @@ function renderWalk() {
   if (w.sum) { const p = document.createElement('div'); p.className = 'dx'; p.textContent = w.sum; sum.appendChild(p); }
   sum.appendChild(mkBtn(w.title || w.sum ? 'EDIT · タイトルとまとめ' : '＋ タイトルとまとめを書く', w.title || w.sum ? 'tag' : 'btn ghost', () => editWalk(sum, d)));
   body.appendChild(sum);
-  const r = document.createElement('div'); r.className = 'rule'; r.textContent = `メモ ${st.ns.length}`; body.appendChild(r);
+  const r = document.createElement('div'); r.className = 'rule'; r.textContent = `メモ ${st.ns.length}`; photosBtn(r, st.ns); body.appendChild(r);
   if (!st.ns.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'この日のメモはありません。'; body.appendChild(e); }
   st.ns.forEach(n => body.appendChild(entryNode(n, { place: true, timeOnly: true })));
 }
@@ -2781,6 +2873,7 @@ setTimeout(hideHint, 9000);
 addEventListener('keydown', e => {
   if (e.target.matches('input,textarea')) { if (e.key === 'Escape') e.target.blur(); return; }
   if (e.key === 'Escape') up();
+  else if (IG.on()) { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); IG.step(e.key === 'ArrowLeft' ? -1 : 1); } }
   else if (e.key === '/' ) { e.preventDefault(); openDrawer('list'); setTimeout(() => $('#dFilter').focus(), 50); }
 });
 const setSP = () => document.body.classList.toggle('sp', W < 720 || H < 520);
