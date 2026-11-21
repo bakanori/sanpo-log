@@ -231,7 +231,14 @@ for name in os.listdir(OUT):
 # the page itself + library
 os.makedirs(os.path.join(SITE, 'lib'), exist_ok=True)
 fetch(D3_URL, os.path.join(SITE, 'lib', 'd3-delaunay.min.js'))
-for name in ['index.html', 'README.md', 'firebase-config.js']:
+# app icons (kept as base64 text in tools/icons.json)
+import base64
+os.makedirs(os.path.join(SITE, 'icons'), exist_ok=True)
+for name, b64 in json.load(open(os.path.join(ROOT, 'tools', 'icons.json'))).items():
+    if not name.startswith('_'):
+        with open(os.path.join(SITE, 'icons', name), 'wb') as f: f.write(base64.b64decode(b64))
+
+for name in ['index.html', 'README.md', 'firebase-config.js', 'manifest.webmanifest']:
     if os.path.exists(os.path.join(ROOT, name)):
         shutil.copy(os.path.join(ROOT, name), os.path.join(SITE, name))
 open(os.path.join(SITE, '.nojekyll'), 'w').close()
