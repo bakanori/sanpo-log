@@ -215,10 +215,11 @@ body.sp.sheet-open #fab,body.sp.drawer-open #fab,body.sp.wsheet-open #fab{transf
 .walk .d{display:flex;justify-content:space-between;font:10px/1 var(--mono);color:var(--mute);letter-spacing:.06em}
 .walk .d b{font-weight:400}
 .walk .ti{font-size:15px;margin-top:7px}
-.walk .ti.auto,.big.auto{color:#9a9a94}
+.walk .ti.auto,.big.auto{color:inherit}
 .walk .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
 .walk .tags:empty{display:none}
 .walk.cur .ti,.walk:hover .ti{text-decoration:underline;text-underline-offset:3px}
+.addlink{width:100%;margin:2px 0 16px}
 .ycal{margin:2px 0 16px}
 .ycl{display:flex;align-items:baseline;gap:6px;font-size:11px;color:var(--mute);margin-bottom:8px}
 .ycl b{font:300 22px/1 var(--mono);color:var(--ink)}
@@ -343,9 +344,37 @@ body:not(.sp).drawer-open #hud{left:342px}
 .log:hover .p{text-decoration:underline;text-underline-offset:3px}
 
 /* modal */
-#modal,#geo,#join{position:fixed;inset:0;background:rgba(239,239,234,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
-#modal.open,#geo.open,#join.open{display:flex;animation:fade .3s both}
-#geo,#join{z-index:45}
+#modal,#geo,#join,#attach{position:fixed;inset:0;background:rgba(239,239,234,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
+#modal.open,#geo.open,#join.open,#attach.open{display:flex;animation:fade .3s both}
+#geo,#join,#attach{z-index:45}
+/* small photos */
+.thumbs{grid-column:1/3;display:flex;flex-wrap:wrap;gap:6px}
+.thumbs:empty{display:none}
+.th{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;background:#ecece7;padding:0;flex:none}
+.th img{display:block;width:100%;height:100%;object-fit:cover}
+.th.miss:after{content:"…";position:absolute;inset:0;display:grid;place-items:center;color:var(--mute)}
+.th .rm{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;background:rgba(17,17,17,.72);color:#fff;font:12px/1 var(--mono);display:grid;place-items:center}
+.thumbs.edit{margin-top:8px}
+[hidden]{display:none!important}
+.chip .svc{font-style:normal;font-size:8px;letter-spacing:.04em;opacity:.55;margin-left:5px}
+.igf.pic{background:#f6f6f2}
+.igImg{display:block;width:100%;max-width:480px;height:auto;margin:0 auto}
+.addph{grid-column:1/3;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0 2px}
+.addph input{flex:1 1 180px;min-width:0;font:inherit;font-size:16px;border:1px solid var(--hair);border-radius:10px;padding:10px 12px}
+.entry.own{cursor:pointer}
+.edit .eDel{margin-left:auto;font:11px/1 var(--mono);letter-spacing:.08em;color:var(--mute);padding:12px 4px}
+.edit .eDel.arm{color:var(--ink);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+#attach .card{max-width:440px}
+#attach .cands{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px}
+#attach .cand{display:block;width:100%;text-align:left;border:1px solid var(--hair);border-radius:12px;padding:12px 14px;min-height:52px;background:#fff;transition:border-color var(--ui),background var(--ui)}
+#attach .cand:hover{border-color:var(--ink)}
+#attach .cand b{display:block;font:500 10px/1.4 var(--mono);letter-spacing:.06em;color:var(--mute);margin-bottom:3px}
+#attach .cand span{display:block;font-size:14px;line-height:1.5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#attach .cand.best{border-color:var(--ink)}
+#attach .cand.best b:after{content:"  いちばん近い時刻";color:var(--accent)}
+#attach .attIn{font:inherit;font-size:16px;border:1px solid var(--hair);border-radius:10px;padding:12px}
+#attach .when{font:11px/1.6 var(--mono);color:var(--mute);letter-spacing:.04em}
+#bData2{display:none}
 /* photo viewer — Instagram's own embed page, fetched only when a photo is tapped */
 #ig{position:fixed;inset:0;z-index:50;display:none;flex-direction:column;align-items:center;background:rgba(239,239,234,.94);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:calc(14px + var(--safe-t)) calc(12px + var(--safe-r)) calc(14px + var(--safe-b)) calc(12px + var(--safe-l))}
 #ig.open{display:flex;animation:fade .3s both}
@@ -389,18 +418,58 @@ body:not(.sp).drawer-open #hud{left:342px}
 .card .ver a{color:var(--mute)}
 .card small{display:block;font:10px/1.6 var(--mono);color:var(--mute);margin-top:16px;letter-spacing:.03em}
 
+.entry .acts button{min-height:28px;padding:0 4px}
+.tag,.chip,.htag{min-height:22px;display:inline-flex;align-items:center}
 @media (max-width:720px){
+  /* sizes for thumbs: 44px for what you press often, nothing under 11px */
+  .pill{min-height:44px;min-width:44px;padding:0 15px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+  .x{width:44px;height:44px;right:8px}
+  #hlbar button{width:36px;height:36px}
+  .eyebrow,.coord,.rule,.entry .d,.scope>span,#stats b em{font-size:11px}
+  .chip .svc{font-size:9px}
+  #tools{gap:6px}
+  #bData{display:none}
+  #bData2{display:inline-flex;grid-area:1/6;align-items:center;gap:6px;min-height:44px;padding:0 2px 0 8px;margin:-11px -4px -11px 0;font:11px/1 var(--mono);letter-spacing:.1em;color:var(--ink)}
+  #bData2 i{width:6px;height:6px;border-radius:50%;background:#c9c9c3}
+  #bData2.ok i{background:#2bb673}#bData2.busy i{background:var(--accent);animation:pulse 1s infinite}#bData2.err i{background:#d33}
+  #store{display:none!important}
+  .brand{padding:11px 14px 11px 0;margin:-11px -14px -11px 0;min-width:44px;min-height:44px}
+  #memoHere{min-height:34px;padding:0 13px;font-size:11px}
+  #fab{bottom:calc(78px + var(--safe-b))}
+  #fab small{font-size:11px;bottom:-19px}
+  #hud{bottom:calc(74px + var(--safe-b))!important}
+  #scale{font-size:11px}
+  .btn{min-height:44px;font-size:12px}
+  label.btn{display:inline-flex;align-items:center}
+  .entry .meta .tag.raw,.entry .meta .who{min-height:26px}
+  .mini{min-height:44px;font-size:12px}
+  .loc{min-height:44px;font-size:11px}
+  .toggle{min-height:40px}
+  .sc{min-height:38px;font-size:13px;padding:0 13px;display:inline-flex;align-items:center}
+  .tag,.chip{font-size:11px;min-height:32px;padding:0 11px}
+  .htag{font-size:12px;min-height:32px;padding:0 10px}
+  .rule .rl{font-size:11px;min-height:32px;padding:0 11px;display:inline-flex;align-items:center}
+  .plink{font-size:13px;display:inline-block;padding:8px 0}
+  .entry .acts{gap:2px}
+  .entry .acts button{min-width:44px;min-height:44px;padding:0 8px;font-size:12px;color:#8f8f88;margin:-8px -4px 0 0}
+  .entry .t{font-size:15px}
+  .th{width:72px;height:72px}
+  #replay button{width:44px;height:44px}
+  .igbar .nv{width:44px;height:44px}
+  #ig .x{width:44px;height:44px}
+  .ycal text{font-size:8px}
   /* two lines: [● place path ……… 県 市 町] / [place name] */
   #top{padding:calc(12px + var(--safe-t)) 14px 24px;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto auto auto;column-gap:10px;align-items:center;background:linear-gradient(to bottom,rgba(239,239,234,.96) 72%,rgba(239,239,234,0))}
   #top>div:first-child,#stats{display:contents}
   .brand{grid-area:1/1;min-height:22px}
   body:not([data-level=japan]) .brand span{display:none}
-  #crumb{grid-area:1/2;margin:0;min-height:0;font-size:11px;flex-wrap:nowrap;overflow:hidden;white-space:nowrap}
+  #crumb{grid-area:1/2;margin:-13px 0;min-height:0;font-size:11px;flex-wrap:nowrap;overflow:hidden;white-space:nowrap;align-items:center}
+  #crumb button{padding:15px 0}
   #stats>div:nth-child(1){grid-area:1/3}#stats>div:nth-child(2){grid-area:1/4}#stats>div:nth-child(3){grid-area:1/5}
   #stats>div{flex-direction:row;align-items:baseline;gap:4px}
   #stats>div>span{font-size:11px;letter-spacing:.02em}
   #stats b{font-size:14px}
-  #stats b em{font-size:10px}
+  #stats b em{font-size:11px}
   #store{grid-area:1/6;flex-basis:auto}
   #store span{display:none}
   #title{grid-area:2/1/3/-1;margin-top:8px;gap:10px}
@@ -491,6 +560,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <nav id="crumb"></nav>
     <div id="title"><h1 id="name">日本</h1><button id="memoHere" hidden>＋ メモ</button></div>
     <div id="kind">JAPAN</div>
+    <button id="bData2" type="button" aria-label="データ（記録のありか・みんなで・バックアップ）"><i></i>DATA</button>
     <p id="intro" hidden></p>
   </div>
   <div id="stats">
@@ -509,9 +579,9 @@ body.sp input,body.sp textarea{font-size:16px!important}
 </div>
 <div id="hint">CLICK TO DIVE · DRAG TO MOVE · SCROLL TO ZOOM · ESC TO RISE</div>
 <div id="tools">
-  <button class="pill sp-only" id="bLoc" title="現在地">◎ HERE</button>
+  <button class="pill sp-only" id="bLoc" title="現在地">◎ いま</button>
   <button class="pill" id="bHome" title="日本全体へ" aria-label="日本全体へ"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 6.2 6 2l4.5 4.2M3 5v5h6V5"/></svg><span>HOME</span></button>
-  <button class="pill" id="bUp" title="上の階層へ (Esc)">↑ UP</button>
+  <button class="pill" id="bUp" title="上の階層へ (Esc)">↑ もどる</button>
   <button class="pill" id="bList">LIST</button>
   <button class="pill" id="bLog">LOG</button>
   <button class="pill" id="bData">DATA</button>
@@ -539,7 +609,8 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <textarea id="fText" rows="2" placeholder="ひとことメモ（#タグも書けます）"></textarea>
     <textarea id="fDetail" class="pc-only" placeholder="くわしく（道順、見つけたもの、天気、寄ったお店、気づいたこと…）"></textarea>
     <div id="fTags" class="pc-only"></div>
-    <div class="row links"><input id="fLinks" type="url" inputmode="url" autocomplete="off" placeholder="写真のリンク（Instagramなど）"><button type="button" class="mini sp-only" id="fPaste">貼付</button></div>
+    <div class="row links"><input id="fLinks" type="url" inputmode="url" autocomplete="off" placeholder="写真のリンク（Instagram・X）"><button type="button" class="mini sp-only" id="fPaste">貼る</button><button type="button" class="mini" id="fPick" title="スマホの写真を小さくして、アプリにのこす">◫ 写真</button></div>
+    <div class="thumbs edit" id="fThumbs"></div>
     <button type="button" class="share" id="fShare" hidden><i></i><span></span></button>
     <div class="row" style="margin:10px 0 0"><button class="btn" id="fSave" type="submit">のこす</button><button type="button" class="loc sp-only" id="fLoc">◉ 位置を付ける</button></div>
   </form>
@@ -575,6 +646,15 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <small>現在地は、メモに場所を付けるときと、地図に今いる場所を出すときだけ使います。</small>
   </div>
 </div>
+<div id="attach" role="dialog" aria-modal="true" aria-labelledby="attTitle">
+  <div class="card">
+    <button class="x" data-close="attach" aria-label="閉じる" style="top:12px">×</button>
+    <h3 id="attTitle">どのメモに付けますか？</h3>
+    <p class="when" id="attWhen"></p>
+    <div class="cands" id="attList"></div>
+    <small>投稿した時刻に近いメモを、上に出しています。</small>
+  </div>
+</div>
 <div id="join" role="dialog" aria-modal="true" aria-labelledby="joinTitle">
   <div class="card">
     <button class="x" data-close="join" aria-label="閉じる" style="top:12px">×</button>
@@ -588,7 +668,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <div class="igbar"><span class="n" id="igN"></span><button class="nv" id="igPrev" aria-label="前の写真">‹</button><button class="nv" id="igNext" aria-label="次の写真">›</button><a class="chip" id="igOut" target="_blank" rel="noopener noreferrer">INSTAGRAM ↗</a><button class="x" data-close="ig" aria-label="閉じる">×</button></div>
   <div class="igcap" id="igCap"></div>
   <div class="igf" id="igBox"><div class="igl" id="igL"></div></div>
-  <div class="igh">表示されないときは、非公開のアカウントか、Instagramの設定で「埋め込み」がオフの投稿です。右上の INSTAGRAM ↗ から開けます。</div>
+  <div class="igh" id="igH"></div>
 </div>
 <div id="modal" role="dialog" aria-modal="true">
   <div class="card">
@@ -648,7 +728,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.0.1', VERSION_DATE = '2026.11.22';
+const VERSION = '2.1.0', VERSION_DATE = '2026.11.22';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -811,6 +891,8 @@ function cleanNote(x) {
   if (x.x) o.x = String(x.x);
   const p = Array.isArray(x.p) ? x.p.map(String).filter(u => /^https?:\/\//.test(u)).slice(0, 12) : [];
   if (p.length) o.p = p;
+  const im = Array.isArray(x.im) ? x.im.map(String).filter(v => /^t[a-z0-9]{6,40}$/.test(v)).slice(0, 8) : [];
+  if (im.length) o.im = im;
   if (Array.isArray(x.loc) && x.loc.length >= 2 && x.loc.slice(0, 3).every(v => Number.isFinite(+v))) o.loc = x.loc.slice(0, 3).map(Number);
   const tags = uniq((Array.isArray(x.tags) ? x.tags : []).map(normTag));
   if (tags.length) o.tags = tags;
@@ -1023,6 +1105,7 @@ const Sync = {
       else { txt = 'SYNCED · GITHUB' + (hm ? ' ' + hm : ''); st.classList.add('ok'); }
     }
     st.querySelector('span').textContent = txt;
+    const b2 = $('#bData2'); if (b2) { b2.className = st.className; b2.title = txt; }
     const fb = $('#fbBox');
     if (fb) {
       fb.hidden = !FB.enabled();
@@ -1136,6 +1219,7 @@ const FB = {
       }
       for (const [op, c, id, data] of ops) op === 'set' ? this.remote[c].set(id, +data.u || 0) : this.remote[c].delete(id);
       this.state = 'ok'; this.last = Date.now(); this.msg = '';
+      Thumbs.upload();
     } catch (e) {
       this.state = 'err'; this.msg = navigator.onLine === false ? 'オフラインです。つながったら自動で同期します。' : '同期できませんでした。少しあとでもう一度試します。';
       this.soon(60000);
@@ -1283,7 +1367,11 @@ const GR = {
   /* my shared records -> group (copies without GPS); everything else stays mine only */
   want() {
     const me = this.me(), ts = this.gtags(), out = { notes: new Map(), places: new Map(), walks: new Map() };
-    for (const n of Store.notes.values()) if (this.isShared(n)) { const { loc, ...r } = n; out.notes.set(me + '_' + n.id, { ...r, by: me }); }
+    for (const n of Store.notes.values()) if (this.isShared(n)) {
+      const { loc, im, ...r } = n;
+      if (im && im.length) { const imd = im.map(id => Thumbs.mem.get(id)).filter(Boolean); if (imd.length) r.imd = imd; }
+      out.notes.set(me + '_' + n.id, { ...r, by: me });
+    }
     for (const w of Store.walks.values()) if ((w.tags || []).some(t => ts.includes(t))) out.walks.set(me + '_' + w.d, { ...w, by: me });
     return out;
   },
@@ -1293,6 +1381,7 @@ const GR = {
     if (this.busy) { this.again = true; return; }
     this.busy = true;
     try {
+      for (const n of Store.notes.values()) if (n.im && this.isShared(n)) for (const id of n.im) await Thumbs.src(id);   // so shared memos carry their small photos
       const s = FB.sdk, me = this.me(), gid = this.gid, want = this.want(), ops = [];
       for (const c of ['notes', 'places', 'walks']) {
         for (const [id, x] of want[c]) { const r = this.docs[c].get(id); if (!r || (+x.u || 0) > (+r.u || 0)) ops.push(['set', c, id, JSON.parse(JSON.stringify(x))]); }
@@ -2032,19 +2121,43 @@ function linkLabel(u) {
   return (h || 'LINK').toUpperCase();
 }
 const parseLinks = s => [...new Set(String(s || '').match(/https?:\/\/[^\s<>"'、。）)]+/g) || [])].slice(0, 12);
-/* Instagram post / reel links open inside the app, through Instagram's own embed page.
-   Nothing is loaded until a photo is tapped, and the frame is thrown away on close. */
-function igPost(u) {
+/* Photos. Instagram and X posts open inside the app through their own embed pages — loaded only
+   when tapped, thrown away on close. Small photos picked from the phone live in the app itself. */
+function photoPost(u) {
   let x; try { x = new URL(u); } catch (e) { return null; }
-  if (!/^((www|m)\.)?instagram\.com$|^instagr\.am$/.test(x.hostname)) return null;
-  const m = x.pathname.match(/^\/(?:[\w.]+\/)?(p|reels?|tv)\/([\w-]{5,})/);
-  if (!m) return null;
-  const kind = m[1] === 'p' ? 'p' : m[1] === 'tv' ? 'tv' : 'reel';
-  return { code: m[2], url: `https://www.instagram.com/${kind}/${m[2]}/`, embed: `https://www.instagram.com/p/${m[2]}/embed/?cr=1&v=14` };
+  const h = x.hostname.replace(/^(www|m|mobile)\./, '');
+  if (h === 'instagram.com' || h === 'instagr.am') {
+    const m = x.pathname.match(/^\/(?:[\w.]+\/)?(p|reels?|tv)\/([\w-]{5,})/);
+    if (!m) return null;
+    const kind = m[1] === 'p' ? 'p' : m[1] === 'tv' ? 'tv' : 'reel';
+    return { svc: 'ig', name: 'INSTAGRAM', mark: 'IG', code: m[2], url: `https://www.instagram.com/${kind}/${m[2]}/`, embed: `https://www.instagram.com/p/${m[2]}/embed/?cr=1&v=14` };
+  }
+  if (h === 'x.com' || h === 'twitter.com') {
+    const m = x.pathname.match(/^\/(?:\w{1,20}|i\/web|i)\/status(?:es)?\/(\d{5,25})/);
+    if (!m) return null;
+    return { svc: 'x', name: 'X', mark: 'X', code: m[1], url: `https://x.com/i/status/${m[1]}`, embed: `https://platform.twitter.com/embed/Tweet.html?id=${m[1]}&dnt=true&lang=ja&theme=light` };
+  }
+  return null;
+}
+const igPost = photoPost;
+/* when was it posted? both services keep the time inside the post number */
+function postTime(u) {
+  const p = photoPost(u); if (!p) return null;
+  try {
+    if (p.svc === 'x') return Number((BigInt(p.code) >> 22n) + 1288834974657n);
+    if (p.code.length < 10) return null;
+    let n = 0n;
+    for (const c of p.code) { const v = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_'.indexOf(c); if (v < 0) return null; n = n * 64n + BigInt(v); }
+    const t = Number((n >> 23n) + 1314220021721n);
+    return t > Date.UTC(2012, 0, 1) && t < Date.now() + 864e5 ? t : null;
+  } catch (e) { return null; }
 }
 const noteLinks = n => Array.isArray(n.p) ? n.p.filter(u => /^https?:\/\//.test(u)) : [];
-const capOf = n => [n.d ? n.d.slice(5).replace('-', '.') + (n.at ? ' ' + n.at : '') : '', placeName(n.k), n.t].filter(Boolean).join(' · ');
-const igItems = ns => ns.flatMap(n => noteLinks(n).filter(igPost).map(u => ({ u, cap: capOf(n) })));
+const capOf = n => [n.d ? n.d.slice(5).replace('-', '.') + (n.at ? ' ' + n.at : '') : '', n.k ? placeName(n.k) : '', n.t].filter(Boolean).join(' · ');
+// what the viewer shows for one memo: its own small photos first, then posts that open inside
+const noteItems = n => [...(n.im || []), ...(Array.isArray(n.imd) ? n.imd : [])].map(img => ({ img, cap: capOf(n) }))
+  .concat(noteLinks(n).filter(photoPost).map(u => ({ u, cap: capOf(n) })));
+const igItems = ns => ns.flatMap(noteItems);
 const IG = {
   list: [], i: 0, f: null, t: 0,
   on: () => $('#ig').classList.contains('open'),
@@ -2055,31 +2168,43 @@ const IG = {
     this.show();
   },
   show() {
-    const it = this.list[this.i], p = igPost(it.u), many = this.list.length > 1;
+    const it = this.list[this.i], many = this.list.length > 1, box = $('#igBox'), L = $('#igL'), out = $('#igOut'), hint = $('#igH');
     $('#igN').textContent = many ? `${this.i + 1} / ${this.list.length}` : '';
     $('#igPrev').hidden = $('#igNext').hidden = !many;
     $('#igCap').textContent = it.cap || '';
-    $('#igOut').href = p.url;
     this.clear();
-    const L = $('#igL'); L.textContent = 'LOADING…';
+    if (it.img) {   // a small photo kept in the app
+      box.classList.add('pic'); out.hidden = true; hint.hidden = true;
+      const im = new Image(); im.className = 'igImg'; im.alt = it.cap || '写真';
+      box.appendChild(im); this.f = im;
+      Thumbs.src(it.img).then(d => { if (this.f !== im) return; if (d) im.src = d; else L.textContent = '写真を読み込めませんでした'; });
+      return;
+    }
+    const p = photoPost(it.u);
+    box.classList.remove('pic'); out.hidden = false; hint.hidden = false;
+    out.href = p.url; out.textContent = p.name + ' ↗';
+    hint.textContent = `出てこないときは、鍵のかかった投稿かもしれません。右上の ${p.name} ↗ から開くと、${p.svc === 'x' ? 'X' : 'Instagram'} で見られます。`;
+    L.textContent = 'LOADING…';
     // a new frame each time: changing an iframe's src would add a Back-button step
     const f = document.createElement('iframe');
-    f.title = 'Instagram'; f.allow = 'autoplay; encrypted-media; picture-in-picture; clipboard-write'; f.allowFullscreen = true;
-    const w = Math.max(326, Math.min(540, $('#igBox').clientWidth - 2 || 360));
-    f.style.height = Math.round(w * 1.25 + 200) + 'px';
+    f.title = p.svc === 'x' ? 'X' : 'Instagram'; f.allow = 'autoplay; encrypted-media; picture-in-picture; clipboard-write'; f.allowFullscreen = true;
+    const w = Math.max(326, Math.min(540, box.clientWidth - 2 || 360));
+    f.style.height = Math.round(p.svc === 'x' ? w * 1.1 + 190 : w * 1.25 + 200) + 'px';
     f.onload = () => { if (this.f !== f) return; clearTimeout(this.t); f.classList.add('on'); L.textContent = ''; };
-    f.src = p.embed + '&wp=' + w;   // with these, the embed reports its real height
-    $('#igBox').appendChild(f); $('#igBox').scrollTop = 0; this.f = f;
-    this.t = setTimeout(() => { if (this.f === f && !f.classList.contains('on')) L.textContent = '読み込めませんでした\nINSTAGRAM ↗ から開いてください'; }, 15000);
+    f.src = p.svc === 'ig' ? p.embed + '&wp=' + w : p.embed;   // with these, the embed reports its real height
+    box.appendChild(f); box.scrollTop = 0; this.f = f;
+    this.t = setTimeout(() => { if (this.f === f && !f.classList.contains('on')) L.textContent = `読み込めませんでした\n${p.name} ↗ から開いてください`; }, 15000);
   },
   step(d) { if (this.list.length < 2) return; this.i = (this.i + d + this.list.length) % this.list.length; this.show(); },
   clear() { clearTimeout(this.t); if (this.f) { this.f.remove(); this.f = null; } $('#igL').textContent = ''; }
 };
-// Instagram's embed page tells its parent how tall it is
+// the embed pages tell their parent how tall they are
 addEventListener('message', e => {
-  if (!IG.f || e.source !== IG.f.contentWindow || !/^https:\/\/(www\.)?instagram\.com$/.test(e.origin)) return;
+  if (!IG.f || e.source !== IG.f.contentWindow) return;
   let m; try { m = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (er) { return; }
-  const h = m && m.type === 'MEASURE' && m.details ? +m.details.height : 0;
+  let h = 0;
+  if (/^https:\/\/(www\.)?instagram\.com$/.test(e.origin)) h = m && m.type === 'MEASURE' && m.details ? +m.details.height : 0;
+  else if (/^https:\/\/platform\.(twitter|x)\.com$/.test(e.origin)) { const r = m && m['twttr.embed']; if (r && r.method === 'twttr.private.resize' && r.params && r.params[0]) h = +r.params[0].height; }
   if (h > 120 && h < 6000) IG.f.style.height = Math.ceil(h) + 'px';
 });
 $('#igPrev').onclick = () => IG.step(-1);
@@ -2094,19 +2219,110 @@ function photosBtn(rule, ns) {
 }
 function chips(urls, n) {
   const f = document.createDocumentFragment();
-  const list = (urls || []).filter(igPost).map(u => ({ u, cap: n ? capOf(n) : '' }));
+  const posts = (urls || []).filter(photoPost);
+  const list = n ? noteItems(n) : posts.map(u => ({ u, cap: '' })), off = list.length - posts.length;
   let k = 0;
   (urls || []).forEach(u => {
     const a = document.createElement('a'); a.className = 'chip'; a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer';
-    if (igPost(u)) {
+    const p = photoPost(u);
+    if (p) {
       const i = k++;
-      a.textContent = 'INSTAGRAM' + (list.length > 1 ? ' ' + (i + 1) : '') + ' ▸'; a.title = 'アプリの中で見る';
-      a.onclick = e => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return; e.preventDefault(); IG.open(list, i); };
+      a.textContent = '写真' + (posts.length > 1 ? ' ' + (i + 1) : '') + ' ▸';
+      const mk = document.createElement('i'); mk.className = 'svc'; mk.textContent = p.mark; a.appendChild(mk);
+      a.title = `${p.svc === 'x' ? 'X' : 'Instagram'} の投稿を、アプリの中で見る`;
+      a.onclick = e => { if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button) return; e.preventDefault(); IG.open(list, off + i); };
     } else a.textContent = linkLabel(u) + ' ↗';
     f.appendChild(a);
   });
   return f;
 }
+function thumbStrip(n, edit) {
+  const ids = [...(n.im || []), ...(Array.isArray(n.imd) ? n.imd : [])];
+  const box = document.createElement('div'); box.className = 'thumbs';
+  const list = noteItems(n);
+  ids.forEach((id, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'th'; b.setAttribute('aria-label', '写真を大きく見る');
+    const im = new Image(); im.alt = ''; im.decoding = 'async'; b.appendChild(im);
+    Thumbs.src(id).then(d => { if (d) im.src = d; else b.classList.add('miss'); });
+    b.onclick = e => { e.stopPropagation(); if (!edit) IG.open(list, i); };
+    if (edit) { const rm = document.createElement('span'); rm.className = 'rm'; rm.textContent = '×'; rm.setAttribute('aria-label', 'この写真をはずす'); b.appendChild(rm); b.onclick = e => { e.stopPropagation(); edit(id); }; }
+    box.appendChild(b);
+  });
+  return box;
+}
+
+/* ---------- small photos: kept in this browser (IndexedDB), and in your cloud space when signed in ---------- */
+const idbReq = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+const Thumbs = {
+  db: null, mem: new Map(), upping: false,
+  open() {
+    if (!this.db) this.db = new Promise((res, rej) => { const r = indexedDB.open('sanpo-thumbs', 1); r.onupgradeneeded = () => r.result.createObjectStore('t'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+    return this.db;
+  },
+  async os(mode) { return (await this.open()).transaction('t', mode || 'readonly').objectStore('t'); },
+  newId: () => 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+  async src(x) {
+    if (!x) return null;
+    if (/^data:image\//.test(x)) return x;
+    if (this.mem.has(x)) return this.mem.get(x);
+    try { const v = await idbReq((await this.os()).get(x)); if (v && v.d) { this.mem.set(x, v.d); return v.d; } } catch (e) {}
+    if (FB.user && FB.sdk) {
+      try { const sn = await FB.sdk.getDoc(FB.sdk.doc(FB.db, 'users', FB.user.uid, 'thumbs', x)); if (sn.exists() && sn.data().d) { await this.put(x, sn.data().d, true); return sn.data().d; } } catch (e) {}
+    }
+    return null;
+  },
+  async put(id, d, up) {
+    this.mem.set(id, d);
+    try { await idbReq((await this.os('readwrite')).put({ d, up: !!up }, id)); } catch (e) {}
+    if (!up) this.upload();
+  },
+  async del(ids) {
+    for (const id of ids || []) {
+      this.mem.delete(id);
+      try { await idbReq((await this.os('readwrite')).delete(id)); } catch (e) {}
+      if (FB.user && FB.sdk) try { await FB.sdk.deleteDoc(FB.sdk.doc(FB.db, 'users', FB.user.uid, 'thumbs', id)); } catch (e) {}
+    }
+  },
+  async entries() {
+    try { const o = await this.os(), kq = o.getAllKeys(), vq = o.getAll(); const ks = await idbReq(kq), vs = await idbReq(vq); return ks.map((k, i) => [k, vs[i] || {}]); } catch (e) { return []; }
+  },
+  async all() { const out = {}; for (const [k, v] of await this.entries()) if (v.d) out[k] = v.d; return out; },
+  async upload() {   // small photos made while signed out (or offline) go up once you are signed in
+    if (!FB.user || !FB.ready || this.upping) return;
+    this.upping = true;
+    try {
+      for (const [k, v] of await this.entries()) if (v.d && !v.up) {
+        await FB.sdk.setDoc(FB.sdk.doc(FB.db, 'users', FB.user.uid, 'thumbs', k), { d: v.d, u: Date.now() });
+        await idbReq((await this.os('readwrite')).put({ d: v.d, up: true }, k));
+      }
+    } catch (e) {} finally { this.upping = false; }
+  }
+};
+// shrink a photo from the phone to about 240px (8–15KB). Drawing it again also drops the GPS data inside the file.
+async function makeThumb(file) {
+  let src;
+  try { src = await createImageBitmap(file); }
+  catch (e) { src = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = URL.createObjectURL(file); }); }
+  const k = Math.min(1, 240 / Math.max(src.width, src.height));
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(src.width * k)); c.height = Math.max(1, Math.round(src.height * k));
+  const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(src, 0, 0, c.width, c.height);
+  let q = .74, d = c.toDataURL('image/jpeg', q);
+  while (d.length > 15000 && q > .4) { q -= .08; d = c.toDataURL('image/jpeg', q); }
+  return d;
+}
+function pickPhotos(max, done) {   // must start inside a tap
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.hidden = true;
+  document.body.appendChild(inp);
+  inp.onchange = async () => {
+    const fs = [...inp.files].slice(0, Math.max(1, max)); inp.remove();
+    if (!fs.length) return;
+    toast('写真を小さくしています…');
+    const out = []; for (const f of fs) { try { out.push(await makeThumb(f)); } catch (e) {} }
+    out.length ? done(out) : toast('この写真は読み込めませんでした');
+  };
+  inp.click();
+}
+async function saveThumbs(ds) { const ids = []; for (const d of ds) { const id = Thumbs.newId(); await Thumbs.put(id, d); ids.push(id); } return ids; }
 function tagChips(tags) {
   const f = document.createDocumentFragment();
   const gt = GR.on() ? GR.gtags() : [], gc = GR.on() ? GR.color(GR.me()) : null;
@@ -2122,11 +2338,12 @@ const mkBtn = (txt, cls, fn, title) => { const b = document.createElement('butto
 function entryNode(n, opt = {}) {
   if (opt.other) return otherEntry(n, opt);
   const d = document.createElement('div'); d.className = 'entry'; d.dataset.id = n.id;
-  d.innerHTML = `<div class="meta"><span class="d"></span></div><div class="acts"><button class="ed" type="button">なおす</button><button class="del" type="button">けす</button></div><div class="pl"></div><div class="t"></div><div class="dx"></div><div class="ph"></div><div class="tg"></div>`;
+  d.innerHTML = `<div class="meta"><span class="d"></span></div><div class="acts"><button class="ad" type="button" aria-label="写真を足す">＋写真</button><button class="ed" type="button">なおす</button></div><div class="pl"></div><div class="t"></div><div class="dx"></div><div class="ph"></div><div class="tg"></div>`;
+  d.classList.add('own');
   d.querySelector('.d').textContent = (opt.timeOnly ? (n.at || '--:--') : n.d.replace(/-/g, '.') + (n.at ? '  ' + n.at : ''));
   const meta = d.querySelector('.meta');
-  if (!opt.timeOnly) meta.appendChild(mkBtn('WALK ›', 'tag', () => openWalk(n.d), 'この日の散歩を見る'));
-  if (n.loc) meta.appendChild(mkBtn('◉ ' + fmtLoc(n.loc).split(' ±')[0], 'tag', () => showPin(n.loc, n.k), 'この場所を地図で見る'));
+  if (!opt.timeOnly) meta.appendChild(mkBtn('この日の散歩 ›', 'tag', () => openWalk(n.d), 'この日の散歩を見る'));
+  if (n.loc) meta.appendChild(mkBtn('◉ 位置あり', 'tag', () => showPin(n.loc, n.k), fmtLoc(n.loc) + '（押すと地図で見る）'));
   if (GR.on() && GR.isShared(n)) { const sh = whoChip(GR.me()); sh.lastChild.textContent = '共有中'; sh.title = `#${GR.gtag()} でグループに共有しています`; meta.appendChild(sh); }
   if (!n.x) { const t = document.createElement('span'); t.className = 'tag raw'; t.textContent = 'メモだけ'; t.title = 'くわしい文章は、まだ書いていません'; meta.appendChild(t); }
   const pl = d.querySelector('.pl');
@@ -2134,14 +2351,49 @@ function entryNode(n, opt = {}) {
   d.querySelector('.t').textContent = n.t || (n.x ? '' : '（メモなし）');
   d.querySelector('.dx').textContent = n.x || '';
   d.querySelector('.ph').appendChild(chips(n.p, n));
+  d.insertBefore(thumbStrip(n), d.querySelector('.ph'));
   d.querySelector('.tg').appendChild(tagChips(n.tags));
-  const del = d.querySelector('.del');
-  del.onclick = () => {
-    if (!del.classList.contains('arm')) { del.classList.add('arm'); del.textContent = 'ほんとに？'; setTimeout(() => { del.classList.remove('arm'); del.textContent = 'けす'; }, 2500); return; }
-    Store.delNote(n.id);
+  d.querySelector('.ed').onclick = e => { e.stopPropagation(); editEntry(d, n); };
+  d.querySelector('.ad').onclick = e => { e.stopPropagation(); addPhotoUI(d, n); };
+  d.onclick = e => {   // anywhere on the card: show it on the map
+    if (e.target.closest('button,a,input,textarea,label,.addph,.edit') || d.querySelector('.edit') || String(getSelection ? getSelection() : '').length) return;
+    showNote(n);
   };
-  d.querySelector('.ed').onclick = () => editEntry(d, n);
   return d;
+}
+function showNote(n) {
+  if (n.loc) return showPin(n.loc, n.k);
+  const p = placePoint(n.k); if (!p) return;
+  const s = Math.max(V.s * .9, Math.min(V.s, .02));
+  flyTo({ cx: p[0] + (W >= 720 ? 230 * s : 0), cy: p[1] + (W < 720 ? H * .22 * s : 0), s }, 700);
+  setTimeout(() => burst(n.k, p), 420);
+}
+/* ＋写真 on a memo: paste a link, or pick photos from the phone */
+function addPhotoUI(node, n) {
+  const old = node.querySelector('.addph'); if (old) return old.remove();
+  const box = document.createElement('div'); box.className = 'addph';
+  const go = links => {
+    const ls = parseLinks(links.join(' '));
+    if (!ls.length) return toast('リンクが見つかりませんでした');
+    const cur = Store.notes.get(n.id) || n;
+    Store.putNote({ ...cur, p: parseLinks([...(cur.p || []), ...ls].join(' ')) });
+    toast(photoPost(ls[0]) ? '写真のリンクを付けました' : 'リンクを付けました');
+  };
+  const paste = mkBtn('リンクを貼る', 'btn', async () => {
+    try { const ls = parseLinks(await navigator.clipboard.readText()); if (ls.length) return go(ls); } catch (e) {}
+    if (!box.querySelector('input')) {   // clipboard not readable here: paste by hand
+      const inp = document.createElement('input'); inp.type = 'url'; inp.placeholder = 'ここに貼り付け（長押し →「ペースト」）';
+      const ok = mkBtn('付ける', 'btn ghost', () => go([inp.value]));
+      box.appendChild(inp); box.appendChild(ok); inp.focus();
+    }
+  });
+  const pick = mkBtn('◫ 写真を選ぶ', 'btn ghost', () => pickPhotos(6 - (n.im || []).length, async ds => {
+    const ids = await saveThumbs(ds), cur = Store.notes.get(n.id) || n;
+    Store.putNote({ ...cur, im: [...(cur.im || []), ...ids].slice(0, 8) });
+    toast('写真をのこしました');
+  }));
+  box.append(paste, pick);
+  node.appendChild(box);
 }
 function otherEntry(n, opt) {   // someone else's memo in the group: read only, no GPS
   const d = document.createElement('div'); d.className = 'entry other';
@@ -2155,6 +2407,7 @@ function otherEntry(n, opt) {   // someone else's memo in the group: read only, 
   d.querySelector('.dx').textContent = n.x || '';
   d.querySelector('.dx').style.borderLeftColor = GR.color(n.by);
   d.querySelector('.ph').appendChild(chips(noteLinks(n), n));
+  d.insertBefore(thumbStrip({ ...n, im: [] }), d.querySelector('.ph'));
   d.querySelector('.tg').appendChild(tagChips(Array.isArray(n.tags) ? n.tags : []));
   return d;
 }
@@ -2167,17 +2420,31 @@ function editEntry(node, n) {
     <label>MEMO</label><textarea class="eT" rows="2"></textarea>
     <label>DETAIL</label><textarea class="eX big" placeholder="くわしく（道順、見つけたもの、天気、寄ったお店、気づいたこと…）"></textarea>
     <label>TAGS</label><div class="eG"></div>
-    <label>PHOTO LINKS（1行に1つ）</label><textarea class="eP" rows="2" placeholder="https://www.instagram.com/p/…"></textarea>
-    <div class="row"><button class="btn eS" type="button">保存</button><button class="btn ghost eC" type="button">キャンセル</button></div></div>`;
+    <label>写真のリンク（1行に1つ）</label><textarea class="eP" rows="2" placeholder="https://www.instagram.com/p/…　https://x.com/…/status/…"></textarea>
+    <label>写真</label><div class="eI"></div>
+    <div class="row"><button class="btn eS" type="button">保存</button><button class="btn ghost eC" type="button">キャンセル</button><button class="eDel" type="button">このメモをけす</button></div></div>`;
   const q = c => node.querySelector(c);
   let k = n.k;
   scopeChips(q('.eK'), ancestors(n.k), n.k, x => { k = x; });
   q('.eD').value = n.d; q('.eT').value = n.t || ''; q('.eX').value = n.x || ''; q('.eP').value = (n.p || []).join('\n');
   const tg = tagInput(q('.eG'), n.tags);
+  let im = (n.im || []).slice(), gone = [];
+  const paintIm = () => {
+    const box = q('.eI'); box.innerHTML = '';
+    const st = thumbStrip({ im }, id => { im = im.filter(v => v !== id); gone.push(id); paintIm(); }); st.classList.add('edit'); box.appendChild(st);
+    if (im.length < 8) box.appendChild(mkBtn('◫ 写真を選ぶ', 'btn ghost', () => pickPhotos(8 - im.length, async ds => { im = im.concat(await saveThumbs(ds)).slice(0, 8); paintIm(); })));
+  };
+  paintIm();
+  const del = q('.eDel');
+  del.onclick = () => {
+    if (!del.classList.contains('arm')) { del.classList.add('arm'); del.textContent = 'ほんとに？（もう一度押すと、けします）'; setTimeout(() => { del.classList.remove('arm'); del.textContent = 'このメモをけす'; }, 3000); return; }
+    editing = null; Store.delNote(n.id); Thumbs.del(n.im); toast('けしました');
+  };
   const save = () => {
-    const t = q('.eT').value.trim(), x = q('.eX').value.trim();
+    const T = pullLinks(q('.eT').value), X = pullLinks(q('.eX').value), t = T.text, x = X.text;
     editing = null;
-    Store.putNote({ ...n, k, d: q('.eD').value || n.d, t, x, p: parseLinks(q('.eP').value), tags: uniq([...tg.get(), ...hashtags(t + ' ' + x)]) });
+    Store.putNote({ ...n, k, d: q('.eD').value || n.d, t, x, im, p: parseLinks([q('.eP').value, ...T.links, ...X.links].join(' ')), tags: uniq([...tg.get(), ...hashtags(t + ' ' + x)]) });
+    if (gone.length) Thumbs.del(gone);
     toast(k === n.k ? '保存しました' : `${placeName(k)} に移しました`);
   };
   q('.eS').onclick = save;
@@ -2255,21 +2522,41 @@ $('#sForm').onsubmit = ev => {
   ev.preventDefault();
   if (!S.sel) return;
   const pc = W >= 720;
-  const t = $('#fText').value.trim(), x = pc ? $('#fDetail').value.trim() : '', links = parseLinks($('#fLinks').value);
+  // a link written into the memo itself is taken out and kept as a photo link
+  const T = pullLinks($('#fText').value), X = pullLinks(pc ? $('#fDetail').value : '');
+  const t = T.text, x = X.text, links = parseLinks([$('#fLinks').value, ...T.links, ...X.links].join(' '));
   const tags = uniq([...(pc ? fTags.get() : []), ...hashtags(t + ' ' + x), ...(shareOn() ? [GR.gtag()] : [])]);
-  if (!t && !x && !links.length) { $('#fText').focus(); toast('メモを書いてください'); return; }
+  if (!t && !x && !links.length && !formThumbs.length) { $('#fText').focus(); toast('メモを書いてください'); return; }
   const d = pc ? ($('#fDate').value || today()) : today();
   const k = formKey || S.sel.key;
   const sp = spreadPrep(k), pt = placePoint(k, formLoc);
-  Store.putNote({ id: newId(), k, d, at: d === today() ? nowHM() : '', t, x, p: links, loc: formLoc, tags });
+  const nid = newId(), ds = formThumbs.slice();
+  Store.putNote({ id: nid, k, d, at: d === today() ? nowHM() : '', t, x, p: links, loc: formLoc, tags });
+  if (ds.length) saveThumbs(ds).then(im => { const n = Store.notes.get(nid); if (n) Store.putNote({ ...n, im }); });
   spread(sp, pt);
-  $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; fTags.set([]);
+  $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; fTags.set([]); formThumbs = []; paintFormThumbs();
   setFormLoc(null);
   toast((k === S.sel.key ? 'のこしました' : `${placeName(k)} にのこしました`) + (shareOn() ? `（#${GR.gtag()} のみんなにも）` : ''));
   burst(k, pt);
   if (pc) $('#sForm').classList.add('collapsed');
 };
 [$('#fText'), $('#fDetail')].forEach(t => t.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); $('#sForm').requestSubmit(); } }));
+const URL_RE = /https?:\/\/[^\s<>"'、。）)」]+/g;
+const pullLinks = s => { s = String(s || ''); return { links: s.match(URL_RE) || [], text: s.replace(URL_RE, ' ').replace(/[ \t\u3000]{2,}/g, ' ').trim() }; };
+let formThumbs = [];
+function paintFormThumbs() {
+  const box = $('#fThumbs'); box.innerHTML = '';
+  formThumbs.forEach((d, i) => box.appendChild(thumbStrip({ imd: [d] }, () => { formThumbs.splice(i, 1); paintFormThumbs(); }).firstChild));
+}
+$('#fPick').onclick = () => pickPhotos(6 - formThumbs.length, ds => { formThumbs = formThumbs.concat(ds).slice(0, 6); paintFormThumbs(); });
+$('#fText').addEventListener('paste', e => {   // pasting a link into the memo puts it where photo links go
+  const P = pullLinks((e.clipboardData || {}).getData ? e.clipboardData.getData('text') : '');
+  if (!P.links.length) return;
+  e.preventDefault();
+  $('#fLinks').value = parseLinks([$('#fLinks').value, ...P.links].join(' ')).join(' ');
+  if (P.text) document.execCommand('insertText', false, P.text);
+  toast('リンクは写真の欄に入れました');
+});
 $('#fPaste').onclick = async () => {
   try {
     const l = parseLinks(await navigator.clipboard.readText());
@@ -2558,7 +2845,13 @@ function renderDrawer() {
     });
   } else if (dTab === 'walks') {
     const days = walkDays();
-    if (!q) frag.appendChild(yearCal(days));
+    if (!q) {
+      frag.appendChild(mkBtn('＋ 写真のリンクを貼る', 'btn ghost addlink', async () => {
+        try { const ls = parseLinks(await navigator.clipboard.readText()); if (ls.length) return attachLink(ls[0]); } catch (e) {}
+        attachAsk();
+      }, 'コピーしたリンクを、投稿の時刻に近いメモに付けます'));
+      frag.appendChild(yearCal(days));
+    }
     const nraw = days.filter(d => walkStat(d).raw).length;
     const seg = document.createElement('div'); seg.className = 'seg';
     seg.innerHTML = `<button data-r="0">すべて ${days.length}</button><button data-r="1">メモだけの日 ${nraw}</button>`;
@@ -2896,9 +3189,12 @@ function focusKeys(keys, fitRoute) {
 }
 
 /* ---------- data modal ---------- */
-function exportJSON() { return JSON.stringify({ ...Store.dump(), exported: new Date().toISOString() }, null, 1); }
+let exportThumbs = {};   // read when DATA opens, so saving/sharing stays inside the tap
+function exportJSON() { return JSON.stringify({ ...Store.dump(), thumbs: exportThumbs, exported: new Date().toISOString() }, null, 1); }
 $('#verTxt').textContent = `SANPO LOG v${VERSION}（${VERSION_DATE}）`;
+$('#bData2').onclick = () => $('#bData').onclick();
 $('#bData').onclick = () => {
+  Thumbs.all().then(m => { exportThumbs = m; });
   if (FB.enabled() && !FB.sdk) FB.load().then(() => Sync.paint()).catch(() => {});
   Sync.paint();
   whereText(); a2hsText();
@@ -2925,6 +3221,7 @@ function importText(s) {
     const o = JSON.parse(s);
     if (!o || (typeof o.r !== 'object' && typeof o.notes !== 'object' && typeof o.places !== 'object')) throw 0;
     const n = Store.absorb(o);
+    if (o.thumbs && typeof o.thumbs === 'object') for (const [id, d] of Object.entries(o.thumbs)) if (/^t[a-z0-9]{6,40}$/.test(id) && /^data:image\//.test(d)) Thumbs.put(id, d);
     Store.commit();
     toast(`メモ ${n} 件を読み込みました`); closePanel('modal');
   } catch (e) { toast('読み込めませんでした（形式を確認してください）'); }
@@ -3146,6 +3443,49 @@ function refreshPanels() {
 }
 
 /* ---------- boot ---------- */
+/* 写真のリンクを貼る: the post's own time picks the memo it belongs to */
+const noteTime = n => new Date(n.d + 'T' + (n.at || '12:00') + ':00').getTime();
+function attachLink(u) {
+  const ls = parseLinks(u); if (!ls.length) return toast('リンクが見つかりませんでした');
+  const url = ls[0], when = postTime(url), mine = [...Store.notes.values()];
+  if (!mine.length) return toast('まずメモをのこしてから、写真を付けてください');
+  const c = mine.slice().sort(when ? (a, b) => Math.abs(noteTime(a) - when) - Math.abs(noteTime(b) - when) : (a, b) => noteTime(b) - noteTime(a)).slice(0, 6);
+  const p = photoPost(url);
+  $('#attWhen').textContent = when ? `${p ? (p.svc === 'x' ? 'X' : 'Instagram') + ' の投稿 · ' : ''}${new Date(when).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}` : '新しいメモから順に出しています';
+  const box = $('#attList'); box.innerHTML = '';
+  c.forEach((n, i) => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'cand' + (i === 0 && when && Math.abs(noteTime(n) - when) < 36e5 * 36 ? ' best' : '');
+    b.innerHTML = '<b></b><span></span>';
+    b.querySelector('b').textContent = n.d.replace(/-/g, '.') + (n.at ? ' ' + n.at : '') + ' · ' + (placeName(n.k) || '');
+    b.querySelector('span').textContent = n.t || n.x || '（メモなし）';
+    b.onclick = () => {
+      Store.putNote({ ...n, p: parseLinks([...(n.p || []), url].join(' ')) });
+      closePanel('attach'); toast('写真のリンクを付けました'); openWalk(n.d);
+    };
+    box.appendChild(b);
+  });
+  $('#attach').classList.add('open');
+}
+function attachAsk() {   // when the clipboard can't be read: paste by hand
+  $('#attWhen').textContent = 'コピーした写真のリンク（Instagram・X）を、下の欄に貼り付けてください。';
+  const box = $('#attList'); box.innerHTML = '';
+  const inp = document.createElement('input'); inp.type = 'url'; inp.placeholder = 'ここに貼り付け（長押し →「ペースト」）'; inp.className = 'attIn';
+  box.appendChild(inp); box.appendChild(mkBtn('付けるメモをさがす', 'btn', () => attachLink(inp.value)));
+  $('#attach').classList.add('open'); inp.focus();
+}
+$('#attach').addEventListener('click', e => { if (e.target.id === 'attach') closePanel('attach'); });
+document.addEventListener('paste', e => {   // PC: paste a link anywhere on the map
+  if (e.target.closest && e.target.closest('input,textarea,[contenteditable]')) return;
+  const ls = parseLinks(e.clipboardData ? e.clipboardData.getData('text') : '');
+  if (ls.length) { e.preventDefault(); attachLink(ls[0]); }
+});
+let pendingAdd = '';
+(function catchAdd() {   // ?add=<link> (for an iPhone shortcut from the share menu)
+  const m = location.search.match(/[?&]add=([^&]+)/);
+  if (!m) return;
+  try { pendingAdd = decodeURIComponent(m[1]); } catch (e) {}
+  history.replaceState(null, '', location.pathname + location.hash);
+})();
 (function catchInvite() {   // ?g=<group id>  ->  remember it, tidy the address bar
   const m = location.search.match(/[?&]g=([A-Za-z0-9]{12,40})/);
   if (!m) return;
@@ -3171,6 +3511,7 @@ function refreshPanels() {
   finally { progress(false); }
   await route();
   Sync.soon(0);
+  if (pendingAdd) setTimeout(() => attachLink(pendingAdd), 400);
 })();
 </script>
 </body>
