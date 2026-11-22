@@ -441,6 +441,8 @@ body.rec .brand i{animation:pulse 1.6s infinite}
 .igf iframe.on{opacity:1}
 .igl{position:absolute;left:16px;right:16px;top:120px;text-align:center;font:10px/1.8 var(--mono);letter-spacing:.12em;color:var(--mute);pointer-events:none}
 .igh{font-size:11px;line-height:1.7;color:var(--mute);padding:10px 2px 0}
+#ig .igkeep{width:auto;align-self:center;margin-top:12px;min-height:44px;padding:0 18px;font-size:12px;letter-spacing:.06em;background:#fff}
+#ig .igkeep:hover{background:var(--ink);color:#fff}
 .rule .rl{order:2;font:9px/1 var(--mono);letter-spacing:.1em;color:var(--ink);border:1px solid var(--ink);border-radius:999px;padding:5px 8px 4px;transition:background var(--ui),color var(--ui)}
 .steps{margin:14px 0 2px 20px;font-size:13px;line-height:1.75;color:#333}
 .steps li{margin:6px 0;padding-left:2px}
@@ -739,6 +741,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <div class="igcap" id="igCap"></div>
   <div class="igf" id="igBox"><div class="igl" id="igL"></div></div>
   <div class="igh" id="igH"></div>
+  <button class="btn ghost igkeep" id="igKeep" type="button" hidden>◫ この写真を、アプリにものこす</button>
 </div>
 <div id="modal" role="dialog" aria-modal="true">
   <div class="card">
@@ -798,7 +801,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.3.0', VERSION_DATE = '2026.11.22';
+const VERSION = '2.3.1', VERSION_DATE = '2026.11.22';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -1449,7 +1452,7 @@ const GR = {
     const me = this.me(), ts = this.gtags(), out = { notes: new Map(), places: new Map(), walks: new Map() };
     for (const n of Store.notes.values()) if (this.isShared(n)) {
       const { loc, im, ...r } = n;
-      if (im && im.length) { const imd = im.map(id => Thumbs.mem.get(id)).filter(Boolean); if (imd.length) r.imd = imd; }
+      if (im && im.length) { const imd = im.map(id => Thumbs.memS.get(id)).filter(Boolean); if (imd.length) r.imd = imd; }   // the small copy (≈240px), never the sharp one
       out.notes.set(me + '_' + n.id, { ...r, by: me });
     }
     for (const w of Store.walks.values()) if ((w.tags || []).some(t => ts.includes(t))) { const { trk, tw, ...r } = w; out.walks.set(me + '_' + w.d, { ...r, by: me }); }
@@ -1461,7 +1464,7 @@ const GR = {
     if (this.busy) { this.again = true; return; }
     this.busy = true;
     try {
-      for (const n of Store.notes.values()) if (n.im && this.isShared(n)) for (const id of n.im) await Thumbs.src(id);   // so shared memos carry their small photos
+      for (const n of Store.notes.values()) if (n.im && this.isShared(n)) for (const id of n.im) await Thumbs.small(id);   // so shared memos carry their small photos
       const s = FB.sdk, me = this.me(), gid = this.gid, want = this.want(), ops = [];
       for (const c of ['notes', 'places', 'walks']) {
         for (const [id, x] of want[c]) { const r = this.docs[c].get(id); if (!r || (+x.u || 0) > (+r.u || 0)) ops.push(['set', c, id, JSON.parse(JSON.stringify(x))]); }
@@ -2241,8 +2244,10 @@ function postTime(u) {
 const noteLinks = n => Array.isArray(n.p) ? n.p.filter(u => /^https?:\/\//.test(u)) : [];
 const capOf = n => [n.d ? n.d.slice(5).replace('-', '.') + (n.at ? ' ' + n.at : '') : '', n.k ? placeName(n.k) : '', n.t].filter(Boolean).join(' · ');
 // what the viewer shows for one memo: its own small photos first, then posts that open inside
-const noteItems = n => [...(n.im || []), ...(Array.isArray(n.imd) ? n.imd : [])].map(img => ({ img, cap: capOf(n) }))
-  .concat(noteLinks(n).filter(photoPost).map(u => ({ u, cap: capOf(n) })));
+const noteItems = n => [...(n.im || []), ...(Array.isArray(n.imd) ? n.imd : [])].map(img => ({ img, cap: capOf(n), nid: n.id, by: n.by }))
+  .concat(noteLinks(n).filter(photoPost).map(u => ({ u, cap: capOf(n), nid: n.id, by: n.by })));
+// a memo of mine (not someone else's in the group) that still has room for photos
+const keepNote = it => { const n = it && it.nid && Store.notes.get(it.nid); return n && (!it.by || it.by === GR.me()) && (n.im || []).length < 8 ? n : null; };
 const igItems = ns => ns.flatMap(noteItems);
 const IG = {
   list: [], i: 0, f: null, t: 0,
@@ -2259,7 +2264,8 @@ const IG = {
     $('#igPrev').hidden = $('#igNext').hidden = !many;
     $('#igCap').textContent = it.cap || '';
     this.clear();
-    if (it.img) {   // a small photo kept in the app
+    $('#igKeep').hidden = !!it.img || !keepNote(it);
+    if (it.img) {   // a photo kept in the app
       box.classList.add('pic'); out.hidden = true; hint.hidden = true;
       const im = new Image(); im.className = 'igImg'; im.alt = it.cap || '写真';
       box.appendChild(im); this.f = im;
@@ -2269,7 +2275,8 @@ const IG = {
     const p = photoPost(it.u);
     box.classList.remove('pic'); out.hidden = false; hint.hidden = false;
     out.href = p.url; out.textContent = p.name + ' ↗';
-    hint.textContent = `出てこないときは、鍵のかかった投稿かもしれません。右上の ${p.name} ↗ から開くと、${p.svc === 'x' ? 'X' : 'Instagram'} で見られます。`;
+    const svc = p.svc === 'x' ? 'X' : 'Instagram';
+    hint.textContent = `出てこないときは、鍵をかけた${p.svc === 'x' ? 'ポスト' : '投稿'}かもしれません。鍵つきのものは ${svc} のきまりで、ここには出せません（自分のものでも）。右上の ${p.name} ↗ から開けば、${svc} で見られます。`;
     L.textContent = 'LOADING…';
     // a new frame each time: changing an iframe's src would add a Back-button step
     const f = document.createElement('iframe');
@@ -2282,6 +2289,18 @@ const IG = {
     this.t = setTimeout(() => { if (this.f === f && !f.classList.contains('on')) L.textContent = `読み込めませんでした\n${p.name} ↗ から開いてください`; }, 15000);
   },
   step(d) { if (this.list.length < 2) return; this.i = (this.i + d + this.list.length) % this.list.length; this.show(); },
+  keep() {   // pick the same photo from the phone: it goes onto the memo, and shows here right away
+    const it = this.list[this.i], n = keepNote(it); if (!n) return;
+    pickPhotos(8 - (n.im || []).length, async ds => {
+      const ids = await saveThumbs(ds), cur = Store.notes.get(n.id); if (!cur) return;
+      Store.putNote({ ...cur, im: [...(cur.im || []), ...ids].slice(0, 8) });
+      if (this.on() && this.list[this.i] === it) {
+        this.list.splice(this.i, 0, ...ids.map(img => ({ img, cap: it.cap, nid: it.nid, by: it.by })));
+        this.show();
+      }
+      toast('のこしました。次からは、この写真がすぐに出ます', 3200);
+    });
+  },
   clear() { clearTimeout(this.t); if (this.f) { this.f.remove(); this.f = null; } $('#igL').textContent = ''; }
 };
 // the embed pages tell their parent how tall they are
@@ -2294,6 +2313,7 @@ addEventListener('message', e => {
   if (h > 120 && h < 6000) IG.f.style.height = Math.ceil(h) + 'px';
 });
 $('#igPrev').onclick = () => IG.step(-1);
+$('#igKeep').onclick = () => IG.keep();
 $('#igNext').onclick = () => IG.step(1);
 $('#ig').addEventListener('click', e => { if (e.target.id === 'ig') closePanel('ig'); });
 { let x0 = null, y0 = 0;   // swipe sideways (outside the photo itself) for the next one
@@ -2329,7 +2349,7 @@ function thumbStrip(n, edit) {
   ids.forEach((id, i) => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'th'; b.setAttribute('aria-label', '写真を大きく見る');
     const im = new Image(); im.alt = ''; im.decoding = 'async'; b.appendChild(im);
-    Thumbs.src(id).then(d => { if (d) im.src = d; else b.classList.add('miss'); });
+    Thumbs.small(id).then(d => d || Thumbs.src(id)).then(d => { if (d) im.src = d; else b.classList.add('miss'); });
     b.onclick = e => { e.stopPropagation(); if (!edit) IG.open(list, i); };
     if (edit) { const rm = document.createElement('span'); rm.className = 'rm'; rm.textContent = '×'; rm.setAttribute('aria-label', 'この写真をはずす'); b.appendChild(rm); b.onclick = e => { e.stopPropagation(); edit(id); }; }
     box.appendChild(b);
@@ -2337,10 +2357,11 @@ function thumbStrip(n, edit) {
   return box;
 }
 
-/* ---------- small photos: kept in this browser (IndexedDB), and in your cloud space when signed in ---------- */
+/* ---------- photos: kept in this browser (IndexedDB), and in your cloud space when signed in.
+   Each has a sharp copy (d, about 800px) and a small one (s, about 240px) for lists and the group. ---------- */
 const idbReq = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 const Thumbs = {
-  db: null, mem: new Map(), upping: false,
+  db: null, mem: new Map(), memS: new Map(), upping: false,
   open() {
     if (!this.db) this.db = new Promise((res, rej) => { const r = indexedDB.open('sanpo-thumbs', 1); r.onupgradeneeded = () => r.result.createObjectStore('t'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
     return this.db;
@@ -2351,20 +2372,34 @@ const Thumbs = {
     if (!x) return null;
     if (/^data:image\//.test(x)) return x;
     if (this.mem.has(x)) return this.mem.get(x);
-    try { const v = await idbReq((await this.os()).get(x)); if (v && v.d) { this.mem.set(x, v.d); return v.d; } } catch (e) {}
+    try { const v = await idbReq((await this.os()).get(x)); if (v && v.d) { this.mem.set(x, v.d); if (v.s) this.memS.set(x, v.s); return v.d; } } catch (e) {}
     if (FB.user && FB.sdk) {
-      try { const sn = await FB.sdk.getDoc(FB.sdk.doc(FB.db, 'users', FB.user.uid, 'thumbs', x)); if (sn.exists() && sn.data().d) { await this.put(x, sn.data().d, true); return sn.data().d; } } catch (e) {}
+      try { const sn = await FB.sdk.getDoc(FB.sdk.doc(FB.db, 'users', FB.user.uid, 'thumbs', x)); const o = sn.exists() ? sn.data() : null; if (o && o.d) { await this.put(x, o.d, true, o.s); return o.d; } } catch (e) {}
     }
     return null;
   },
-  async put(id, d, up) {
-    this.mem.set(id, d);
-    try { await idbReq((await this.os('readwrite')).put({ d, up: !!up }, id)); } catch (e) {}
+  async small(x) {
+    if (!x) return null;
+    if (/^data:image\//.test(x)) return x;
+    if (this.memS.has(x)) return this.memS.get(x);
+    const d = await this.src(x); if (!d) return null;
+    if (this.memS.has(x)) return this.memS.get(x);
+    let s = d;
+    if (d.length > 20000) {   // a sharp one without its small copy (read from a backup): make it once
+      try { s = await shrinkPhoto(d, 240, 15000); } catch (e) { return null; }
+      try { const o = await this.os('readwrite'), v = await idbReq(o.get(x)); if (v) await idbReq((await this.os('readwrite')).put({ ...v, s }, x)); } catch (e) {}
+    }
+    this.memS.set(x, s);
+    return s;
+  },
+  async put(id, d, up, s) {
+    this.mem.set(id, d); if (s) this.memS.set(id, s);
+    try { await idbReq((await this.os('readwrite')).put(s ? { d, s, up: !!up } : { d, up: !!up }, id)); } catch (e) {}
     if (!up) this.upload();
   },
   async del(ids) {
     for (const id of ids || []) {
-      this.mem.delete(id);
+      this.mem.delete(id); this.memS.delete(id);
       try { await idbReq((await this.os('readwrite')).delete(id)); } catch (e) {}
       if (FB.user && FB.sdk) try { await FB.sdk.deleteDoc(FB.sdk.doc(FB.db, 'users', FB.user.uid, 'thumbs', id)); } catch (e) {}
     }
@@ -2378,37 +2413,45 @@ const Thumbs = {
     this.upping = true;
     try {
       for (const [k, v] of await this.entries()) if (v.d && !v.up) {
-        await FB.sdk.setDoc(FB.sdk.doc(FB.db, 'users', FB.user.uid, 'thumbs', k), { d: v.d, u: Date.now() });
-        await idbReq((await this.os('readwrite')).put({ d: v.d, up: true }, k));
+        const ref = FB.sdk.doc(FB.db, 'users', FB.user.uid, 'thumbs', k);
+        try { await FB.sdk.setDoc(ref, v.s ? { d: v.d, s: v.s, u: Date.now() } : { d: v.d, u: Date.now() }); }
+        catch (e) { if (!v.s || !/permission/.test(e && e.code || '')) throw e; await FB.sdk.setDoc(ref, { d: v.s, u: Date.now() }); }   // a stricter cloud: keep at least the small one there
+        await idbReq((await this.os('readwrite')).put({ ...v, up: true }, k));
       }
     } catch (e) {} finally { this.upping = false; }
   }
 };
-// shrink a photo from the phone to about 240px (8–15KB). Drawing it again also drops the GPS data inside the file.
+// a photo from the phone becomes two copies: about 800px (60–120KB, sharp even on a full screen) and
+// about 240px (8–15KB, for lists and the group). Drawing it again also drops the GPS data inside the file.
+function drawJpeg(src, max, cap) {
+  const k = Math.min(1, max / Math.max(src.width, src.height));
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(src.width * k)); c.height = Math.max(1, Math.round(src.height * k));
+  const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(src, 0, 0, c.width, c.height);
+  let q = max > 400 ? .82 : .74, d = c.toDataURL('image/jpeg', q);
+  while (d.length > cap && q > .4) { q -= .08; d = c.toDataURL('image/jpeg', q); }
+  return d;
+}
+const loadImg = u => new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = u; });
 async function makeThumb(file) {
   let src;
   try { src = await createImageBitmap(file); }
-  catch (e) { src = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = URL.createObjectURL(file); }); }
-  const k = Math.min(1, 240 / Math.max(src.width, src.height));
-  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(src.width * k)); c.height = Math.max(1, Math.round(src.height * k));
-  const g = c.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(src, 0, 0, c.width, c.height);
-  let q = .74, d = c.toDataURL('image/jpeg', q);
-  while (d.length > 15000 && q > .4) { q -= .08; d = c.toDataURL('image/jpeg', q); }
-  return d;
+  catch (e) { src = await loadImg(URL.createObjectURL(file)); }
+  return { d: drawJpeg(src, 800, 160000), s: drawJpeg(src, 240, 15000) };
 }
+async function shrinkPhoto(d, max, cap) { return drawJpeg(await loadImg(d), max, cap); }
 function pickPhotos(max, done) {   // must start inside a tap
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.hidden = true;
   document.body.appendChild(inp);
   inp.onchange = async () => {
     const fs = [...inp.files].slice(0, Math.max(1, max)); inp.remove();
     if (!fs.length) return;
-    toast('写真を小さくしています…');
+    toast('写真を、のこす大きさにしています…');
     const out = []; for (const f of fs) { try { out.push(await makeThumb(f)); } catch (e) {} }
     out.length ? done(out) : toast('この写真は読み込めませんでした');
   };
   inp.click();
 }
-async function saveThumbs(ds) { const ids = []; for (const d of ds) { const id = Thumbs.newId(); await Thumbs.put(id, d); ids.push(id); } return ids; }
+async function saveThumbs(ds) { const ids = []; for (const o of ds) { const id = Thumbs.newId(); await Thumbs.put(id, o.d || o, false, o.s); ids.push(id); } return ids; }
 function tagChips(tags) {
   const f = document.createDocumentFragment();
   const gt = GR.on() ? GR.gtags() : [], gc = GR.on() ? GR.color(GR.me()) : null;
@@ -2473,7 +2516,7 @@ function addPhotoUI(node, n) {
       box.appendChild(inp); box.appendChild(ok); inp.focus();
     }
   });
-  const pick = mkBtn('◫ 写真を選ぶ', 'btn ghost', () => pickPhotos(6 - (n.im || []).length, async ds => {
+  const pick = mkBtn('◫ 写真を選ぶ', 'btn ghost', () => pickPhotos(8 - ((Store.notes.get(n.id) || n).im || []).length, async ds => {
     const ids = await saveThumbs(ds), cur = Store.notes.get(n.id) || n;
     Store.putNote({ ...cur, im: [...(cur.im || []), ...ids].slice(0, 8) });
     toast('写真をのこしました');
@@ -2650,7 +2693,7 @@ const pullLinks = s => { s = String(s || ''); return { links: s.match(URL_RE) ||
 let formThumbs = [];
 function paintFormThumbs() {
   const box = $('#fThumbs'); box.innerHTML = '';
-  formThumbs.forEach((d, i) => box.appendChild(thumbStrip({ imd: [d] }, () => { formThumbs.splice(i, 1); paintFormThumbs(); }).firstChild));
+  formThumbs.forEach((o, i) => box.appendChild(thumbStrip({ imd: [o.s || o] }, () => { formThumbs.splice(i, 1); paintFormThumbs(); }).firstChild));
 }
 $('#fPick').onclick = () => pickPhotos(6 - formThumbs.length, ds => { formThumbs = formThumbs.concat(ds).slice(0, 6); paintFormThumbs(); });
 $('#fText').addEventListener('paste', e => {   // pasting a link into the memo puts it where photo links go
