@@ -146,9 +146,11 @@ button.tag:hover{border-color:var(--ink);color:var(--ink)}
 .chip{font:9px/1 var(--mono);letter-spacing:.1em;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:999px;padding:5px 8px 4px;transition:background var(--ui),color var(--ui)}
 .chip:hover{background:var(--ink);color:#fff}
 .edit{grid-column:1/3;display:flex;flex-direction:column;gap:8px;margin-top:4px}
-.edit label{font:9px/1 var(--mono);color:var(--mute);letter-spacing:.12em;margin-top:4px}
+.edit label{font:11px/1.2 var(--sans);color:var(--mute);letter-spacing:.06em;margin-top:4px}
+.edit .erow{display:flex;gap:12px;flex-wrap:wrap}
+.edit .erow>div{display:flex;flex-direction:column;gap:8px}
 .edit input,.edit textarea{width:100%;border:1px solid var(--hair);border-radius:8px;padding:9px 11px;font-size:14px;line-height:1.6;background:#fff;outline:none}
-.edit input[type=date]{width:auto;font:11px/1 var(--mono);padding:7px 8px}
+.edit input[type=date],.edit input[type=time]{width:auto;font:12px/1 var(--mono);padding:7px 8px}
 .edit textarea{resize:vertical}
 .edit textarea.big{min-height:160px}
 .edit input:focus,.edit textarea:focus{border-color:var(--ink)}
@@ -156,7 +158,10 @@ button.tag:hover{border-color:var(--ink);color:var(--ink)}
 .empty{font-size:12px;color:var(--mute);padding:14px 0;line-height:1.7}
 .form{border-top:1px solid var(--hair);padding:14px 24px calc(18px + var(--safe-b));background:#fff}
 .form .row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
-.form input[type=date]{font:11px/1 var(--mono);border:1px solid var(--hair);border-radius:6px;padding:7px 8px;background:#fff;letter-spacing:.04em}
+.form input[type=date],.form input[type=time]{font:11px/1 var(--mono);border:1px solid var(--hair);border-radius:6px;padding:7px 8px;background:#fff;letter-spacing:.04em}
+body.sp #fWhenRow{display:none}
+body.sp #fWhenRow.open{display:flex}
+#fWhen.on{border-style:solid;border-color:var(--ink);color:var(--ink)}
 .form textarea,.form input[type=url]{width:100%;resize:vertical;border:1px solid var(--hair);border-radius:8px;padding:10px 12px;font-size:14px;line-height:1.6;background:#fff;outline:none;transition:border-color var(--ui)}
 #fText{min-height:46px}
 #fDetail{min-height:120px;margin-top:8px}
@@ -444,6 +449,7 @@ body:not(.sp).drawer-open #hud{left:342px}
   .entry .meta .tag.raw,.entry .meta .who{min-height:26px}
   .mini{min-height:44px;font-size:12px}
   .loc{min-height:44px;font-size:11px}
+  .form input[type=date],.form input[type=time],.edit input[type=date],.edit input[type=time]{min-height:44px;padding:0 12px}
   .toggle{min-height:40px}
   .sc{min-height:38px;font-size:13px;padding:0 13px;display:inline-flex;align-items:center}
   .tag,.chip{font-size:11px;min-height:32px;padding:0 11px}
@@ -605,14 +611,14 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <form class="form" id="sForm">
     <button type="button" id="fOpen" class="btn ghost">＋ 新しいメモを書く</button>
     <div class="scope" id="fScope"></div>
-    <div class="row pc-only"><input type="date" id="fDate" required><span class="kbd">⌘/CTRL + ENTER</span></div>
+    <div class="row when" id="fWhenRow"><input type="date" id="fDate" required aria-label="日付"><input type="time" id="fTime" aria-label="時刻（空なら今の時刻）" title="空のままなら、今の時刻"><span class="kbd pc-only">⌘/CTRL + ENTER</span></div>
     <textarea id="fText" rows="2" placeholder="ひとことメモ（#タグも書けます）"></textarea>
     <textarea id="fDetail" class="pc-only" placeholder="くわしく（道順、見つけたもの、天気、寄ったお店、気づいたこと…）"></textarea>
     <div id="fTags" class="pc-only"></div>
     <div class="row links"><input id="fLinks" type="url" inputmode="url" autocomplete="off" placeholder="写真のリンク（Instagram・X）"><button type="button" class="mini sp-only" id="fPaste">貼る</button><button type="button" class="mini" id="fPick" title="スマホの写真を小さくして、アプリにのこす">◫ 写真</button></div>
     <div class="thumbs edit" id="fThumbs"></div>
     <button type="button" class="share" id="fShare" hidden><i></i><span></span></button>
-    <div class="row" style="margin:10px 0 0"><button class="btn" id="fSave" type="submit">のこす</button><button type="button" class="loc sp-only" id="fLoc">◉ 位置を付ける</button></div>
+    <div class="row" style="margin:10px 0 0"><button class="btn" id="fSave" type="submit">のこす</button><button type="button" class="loc sp-only" id="fLoc">◉ 位置を付ける</button><button type="button" class="loc sp-only" id="fWhen" aria-label="日付と時刻を選ぶ">◷ 今日</button></div>
   </form>
 </aside>
 
@@ -728,7 +734,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.1.0', VERSION_DATE = '2026.11.22';
+const VERSION = '2.1.1', VERSION_DATE = '2026.11.22';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -2415,18 +2421,18 @@ let editing = null;
 function editEntry(node, n) {
   editing = n.id;
   node.innerHTML = `<div class="edit">
-    <label>DATE</label><input type="date" class="eD">
+    <div class="erow"><div><label>日付</label><input type="date" class="eD"></div><div><label>時刻</label><input type="time" class="eA"></div></div>
     <div class="scope eK"></div>
-    <label>MEMO</label><textarea class="eT" rows="2"></textarea>
-    <label>DETAIL</label><textarea class="eX big" placeholder="くわしく（道順、見つけたもの、天気、寄ったお店、気づいたこと…）"></textarea>
-    <label>TAGS</label><div class="eG"></div>
+    <label>ひとこと</label><textarea class="eT" rows="2"></textarea>
+    <label>くわしく</label><textarea class="eX big" placeholder="道順、見つけたもの、天気、寄ったお店、気づいたこと…"></textarea>
+    <label>タグ</label><div class="eG"></div>
     <label>写真のリンク（1行に1つ）</label><textarea class="eP" rows="2" placeholder="https://www.instagram.com/p/…　https://x.com/…/status/…"></textarea>
     <label>写真</label><div class="eI"></div>
     <div class="row"><button class="btn eS" type="button">保存</button><button class="btn ghost eC" type="button">キャンセル</button><button class="eDel" type="button">このメモをけす</button></div></div>`;
   const q = c => node.querySelector(c);
   let k = n.k;
   scopeChips(q('.eK'), ancestors(n.k), n.k, x => { k = x; });
-  q('.eD').value = n.d; q('.eT').value = n.t || ''; q('.eX').value = n.x || ''; q('.eP').value = (n.p || []).join('\n');
+  q('.eD').value = n.d; q('.eA').value = n.at || ''; q('.eT').value = n.t || ''; q('.eX').value = n.x || ''; q('.eP').value = (n.p || []).join('\n');
   const tg = tagInput(q('.eG'), n.tags);
   let im = (n.im || []).slice(), gone = [];
   const paintIm = () => {
@@ -2443,7 +2449,7 @@ function editEntry(node, n) {
   const save = () => {
     const T = pullLinks(q('.eT').value), X = pullLinks(q('.eX').value), t = T.text, x = X.text;
     editing = null;
-    Store.putNote({ ...n, k, d: q('.eD').value || n.d, t, x, im, p: parseLinks([q('.eP').value, ...T.links, ...X.links].join(' ')), tags: uniq([...tg.get(), ...hashtags(t + ' ' + x)]) });
+    Store.putNote({ ...n, k, d: q('.eD').value || n.d, at: q('.eA').value || '', t, x, im, p: parseLinks([q('.eP').value, ...T.links, ...X.links].join(' ')), tags: uniq([...tg.get(), ...hashtags(t + ' ' + x)]) });
     if (gone.length) Thumbs.del(gone);
     toast(k === n.k ? '保存しました' : `${placeName(k)} に移しました`);
   };
@@ -2527,16 +2533,19 @@ $('#sForm').onsubmit = ev => {
   const t = T.text, x = X.text, links = parseLinks([$('#fLinks').value, ...T.links, ...X.links].join(' '));
   const tags = uniq([...(pc ? fTags.get() : []), ...hashtags(t + ' ' + x), ...(shareOn() ? [GR.gtag()] : [])]);
   if (!t && !x && !links.length && !formThumbs.length) { $('#fText').focus(); toast('メモを書いてください'); return; }
-  const d = pc ? ($('#fDate').value || today()) : today();
+  const custom = pc || $('#fWhenRow').classList.contains('open');   // phone: only when ◷ was opened
+  const d = custom ? ($('#fDate').value || today()) : today();
+  const at = custom && $('#fTime').value ? $('#fTime').value : (d === today() ? nowHM() : '');
   const k = formKey || S.sel.key;
   const sp = spreadPrep(k), pt = placePoint(k, formLoc);
   const nid = newId(), ds = formThumbs.slice();
-  Store.putNote({ id: nid, k, d, at: d === today() ? nowHM() : '', t, x, p: links, loc: formLoc, tags });
+  Store.putNote({ id: nid, k, d, at, t, x, p: links, loc: formLoc, tags });
   if (ds.length) saveThumbs(ds).then(im => { const n = Store.notes.get(nid); if (n) Store.putNote({ ...n, im }); });
   spread(sp, pt);
   $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; fTags.set([]); formThumbs = []; paintFormThumbs();
   setFormLoc(null);
-  toast((k === S.sel.key ? 'のこしました' : `${placeName(k)} にのこしました`) + (shareOn() ? `（#${GR.gtag()} のみんなにも）` : ''));
+  $('#fTime').value = ''; if (!pc) { $('#fDate').value = today(); $('#fWhenRow').classList.remove('open'); } paintWhen();
+  toast((d !== today() ? `${d.slice(5).replace('-', '/')}の分として、` : '') + (k === S.sel.key ? 'のこしました' : `${placeName(k)} にのこしました`) + (shareOn() ? `（#${GR.gtag()} のみんなにも）` : ''));
   burst(k, pt);
   if (pc) $('#sForm').classList.add('collapsed');
 };
@@ -2557,6 +2566,13 @@ $('#fText').addEventListener('paste', e => {   // pasting a link into the memo p
   if (P.text) document.execCommand('insertText', false, P.text);
   toast('リンクは写真の欄に入れました');
 });
+function paintWhen() {
+  const d = $('#fDate').value || today(), t = $('#fTime').value, open = $('#fWhenRow').classList.contains('open');
+  const b = $('#fWhen'); b.textContent = '◷ ' + (d === today() ? '今日' : d.slice(5).replace('-', '/')) + (t ? ' ' + t : '');
+  b.classList.toggle('on', open && (d !== today() || !!t));
+}
+$('#fWhen').onclick = () => { const r = $('#fWhenRow'); r.classList.toggle('open'); if (!$('#fDate').value) $('#fDate').value = today(); paintWhen(); if (r.classList.contains('open')) $('#fDate').focus(); };
+['#fDate', '#fTime'].forEach(id => $(id).addEventListener('input', paintWhen));
 $('#fPaste').onclick = async () => {
   try {
     const l = parseLinks(await navigator.clipboard.readText());
