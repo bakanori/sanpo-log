@@ -224,7 +224,7 @@ body.sp.sheet-open #fab,body.sp.drawer-open #fab,body.sp.wsheet-open #fab{transf
 .walk .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
 .walk .tags:empty{display:none}
 .walk.cur .ti,.walk:hover .ti{text-decoration:underline;text-underline-offset:3px}
-.addlink{width:100%;margin:2px 0 16px}
+.addlink{width:100%}
 .ycal{margin:2px 0 16px}
 .ycl{display:flex;align-items:baseline;gap:6px;font-size:11px;color:var(--mute);margin-bottom:8px}
 .ycl b{font:300 22px/1 var(--mono);color:var(--ink)}
@@ -364,9 +364,37 @@ body:not(.sp).drawer-open #hud{left:342px}
 .log:hover .p{text-decoration:underline;text-underline-offset:3px}
 
 /* modal */
-#modal,#geo,#join,#attach{position:fixed;inset:0;background:rgba(239,239,234,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
-#modal.open,#geo.open,#join.open,#attach.open{display:flex;animation:fade .3s both}
-#geo,#join,#attach{z-index:45}
+#modal,#geo,#join,#attach,#routeDlg{position:fixed;inset:0;background:rgba(239,239,234,.82);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:40;padding:20px}
+#modal.open,#geo.open,#join.open,#attach.open,#routeDlg.open{display:flex;animation:fade .3s both}
+#geo,#join,#attach,#routeDlg{z-index:45}
+/* 道のり: the same orange footprints, as a dotted line (sized in map units so every browser draws round dots) */
+#map #track,#map #recLine,#map #trackHalo,#map #recHalo{fill:none;stroke:var(--accent);stroke-linecap:round;stroke-linejoin:round;vector-effect:none;pointer-events:none}
+#map #trackHalo,#map #recHalo{stroke:#fff}   /* a white ring under each dot, like the memo dots, so the line reads on painted towns too */
+#map #trackGap{fill:none;stroke:var(--accent);opacity:.35;vector-effect:none;pointer-events:none}
+body.replaying #track,body.replaying #trackGap,body.replaying #trackHalo{opacity:.16}
+#replayPath{stroke:var(--ink)!important}
+#recBtn{display:none;position:fixed;right:92px;bottom:calc(88px + var(--safe-b));height:44px;border-radius:22px;padding:0 16px 0 13px;align-items:center;gap:9px;background:rgba(255,255,255,.94);border:1px solid var(--hair);font:12px/1 var(--sans);letter-spacing:.04em;color:var(--ink);z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.07);transition:transform var(--panel),background var(--ui),color var(--ui)}
+#recBtn i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--accent);flex:none}
+#recBtn b{font:300 13px/1 var(--mono);letter-spacing:.02em}
+#recBtn.on{background:var(--ink);border-color:var(--ink);color:#fff}
+#recBtn.on i{background:var(--accent);border-color:var(--accent);animation:pulse 1.6s infinite}
+body.sp #recBtn{display:inline-flex}
+body.sp.sheet-open #recBtn,body.sp.drawer-open #recBtn,body.sp.wsheet-open #recBtn{transform:scale(0);pointer-events:none}
+body.rec .brand i{animation:pulse 1.6s infinite}
+#routeDlg .card{max-width:440px}
+#routeDlg p{font-size:14px;line-height:1.8;margin-top:10px;color:#333}
+#routeDlg .big2{font:300 30px/1.1 var(--mono);letter-spacing:.01em;margin-top:14px}
+#routeDlg .big2 small{font-size:13px;color:var(--mute);margin-left:6px}
+#routeDlg .rday{border-top:1px solid var(--hair);padding:12px 0;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline}
+#routeDlg .rday b{font:500 13px/1.4 var(--mono)}
+#routeDlg .rday span{font-size:13px;color:#555}
+#routeDlg .rday input[type=date]{font:13px var(--mono);border:1px solid var(--hair);border-radius:8px;padding:8px 10px}
+#routeDlg label.chk{display:flex;gap:10px;align-items:center;font-size:14px;margin-top:14px;cursor:pointer}
+#routeDlg label.chk input{width:20px;height:20px;accent-color:var(--accent)}
+#routeDlg .acts{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
+#routeDlg .note{font-size:12px;color:var(--mute);margin-top:10px;line-height:1.7}
+.addrow{display:flex;gap:8px;margin:2px 0 16px}
+.addrow .btn{flex:1;margin:0!important;padding-left:8px;padding-right:8px}
 /* small photos */
 .thumbs{grid-column:1/3;display:flex;flex-wrap:wrap;gap:6px}
 .thumbs:empty{display:none}
@@ -545,6 +573,7 @@ body:not(.sp).drawer-open #hud{left:342px}
   #tools{right:calc(16px + var(--safe-r));bottom:calc(10px + var(--safe-b))}
   #fab{right:calc(16px + var(--safe-r));bottom:calc(52px + var(--safe-b));width:52px;height:52px;font-size:28px}
   #fab small{display:none}
+  #recBtn{right:calc(80px + var(--safe-r));bottom:calc(56px + var(--safe-b))}
   #sheet,#wsheet{width:min(420px,50vw);padding-right:var(--safe-r)}
   #drawer{width:min(340px,45vw);padding-left:var(--safe-l)}
   body.sheet-open #tools,body.wsheet-open #tools{right:calc(min(420px,50vw) + 12px)}
@@ -577,6 +606,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <path id="tDots" class="dot"/>
   <path id="selp"/>
   <path id="loadEdge" pathLength="1"/>
+  <path id="trackGap"/><path id="trackHalo"/><path id="track"/><path id="recHalo"/><path id="recLine"/>
   <path id="route"/><path id="replayPath"/><path id="routeRing" class="dot"/><path id="routeDots" class="dot"/>
   <path id="pinRing" class="dot"/><path id="pin" class="dot"/>
   <g id="gMe"><circle id="meAcc"/><path id="meRing" class="dot"/><path id="meCore" class="dot"/></g>
@@ -620,8 +650,9 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <div id="toast"></div>
 <div id="replay" aria-live="polite"><span class="clk">--:--</span><span class="txt"></span><button type="button" aria-label="たどるのをやめる">■</button></div>
 <div id="hlbar"><span></span><button aria-label="ハイライトを消す">×</button></div>
+<button id="recBtn" type="button" aria-label="さんぽの道のりを記録する"><i></i><span>さんぽ、はじめる</span></button>
 <button id="fab" aria-label="今いる場所でメモ">＋<small>ここでメモ</small></button>
-<div id="drop">DROP JSON TO IMPORT</div>
+<div id="drop">DROP JSON / GPX</div>
 
 <aside id="sheet" class="panel" aria-label="メモ">
   <div class="phead">
@@ -676,6 +707,13 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <ol class="steps" id="geoSteps"></ol>
     <div class="acts"><button class="btn" id="geoRetry">もう一度ためす</button><button class="btn ghost" id="geoMap">地図から選ぶ</button></div>
     <small>現在地は、メモに場所を付けるときと、地図に今いる場所を出すときだけ使います。</small>
+  </div>
+</div>
+<div id="routeDlg" role="dialog" aria-modal="true" aria-labelledby="rtTitle">
+  <div class="card">
+    <h3 id="rtTitle"></h3>
+    <div id="rtBody"></div>
+    <div class="acts" id="rtActs"></div>
   </div>
 </div>
 <div id="attach" role="dialog" aria-modal="true" aria-labelledby="attTitle">
@@ -760,7 +798,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.2.0', VERSION_DATE = '2026.11.22';
+const VERSION = '2.3.0', VERSION_DATE = '2026.11.22';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -932,7 +970,16 @@ function cleanNote(x) {
   return o;
 }
 function cleanWalk(w) {
-  return { d: w.d, title: String(w.title || '').slice(0, 80), sum: String(w.sum || ''), tags: uniq((Array.isArray(w.tags) ? w.tags : []).map(normTag)), u: +w.u || Date.now() };
+  const o = { d: w.d, title: String(w.title || '').slice(0, 80), sum: String(w.sum || ''), tags: uniq((Array.isArray(w.tags) ? w.tags : []).map(normTag)), u: +w.u || Date.now() };
+  // 道のり: encoded line pieces joined by spaces (≈1–3KB a walk), distance, first/last time, towns passed
+  if (typeof w.trk === 'string' && w.trk.length < 300000 && /^[\x3f-\x7e]+( [\x3f-\x7e]+)*$/.test(w.trk.trim())) {
+    o.trk = w.trk.trim();
+    if (+w.km > 0) o.km = Math.round(+w.km * 100) / 100;
+    if (/^\d{2}:\d{2}$/.test(w.t0 || '')) o.t0 = w.t0;
+    if (/^\d{2}:\d{2}$/.test(w.t1 || '')) o.t1 = w.t1;
+  }
+  if (Array.isArray(w.tw)) { const tw = w.tw.map(String).filter(k => /^[tmp]\d{2,}/.test(k)).slice(0, 400); if (tw.length) o.tw = tw; }
+  return o;
 }
 const Store = {
   places: new Map(), notes: new Map(), walks: new Map(), deleted: new Map(), ready: true,   // deleted: 'n:<id>' / 'w:<date>' -> time
@@ -985,11 +1032,12 @@ const Store = {
     this.places.set(k, pl); return pl;
   },
   setVisited(k, v) { const pl = this.ensurePlace(k) || cleanPlace({}); this.places.set(k, { ...pl, v: !!v, u: Date.now() }); this.commit(); },
+  setVisitedMany(keys) { for (const k of keys) { const pl = this.ensurePlace(k); if (pl && !pl.v) this.places.set(k, { ...pl, v: true, u: Date.now() }); } this.commit(); },
   putNote(n) { this.ensurePlace(n.k); this.notes.set(n.id, cleanNote({ ...n, u: Date.now() })); this.commit(); },
   delNote(id) { this.notes.delete(id); this.deleted.set('n:' + id, Date.now()); this.commit(); },
   putWalk(d, w) {
     const c = cleanWalk({ ...(this.walks.get(d) || {}), ...w, d, u: Date.now() });
-    if (!c.title && !c.sum && !c.tags.length) { if (this.walks.delete(d)) this.deleted.set('w:' + d, Date.now()); } else this.walks.set(d, c);
+    if (!c.title && !c.sum && !c.tags.length && !c.trk) { if (this.walks.delete(d)) this.deleted.set('w:' + d, Date.now()); } else this.walks.set(d, c);
     this.commit();
   },
   renameTag(from, to) {   // to = '' deletes the tag; renaming onto an existing tag merges them
@@ -1404,7 +1452,7 @@ const GR = {
       if (im && im.length) { const imd = im.map(id => Thumbs.mem.get(id)).filter(Boolean); if (imd.length) r.imd = imd; }
       out.notes.set(me + '_' + n.id, { ...r, by: me });
     }
-    for (const w of Store.walks.values()) if ((w.tags || []).some(t => ts.includes(t))) out.walks.set(me + '_' + w.d, { ...w, by: me });
+    for (const w of Store.walks.values()) if ((w.tags || []).some(t => ts.includes(t))) { const { trk, tw, ...r } = w; out.walks.set(me + '_' + w.d, { ...r, by: me }); }
     return out;
   },
   soon(ms) { if (!this.on() || !this.ready) return; clearTimeout(this.t); this.t = setTimeout(() => this.push(), ms == null ? 1500 : ms); },
@@ -1580,6 +1628,9 @@ let dotEls;
 function sizeDots() {
   dotEls = dotEls || Object.keys(DOT_PX).filter(id => !/^mk/.test(id)).map(id => [id, document.getElementById(id)]);
   for (const [id, n] of dotEls) n.style.strokeWidth = dotW(id);
+  const k = (W < 720 || H < 520 ? .85 : 1) * V.s;   // 道のり: round dots ~2.6px every ~5.6px on screen
+  for (const [id, w] of [['track', 2.6], ['recLine', 2.6], ['trackHalo', 5], ['recHalo', 5]]) { const n = document.getElementById(id); n.style.strokeWidth = w * k; n.style.strokeDasharray = `${.001 * k} ${5.6 * k}`; }
+  const g = document.getElementById('trackGap'); g.style.strokeWidth = 1 * k; g.style.strokeDasharray = `${2 * k} ${5 * k}`;
 }
 const toWorld = (x, y) => [V.cx + (x - W / 2) * V.s, V.cy + (y - H / 2) * V.s];
 const toScreen = (x, y) => [(x - V.cx) / V.s + W / 2, (y - V.cy) / V.s + H / 2];
@@ -2009,6 +2060,7 @@ function refreshMemoBtn() {
   b.textContent = n ? `メモ ${n}` : isV(k) ? '● 行った' : '＋ メモ';
 }
 function up() {
+  if ($('#routeDlg').classList.contains('open')) return closeRoute();
   if (Replay.on) return Replay.stop();
   if (IG.on()) return closePanel('ig');
   if ($('#join').classList.contains('open')) return closePanel('join');
@@ -2905,10 +2957,13 @@ function renderDrawer() {
   } else if (dTab === 'walks') {
     const days = walkDays();
     if (!q) {
-      frag.appendChild(mkBtn('＋ 写真のリンクを貼る', 'btn ghost addlink', async () => {
+      const ar = document.createElement('div'); ar.className = 'addrow';
+      ar.appendChild(mkBtn('＋ 道のり（GPX）', 'btn ghost', pickGPX, 'ほかのアプリで記録した道のり（GPXファイル）を読みこむ'));
+      frag.appendChild(ar);
+      ar.insertBefore(mkBtn('＋ 写真のリンク', 'btn ghost addlink', async () => {
         try { const ls = parseLinks(await navigator.clipboard.readText()); if (ls.length) return attachLink(ls[0]); } catch (e) {}
         attachAsk();
-      }, 'コピーしたリンクを、投稿の時刻に近いメモに付けます'));
+      }, 'コピーしたリンクを、投稿の時刻に近いメモに付けます'), ar.firstChild);
       frag.appendChild(yearCal(days));
     }
     const nraw = days.filter(d => walkStat(d).raw).length;
@@ -2931,7 +2986,7 @@ function renderDrawer() {
       const b = document.createElement('button'); b.className = 'walk' + (curWalk === d ? ' cur' : '');
       b.innerHTML = '<div class="d"><span></span><b></b></div><div class="ti"></div><div class="tags"></div>';
       b.querySelector('.d span').textContent = fmtDay(d);
-      b.querySelector('.d b').textContent = `メモ ${st.ns.length}` + (st.towns ? ` · 町 ${st.towns}` : '');
+      b.querySelector('.d b').textContent = (w.km ? fmtKm(w.km) + ' · ' : '') + `メモ ${st.ns.length}` + (st.towns ? ` · 町 ${st.towns}` : '');
       const ti = b.querySelector('.ti'); ti.textContent = w.title || autoTitle(d); ti.classList.toggle('auto', !w.title);
       const tg = b.querySelector('.tags');
       if (st.raw) { const s = document.createElement('span'); s.className = 'tag raw'; s.textContent = 'メモだけ ' + st.raw; tg.appendChild(s); }
@@ -3087,9 +3142,10 @@ function openWalk(d) {
   if (W < 720) closePanel('drawer');
   renderWalk();
   $('#wsheet').classList.add('open'); document.body.classList.add('wsheet-open');
-  const ns = IX.byDate.get(d) || [];
-  setHighlight({ kind: 'walk', label: 'WALK ' + fmtDay(d), keys: ns.map(n => n.k), route: ns });
-  focusKeys(ns.map(n => n.k), true);
+  const ns = IX.byDate.get(d) || [], w = Store.walks.get(d) || {};
+  const keys = uniq([...ns.map(n => n.k), ...(w.tw || [])]);   // towns passed on the route count too
+  setHighlight({ kind: 'walk', label: 'WALK ' + fmtDay(d), keys, route: ns, d, trk: !!w.trk });
+  focusKeys(keys, true);
   if ($('#drawer').classList.contains('open')) renderDrawer();
 }
 function renderWalk() {
@@ -3098,7 +3154,7 @@ function renderWalk() {
   $('#wEyebrow').textContent = 'WALK · ' + fmtDay(d);
   const ti = $('#wTitle'); ti.textContent = w.title || autoTitle(d); ti.classList.toggle('auto', !w.title);
   const places = uniq(st.ns.map(n => n.k[0] === 'p' ? placeName(n.k) : placeName('m' + n.k.slice(1, 6))));
-  $('#wStat').textContent = [places.join('・'), st.towns ? `町 ${st.towns}` : '', `メモ ${st.ns.length}`, st.raw ? `メモだけ ${st.raw}` : ''].filter(Boolean).join(' · ');
+  $('#wStat').textContent = [w.km ? fmtKm(w.km) + (w.t0 && w.t1 ? ` ${w.t0}〜${w.t1}` : '') : '', places.join('・'), st.towns ? `町 ${st.towns}` : '', w.tw ? `通った町 ${w.tw.length}` : '', `メモ ${st.ns.length}`, st.raw ? `メモだけ ${st.raw}` : ''].filter(Boolean).join(' · ');
   const wt = $('#wTags'); wt.innerHTML = ''; wt.appendChild(tagChips(w.tags));
   const body = $('#wBody'); body.innerHTML = '';
   // summary
@@ -3106,7 +3162,7 @@ function renderWalk() {
   if (w.sum) { const p = document.createElement('div'); p.className = 'dx'; p.textContent = w.sum; sum.appendChild(p); }
   const row = document.createElement('div'); row.className = 'wrow';
   row.appendChild(mkBtn(w.title || w.sum ? 'なおす · タイトルとまとめ' : '＋ タイトルとまとめを書く', w.title || w.sum ? 'tag' : 'btn ghost', () => editWalk(sum, d)));
-  if (Replay.items(d).length > 1) row.appendChild(mkBtn('▶ たどる', w.title || w.sum ? 'tag' : 'btn ghost', () => Replay.start(d), 'この日の散歩を、メモの順にたどる'));
+  if (Replay.items(d).length > 1 || w.trk) row.appendChild(mkBtn('▶ たどる', w.title || w.sum ? 'tag' : 'btn ghost', () => Replay.start(d), 'この日の散歩を、メモの順にたどる'));
   sum.appendChild(row);
   body.appendChild(sum);
   const r = document.createElement('div'); r.className = 'rule'; r.textContent = `メモ ${st.ns.length}`; photosBtn(r, st.ns); body.appendChild(r);
@@ -3116,16 +3172,21 @@ function renderWalk() {
 function editWalk(node, d) {
   editing = 'walk';
   const w = Store.walks.get(d) || {};
-  node.innerHTML = `<div class="edit"><label>TITLE</label><input class="wT" placeholder="${autoTitle(d)}">
+  node.innerHTML = `<div class="edit"><label>タイトル</label><input class="wT" placeholder="${autoTitle(d)}">
     <label>まとめ</label><textarea class="wS big" placeholder="この日の散歩をふりかえって（コース、天気、印象に残ったこと…）"></textarea>
-    <label>TAGS</label><div class="wG"></div>
-    <div class="row"><button class="btn wOk" type="button">保存</button><button class="btn ghost wNo" type="button">キャンセル</button></div></div>`;
+    <label>タグ</label><div class="wG"></div>
+    <div class="row"><button class="btn wOk" type="button">保存</button><button class="btn ghost wNo" type="button">キャンセル</button>${w.trk ? '<button class="eDel wTrk" type="button">道のりをけす</button>' : ''}</div></div>`;
   const q = c => node.querySelector(c);
   q('.wT').value = w.title || ''; q('.wS').value = w.sum || '';
   const tg = tagInput(q('.wG'), w.tags);
   const save = () => { editing = null; const s = q('.wS').value.trim(); Store.putWalk(d, { title: q('.wT').value.trim(), sum: s, tags: uniq([...tg.get(), ...hashtags(s)]) }); toast('保存しました'); };
   q('.wOk').onclick = save;
   q('.wNo').onclick = () => { editing = null; renderWalk(); };
+  const wt = q('.wTrk');
+  if (wt) wt.onclick = () => {
+    if (!wt.classList.contains('arm')) { wt.classList.add('arm'); wt.textContent = 'ほんとに？（もう一度押すと、けします）'; setTimeout(() => { wt.classList.remove('arm'); wt.textContent = '道のりをけす'; }, 3000); return; }
+    editing = null; Store.putWalk(d, { trk: '', km: 0, t0: '', t1: '', tw: [] }); toast('道のりを、けしました'); openWalk(d);
+  };
   q('.wS').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); save(); } });
   (W < 720 ? q('.wT') : q('.wS')).focus();
 }
@@ -3139,6 +3200,240 @@ function openTag(t) {
   renderDrawer(); syncTools();
   focusKeys(uniq(keys), false);
 }
+
+/* ---------- 道のり (routes) — from another app's GPX, or recorded lightly while this app is open ----------
+   Kept on the day's walk as an encoded line. Never copied to the group (a route shows where you live). */
+const Poly = {
+  num(v) { v = v < 0 ? ~(v << 1) : v << 1; let s = ''; while (v >= 0x20) { s += String.fromCharCode((0x20 | (v & 0x1f)) + 63); v >>= 5; } return s + String.fromCharCode(v + 63); },
+  enc(pts) { let o = '', a0 = 0, b0 = 0; for (const p of pts) { const a = Math.round(p[0] * 1e5), b = Math.round(p[1] * 1e5); o += this.num(a - a0) + this.num(b - b0); a0 = a; b0 = b; } return o; },
+  dec(s) {
+    const out = []; let i = 0, a = 0, b = 0;
+    while (i < s.length) {
+      const v = [0, 0];
+      for (let k = 0; k < 2; k++) { let r = 0, sh = 0, c; do { c = s.charCodeAt(i++) - 63; r |= (c & 0x1f) << sh; sh += 5; } while (c >= 0x20 && i < s.length); v[k] = r & 1 ? ~(r >> 1) : r >> 1; }
+      a += v[0]; b += v[1]; out.push([a / 1e5, b / 1e5]);
+    }
+    return out;
+  }
+};
+const segsOf = trk => String(trk || '').split(' ').filter(Boolean).map(x => Poly.dec(x));
+const hav = (a, b) => { const r = Math.PI / 180, dla = (b[0] - a[0]) * r, dlo = (b[1] - a[1]) * r, h = Math.sin(dla / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dlo / 2) ** 2; return 12742e3 * Math.asin(Math.min(1, Math.sqrt(h))); };
+const segKm = g => g.reduce((s, p, i) => i ? s + hav(g[i - 1], p) : 0, 0) / 1000;
+const isOkiLL = (lat, lng) => lat < 27 && lat > 23.5 && lng > 122.5 && lng < 131.5;
+const projLL = p => proj(p[1], p[0], isOkiLL(p[0], p[1]));
+const hmOf = ms => { const x = new Date(ms); return String(x.getHours()).padStart(2, '0') + ':' + String(x.getMinutes()).padStart(2, '0'); };
+const ymdOf = ms => { const x = new Date(ms); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+const fmtKm = km => (km < 10 ? km.toFixed(1) : Math.round(km)) + 'km';
+const fmtDur = m => m >= 60 ? `${Math.floor(m / 60)}時間${m % 60 ? (m % 60) + '分' : ''}` : `${Math.max(1, Math.round(m))}分`;
+// keep a point every ~12m, then drop the ones a straight line already covers (±6m)
+function thin(seg) {
+  const a = []; for (const p of seg) if (!a.length || hav(a[a.length - 1], p) >= 12) a.push(p);
+  if (seg.length > 1 && a[a.length - 1] !== seg[seg.length - 1]) a.push(seg[seg.length - 1]);
+  if (a.length < 3) return a;
+  const off = (p, s, e) => {
+    const k = Math.cos(s[0] * Math.PI / 180) * 111320, m = 110540;
+    const ax = (e[1] - s[1]) * k, ay = (e[0] - s[0]) * m, px = (p[1] - s[1]) * k, py = (p[0] - s[0]) * m, L = ax * ax + ay * ay;
+    const t = L ? Math.max(0, Math.min(1, (px * ax + py * ay) / L)) : 0;
+    return Math.hypot(px - t * ax, py - t * ay);
+  };
+  const keep = new Uint8Array(a.length); keep[0] = keep[a.length - 1] = 1;
+  const st = [[0, a.length - 1]];
+  while (st.length) {
+    const [s0, e0] = st.pop(); let md = 0, mi = -1;
+    for (let i = s0 + 1; i < e0; i++) { const d = off(a[i], a[s0], a[e0]); if (d > md) { md = d; mi = i; } }
+    if (md > 6) { keep[mi] = 1; st.push([s0, mi], [mi, e0]); }
+  }
+  return a.filter((_, i) => keep[i]);
+}
+// which city / town is this point in (the same answer as the map's own town cells)
+async function placeAt(lng, lat, hint) {
+  if (hint && exactHits([hint.f], lng, lat, () => hint.pc === '47').length) return hint;
+  for (const c of exactHits(D.japanFeats, lng, lat, f => f.c === '47').map(f => f.c)) {
+    const P = await ensurePref(c), hit = exactHits(P.feats, lng, lat, () => c === '47')[0];
+    if (hit) return { pc: c, mc: hit.c, f: hit };
+  }
+  return null;
+}
+async function townsPassed(segs, tick) {
+  const out = new Set(); let hint = null, n = 0;
+  for (const g of segs) for (let i = 0; i < g.length; i++) {
+    const a = g[i], b = g[i + 1], steps = b ? Math.max(1, Math.round(hav(a, b) / 30)) : 1;   // look about every 30m
+    for (let s = 0; s < steps; s++) {
+      const lat = b ? a[0] + (b[0] - a[0]) * s / steps : a[0], lng = b ? a[1] + (b[1] - a[1]) * s / steps : a[1];
+      const at = await placeAt(lng, lat, hint); if (!at) continue; hint = at;
+      const towns = await ensureTowns(at.mc);
+      if (!towns.length) { out.add('m' + at.mc); continue; }
+      const p = proj(lng, lat, at.pc === '47'); let ti = -1, bd = Infinity;
+      towns.forEach((t, j) => t.pts.forEach(q => { const d = (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2; if (d < bd) { bd = d; ti = j; } }));
+      if (ti >= 0) out.add(towns[ti].k);
+      if (tick && ++n % 25 === 0) tick(out.size);
+    }
+  }
+  return [...out];
+}
+function saveRoute(d, segs, o) {
+  const w = Store.walks.get(d) || {};
+  const enc = segs.filter(g => g.length > 1).map(g => Poly.enc(g));
+  if (!enc.length) return 0;
+  const all = [...(o.replace ? [] : String(w.trk || '').split(' ').filter(Boolean)), ...enc];
+  const km = segsOf(all.join(' ')).reduce((s, g) => s + segKm(g), 0);
+  const ts = segs.flat().map(p => p[2]).filter(Boolean);
+  let t0 = o.replace ? '' : w.t0, t1 = o.replace ? '' : w.t1;
+  if (ts.length) { const a = hmOf(Math.min(...ts)), b = hmOf(Math.max(...ts)); if (!t0 || a < t0) t0 = a; if (!t1 || b > t1) t1 = b; }
+  Store.putWalk(d, { trk: all.join(' '), km: +km.toFixed(2), t0, t1, tw: uniq([...(o.replace ? [] : (w.tw || [])), ...(o.towns || [])]) });
+  if (o.visit && o.towns && o.towns.length) Store.setVisitedMany(o.towns);
+  return km;
+}
+function trackPts(d) {   // projected pieces of a day's route
+  const w = Store.walks.get(d); return w && w.trk ? segsOf(w.trk).map(g => g.map(projLL)) : [];
+}
+function drawTrack() {
+  const segs = HL && HL.kind === 'walk' && HL.d ? trackPts(HL.d) : [];
+  const line = segs.filter(g => g.length > 1).map(g => 'M' + g.map(p => f3(p[0]) + ' ' + f3(p[1])).join('L')).join('');
+  const gaps = segs.slice(1).map((g, i) => { const a = segs[i][segs[i].length - 1], b = g[0]; return a && b ? `M${f3(a[0])} ${f3(a[1])}L${f3(b[0])} ${f3(b[1])}` : ''; }).join('');
+  ['#track', '#trackHalo'].forEach(id => line ? $(id).setAttribute('d', line) : $(id).removeAttribute('d'));
+  gaps ? $('#trackGap').setAttribute('d', gaps) : $('#trackGap').removeAttribute('d');
+  if (line) $('#route').removeAttribute('d');   // the real route replaces the straight memo-to-memo line
+}
+
+/* the dialog every route step uses: one card, written in plain words */
+function routeDlg(title, body, acts) {
+  $('#rtTitle').textContent = title;
+  const b = $('#rtBody'); b.innerHTML = ''; (Array.isArray(body) ? body : [body]).forEach(x => x && b.appendChild(typeof x === 'string' ? Object.assign(document.createElement('p'), { textContent: x }) : x));
+  const a = $('#rtActs'); a.innerHTML = ''; acts.forEach(([t, cls, fn]) => a.appendChild(mkBtn(t, cls, fn)));
+  $('#routeDlg').classList.add('open');
+}
+const closeRoute = () => $('#routeDlg').classList.remove('open');
+$('#routeDlg').addEventListener('click', e => { if (e.target.id === 'routeDlg') closeRoute(); });
+const el2 = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+// shared last step: show the day(s), find the towns passed, ask before painting them
+async function confirmRoute(days, title, onDone) {
+  const rows = days.map(x => {
+    const r = el2('div', 'rday');
+    if (x.d) r.appendChild(el2('b', '', `${x.d.slice(5).replace('-', '/')}（${'日月火水木金土'[new Date(x.d + 'T12:00:00').getDay()]}）`));
+    else { const i = el2('input'); i.type = 'date'; i.value = today(); i.onchange = () => { x.d = i.value; }; x.d = today(); r.append(el2('span', '', '日付の入っていない道のりです。何日の散歩ですか？'), i); }
+    r.appendChild(el2('span', '', [fmtKm(x.km), x.t0 && x.t1 ? `${x.t0}〜${x.t1}` : ''].filter(Boolean).join(' · ')));
+    const tw = el2('span', 'tw', '通った町を調べています…'); r.appendChild(tw); x.twEl = tw;
+    if (x.d && (Store.walks.get(x.d) || {}).trk) r.appendChild(el2('span', '', 'この日の道のりに、足します'));
+    return r;
+  });
+  const chk = el2('label', 'chk'); const cb = el2('input'); cb.type = 'checkbox'; cb.checked = true; chk.append(cb, el2('span', '', '通った町を「行った」にする'));
+  let busy = true;
+  routeDlg(title, [...rows, chk, el2('p', 'note', '道のりは自分だけのものです。グループには出しません（家の場所が分かってしまうため）。')], [
+    ['のこす', 'btn', () => { if (busy) return toast('通った町を調べています。少しお待ちください'); closeRoute(); onDone(days, cb.checked); }],
+    ['やめる', 'btn ghost', closeRoute]
+  ]);
+  for (const x of days) { try { x.towns = await townsPassed(x.segs, k => { x.twEl.textContent = `通った町 ${k}…`; }); } catch (e) { x.towns = []; } x.twEl.textContent = `通った町 ${x.towns.length}`; }
+  busy = false;
+}
+function keepDays(days, visit, how) {
+  let km = 0;
+  for (const x of days) km += saveRoute(x.d, x.segs, { towns: x.towns, visit });
+  if (!km) return toast('道のりが短すぎて、のこせませんでした');
+  toast(`${how}道のり ${fmtKm(km)} を、のこしました`);
+  openWalk(days[0].d);
+}
+
+/* ほかのアプリの道のり (GPX) */
+function readGPX(text) {
+  const x = new DOMParser().parseFromString(text, 'application/xml');
+  if (x.querySelector('parsererror') || !x.querySelector('gpx')) return null;
+  const pieces = [...x.querySelectorAll('trkseg'), ...x.querySelectorAll('rte')].map(g => [...g.querySelectorAll('trkpt, rtept')].map(p => {
+    const t = p.querySelector('time'), ms = t ? Date.parse(t.textContent) : NaN;
+    return [+p.getAttribute('lat'), +p.getAttribute('lon'), isNaN(ms) ? 0 : ms];
+  }).filter(q => isFinite(q[0]) && isFinite(q[1]) && Math.abs(q[0]) <= 90)).filter(g => g.length > 1);
+  const byDay = new Map();
+  for (const g of pieces) {
+    let cur = null, key = null;
+    for (const q of g) { const k = q[2] ? ymdOf(q[2]) : ''; if (k !== key) { key = k; cur = []; (byDay.get(k) || byDay.set(k, []).get(k)).push(cur); } cur.push(q); }
+  }
+  return [...byDay.entries()].sort().map(([d, segs]) => {
+    const th = segs.map(thin).filter(g => g.length > 1), ts = segs.flat().map(q => q[2]).filter(Boolean);
+    return { d, segs: th, km: th.reduce((s, g) => s + segKm(g), 0), t0: ts.length ? hmOf(Math.min(...ts)) : '', t1: ts.length ? hmOf(Math.max(...ts)) : '' };
+  }).filter(x => x.segs.length);
+}
+function importGPX(text) {
+  const days = readGPX(text);
+  if (!days) return toast('GPXファイルとして読めませんでした');
+  if (!days.length) return toast('このファイルには道のりが入っていませんでした');
+  confirmRoute(days.slice(0, 14), '道のりを読みこみました', (ds, visit) => keepDays(ds, visit, ''));
+}
+function pickGPX() {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.hidden = true; document.body.appendChild(inp);
+  inp.onchange = () => { const f = inp.files[0]; inp.remove(); if (f) f.text().then(importGPX); };
+  inp.click();
+}
+
+/* さんぽ、はじめる — records only while this app is open (no extra battery); the closed stretches become straight lines */
+const Rec = {
+  K: 'sanpo-rec', st: null, wid: null, saved: 0,
+  load() { try { this.st = JSON.parse(localStorage.getItem(this.K) || 'null'); } catch (e) { this.st = null; } },
+  save(now) { if (!this.st) { try { localStorage.removeItem(this.K); } catch (e) {} return; } if (now || Date.now() - this.saved > 15000) { this.saved = Date.now(); try { localStorage.setItem(this.K, JSON.stringify(this.st)); } catch (e) {} } },
+  pts() { return this.st ? this.st.segs.flat() : []; },
+  km() { return this.st ? this.st.segs.reduce((s, g) => s + segKm(g), 0) : 0; },
+  mins() { return this.st ? (Date.now() - this.st.t) / 6e4 : 0; },
+  start() {
+    this.st = { d: today(), t: Date.now(), segs: [[]] }; this.save(true);
+    this.watch(); this.paint(); toast('さんぽ、はじめました。アプリを開いている間、道のりをのこします');
+  },
+  watch() {
+    if (this.wid != null || !this.st || document.hidden || !navigator.geolocation) return;
+    if (this.st.segs[this.st.segs.length - 1].length) this.st.segs.push([]);   // after a pause: a new piece
+    this.wid = navigator.geolocation.watchPosition(p => this.add(p), e => { if (e.code === 1) { this.unwatch(); geoErr(e, () => this.watch()); } }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+  },
+  unwatch() { if (this.wid != null) navigator.geolocation.clearWatch(this.wid); this.wid = null; this.save(true); },
+  add(p) {
+    const c = p.coords; if (!this.st || !c || c.accuracy > 60) return;
+    const g = this.st.segs[this.st.segs.length - 1], q = [+c.latitude.toFixed(6), +c.longitude.toFixed(6), Date.now()], last = g[g.length - 1];
+    const xy = projLL(q); me = { lat: c.latitude, lng: c.longitude, acc: c.accuracy, x: xy[0], y: xy[1] }; drawMe();
+    if (last && hav(last, q) < 10) return;
+    g.push(q); this.save(); this.paint(); drawRec();
+  },
+  paint() {
+    const b = $('#recBtn'), on = !!this.st;
+    b.classList.toggle('on', on); document.body.classList.toggle('rec', on);
+    b.querySelector('span').innerHTML = on ? 'さんぽ中 <b></b>' : 'さんぽ、はじめる';
+    if (on) b.querySelector('b').textContent = `${fmtKm(this.km())} · ${fmtDur(Math.round(this.mins()))}`;
+    b.setAttribute('aria-label', on ? 'さんぽを、おわりにする' : 'さんぽの道のりを記録する');
+  },
+  clear() { this.unwatch(); this.st = null; this.save(true); this.paint(); drawRec(); },
+  ask() {
+    if (!this.st) {
+      let seen = false; try { seen = !!localStorage.getItem('sanpo-rec-seen'); } catch (e) {}
+      if (seen) return this.start();
+      return routeDlg('さんぽの道のりを、のこします', [
+        '電池をほとんど使わないように、このアプリを開いている間だけ記録します。',
+        '画面を消したり、ほかのアプリを開いたりしていた間は、まっすぐの線でつなぎます。',
+        el2('p', 'note', '道をきっちりのこしたい日は、記録アプリの道のり（GPX）を LOG から読みこめます。')
+      ], [['はじめる', 'btn', () => { try { localStorage.setItem('sanpo-rec-seen', '1'); } catch (e) {} closeRoute(); this.start(); }], ['やめておく', 'btn ghost', closeRoute]]);
+    }
+    const big = el2('div', 'big2', fmtKm(this.km())); big.appendChild(el2('small', '', fmtDur(Math.round(this.mins()))));
+    let armed = false;
+    routeDlg('さんぽを、おわりにしますか？', [big], [
+      ['おわる', 'btn', () => this.finish()],
+      ['つづける', 'btn ghost', closeRoute],
+      ['すてる', 'btn ghost', function () { if (!armed) { armed = true; this.textContent = 'ほんとに？（もう一度）'; return; } Rec.clear(); closeRoute(); toast('道のりを、すてました'); }]
+    ]);
+  },
+  finish(quiet) {
+    const st = this.st; if (!st) return;
+    this.unwatch();
+    const segs = st.segs.map(thin).filter(g => g.length > 1);
+    if (!segs.length) { this.clear(); closeRoute(); return toast('道のりが短すぎて、のこせませんでした'); }
+    const ts = segs.flat().map(q => q[2]);
+    const day = { d: st.d, segs, km: segs.reduce((s, g) => s + segKm(g), 0), t0: hmOf(Math.min(...ts)), t1: hmOf(Math.max(...ts)) };
+    if (quiet) { saveRoute(day.d, day.segs, {}); this.clear(); return toast(`前のさんぽの道のり ${fmtKm(day.km)} を、のこしました`); }
+    confirmRoute([day], 'さんぽ、おつかれさまでした', (ds, visit) => { this.clear(); keepDays(ds, visit, ds[0].d === today() ? '今日の' : ''); });
+  }
+};
+function drawRec() {
+  const g = Rec.st ? Rec.st.segs.filter(x => x.length > 1).map(x => 'M' + x.map(q => { const p = projLL(q); return f3(p[0]) + ' ' + f3(p[1]); }).join('L')).join('') : '';
+  ['#recLine', '#recHalo'].forEach(id => g ? $(id).setAttribute('d', g) : $(id).removeAttribute('d'));
+}
+$('#recBtn').onclick = () => Rec.ask();
+document.addEventListener('visibilitychange', () => { if (!Rec.st) return; if (document.hidden) Rec.unwatch(); else { Rec.watch(); Rec.paint(); } });
+addEventListener('pagehide', () => Rec.save(true));
+setInterval(() => { if (Rec.st && !document.hidden) Rec.paint(); }, 30000);
 
 /* ---------- highlight (walk / tag) + walk route ---------- */
 let HL = null;
@@ -3170,7 +3465,8 @@ const Replay = {
     return out;
   },
   start(d) {
-    const its = this.items(d);
+    const its = this.items(d), w = Store.walks.get(d) || {};
+    if (w.trk) return this.startTrack(d, w, its);
     if (its.length < 2) return toast('たどるには、場所の分かるメモが2つ以上いります');
     this.stop(true);
     this.on = true; this.d = d;
@@ -3208,6 +3504,46 @@ const Replay = {
     };
     this.raf = requestAnimationFrame(step);
   },
+  // with a real route: the dotted line grows at walking pace, the clock runs from start to finish,
+  // and each memo lights up as the line passes it
+  startTrack(d, w, its) {
+    this.stop(true);
+    const segs = trackPts(d).filter(g => g.length > 1); if (!segs.length) return;
+    const flat = [], cum = []; let L = 0;
+    segs.forEach((g, si) => g.forEach((p, i) => { if (i) L += Math.hypot(p[0] - g[i - 1][0], p[1] - g[i - 1][1]); flat.push([p[0], p[1], si]); cum.push(L); }));
+    if (!L) return;
+    const at = its.map(it => { let bi = 0, bd = Infinity; flat.forEach((q, i) => { const dd = (q[0] - it.p[0]) ** 2 + (q[1] - it.p[1]) ** 2; if (dd < bd) { bd = dd; bi = i; } }); return cum[bi] / L; });
+    const order = its.map((it, i) => i).sort((a, b) => at[a] - at[b]);
+    const dur = Math.max(6000, Math.min(18000, (w.km || 2) * 3500));
+    const m0 = toMin(w.t0), m1 = toMin(w.t1);
+    this.on = true; this.d = d;
+    document.body.classList.add('replaying');
+    const box = $('#replay'); box.classList.add('on');
+    box.querySelector('.txt').innerHTML = '<small></small><span></span>';
+    let shown = 0; const t0 = performance.now();
+    const step = now => {
+      if (!this.on) return;
+      const f = Math.min(1, (now - t0) / dur), want = f * L;
+      let k = 0; while (k < cum.length - 1 && cum[k + 1] <= want) k++;
+      let dpath = '', cur = -1;
+      for (let i = 0; i <= k; i++) { const q = flat[i]; dpath += (q[2] !== cur ? 'M' : 'L') + f3(q[0]) + ' ' + f3(q[1]); cur = q[2]; }
+      if (k < flat.length - 1 && flat[k + 1][2] === flat[k][2]) { const a = flat[k], b = flat[k + 1], u = (want - cum[k]) / Math.max(1e-9, cum[k + 1] - cum[k]); dpath += 'L' + f3(a[0] + (b[0] - a[0]) * u) + ' ' + f3(a[1] + (b[1] - a[1]) * u); }
+      $('#replayPath').setAttribute('d', dpath);
+      box.querySelector('.clk').textContent = m0 != null && m1 != null && m1 >= m0 ? fmtMin(m0 + (m1 - m0) * f) : fmtKm((w.km || 0) * f);
+      while (shown < order.length && at[order[shown]] <= f + 1e-6) {
+        const it = its[order[shown++]];
+        burst(it.n.k, it.p);
+        box.querySelector('.txt span').textContent = it.n.t || it.n.x || '';
+        document.querySelectorAll('#wBody .entry.now').forEach(e => e.classList.remove('now'));
+        const e = document.querySelector(`#wBody .entry[data-id="${CSS.escape(it.n.id)}"]`);
+        if (e) { e.classList.add('now'); e.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+      }
+      box.querySelector('.txt small').textContent = `${fmtKm((w.km || 0) * f)}${its.length ? ` · メモ ${shown} / ${its.length}` : ''}`;
+      if (f >= 1) { this.raf = 0; setTimeout(() => { if (this.on && this.d === d) this.stop(); }, 1800); return; }
+      this.raf = requestAnimationFrame(step);
+    };
+    this.raf = requestAnimationFrame(step);
+  },
   stop() {
     if (!this.on) return;
     this.on = false; cancelAnimationFrame(this.raf);
@@ -3224,6 +3560,7 @@ function drawRoute() {
   const dots = pts.map(p => `M${f3(p[0])} ${f3(p[1])}h0`).join('');
   ['#route'].forEach(s => d ? $(s).setAttribute('d', d) : $(s).removeAttribute('d'));
   ['#routeRing', '#routeDots'].forEach(s => dots ? $(s).setAttribute('d', dots) : $(s).removeAttribute('d'));
+  drawTrack();
 }
 function focusKeys(keys, fitRoute) {
   if (!keys.length) return;
@@ -3235,8 +3572,8 @@ function focusKeys(keys, fitRoute) {
   }
   origin = null;
   // tighten onto the route when the walk stays inside one city
-  if (fitRoute && h.length === 5 && HL && HL.route) {
-    const pts = routePoints(HL.route);
+  if (fitRoute && HL && HL.route && (h.length === 5 || HL.trk)) {
+    const pts = HL.trk ? trackPts(HL.d).flat() : routePoints(HL.route);
     if (pts.length > 1) {
       const bb = [Math.min(...pts.map(p => p[0])), Math.min(...pts.map(p => p[1])), Math.max(...pts.map(p => p[0])), Math.max(...pts.map(p => p[1]))];
       const m = Math.max(bb[2] - bb[0], bb[3] - bb[1]) * .35 + .3;
@@ -3301,7 +3638,7 @@ addEventListener('dragover', e => e.preventDefault());
 addEventListener('drop', e => {
   e.preventDefault(); dragN = 0; $('#drop').classList.remove('on');
   const f = e.dataTransfer && e.dataTransfer.files[0];
-  if (f) f.text().then(importText);
+  if (f) f.text().then(t => /\.gpx$/i.test(f.name) || /<gpx[\s>]/.test(t.slice(0, 2000)) ? importGPX(t) : importText(t));
 });
 $('#mFile').onchange = e => { const f = e.target.files[0]; if (!f) return; f.text().then(importText); e.target.value = ''; };
 $('#mPaste').onclick = () => importText($('#mText').value);
@@ -3573,6 +3910,12 @@ let pendingAdd = '';
   await route();
   Sync.soon(0);
   if (pendingAdd) setTimeout(() => attachLink(pendingAdd), 400);
+  Rec.load();
+  if (Rec.st) {
+    const last = Math.max(Rec.st.t, ...Rec.pts().map(q => q[2]));
+    if (Rec.st.d !== today() && Date.now() - last > 3 * 36e5) Rec.finish(true);   // left running from an earlier day
+    else { Rec.watch(); Rec.paint(); drawRec(); }
+  }
 })();
 </script>
 </body>
