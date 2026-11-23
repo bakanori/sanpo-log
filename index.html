@@ -194,8 +194,24 @@ body.sp #fWhenRow.open{display:flex}
 .ftools .tl{flex:none;min-height:34px;padding:0 13px;border:1px solid var(--hair);border-radius:999px;font-size:12px;color:#555;background:#fff;white-space:nowrap;transition:border-color var(--ui),color var(--ui)}
 .ftools .tl.on,.ftools .tl[aria-expanded=true]{border-color:var(--ink);color:var(--ink)}
 .ftools .where{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
-#fWhereBox{display:none;margin:0 0 8px;padding:10px 12px;border:1px solid var(--hair);border-radius:12px;background:#fafaf7}
-#fWhereBox.open{display:block}
+#fWhereBox,#fPhotoBox{display:none;margin:0 0 8px;padding:10px 12px;border:1px solid var(--hair);border-radius:12px;background:#fafaf7}
+#fWhereBox.open,#fPhotoBox.open{display:block;animation:boxIn .22s cubic-bezier(.22,1,.36,1) both}   /* the same small box for 写真 and 場所 */
+@keyframes boxIn{from{opacity:0;transform:translateY(-4px)}}
+#fPhotoBox .lab{display:block;font:9px/1 var(--mono);color:var(--mute);letter-spacing:.12em;margin-bottom:8px}
+#fPhotoBox .pbtns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pgo{font-size:12px;border:1px solid var(--ink);border-radius:999px;padding:0 14px;min-height:34px;color:var(--ink);background:#fff;white-space:nowrap;transition:background .3s,color .3s,box-shadow .3s}
+.pgo.ready{background:var(--ink);color:#fff;box-shadow:0 8px 22px rgba(0,0,0,.14);animation:shopIn .52s cubic-bezier(.22,1,.36,1) both}
+@media (hover:hover){.pgo:not(.ready):hover{background:var(--ink);color:#fff}}
+#fPhotoBox .shin{display:flex;margin-top:8px}
+#fPhotoBox .shin[hidden]{display:none}
+#fPhotoBox .shin input{flex:1;min-width:0;font:inherit;font-size:16px;border:1px solid var(--ink);border-radius:10px;padding:9px 12px}
+#fPhotoBox .phint{margin-top:10px;font-size:11px;line-height:1.7;color:var(--mute)}
+#fPhotoBox .phint button{font:inherit;color:#555;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#cfcfc8;padding:4px 2px;margin-left:4px}
+#fLinksRow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#fLinksRow[hidden]{display:none}
+#fLinksRow .lkc{display:inline-flex;align-items:center;gap:0}
+#fLinksRow .lkc.new{animation:shopPop .5s cubic-bezier(.22,1,.36,1) both}
+#fLinksRow .lkx{font:12px/1 var(--mono);color:var(--mute);min-width:32px;min-height:32px}
 #fWhereBox .scope{margin-bottom:0}
 #fWhereBox .loc{margin-top:8px}
 /* お店: one field, the same everywhere (form, なおす, after a walk, ＋ お店) */
@@ -616,6 +632,10 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   .ftools .tl{min-height:44px;font-size:13px}
   .loc{min-height:44px;font-size:11px}
   .shopf .shn{font-size:16px;min-height:44px;padding:0 14px}
+  .pgo{min-height:44px;font-size:13px}
+  #fPhotoBox .phint{font-size:12px}
+  #fPhotoBox .phint button{display:inline-flex;align-items:center;min-height:44px;padding:0 4px}
+  #fLinksRow .lkx{min-width:44px;min-height:44px}
   .shopf .shgo,.shopf .shpaste{min-height:44px;font-size:13px}
   .shop{min-height:36px;font-size:13px;padding:0 12px 0 10px}
   .shopf .shx{min-height:44px;font-size:11px}
@@ -812,13 +832,14 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <form class="form" id="sForm">
     <button type="button" id="fOpen" class="wbar"><i>＋</i><span>ここに、ひとこと</span></button>
     <button type="button" id="fFold" aria-label="たたんで、メモを読む"><svg viewBox="0 0 16 8" aria-hidden="true"><path d="M2 1.5 8 6.5l6-5"/></svg></button>
-    <div class="ftools" id="fTools"><button type="button" class="tl" id="fPick" title="スマホの写真を、アプリにのこす">写真</button><button type="button" class="tl sp-only" id="fWhen" aria-label="日付と時刻を選ぶ">日付：今日</button><button type="button" class="tl where" id="fWhere" aria-expanded="false"></button></div>
+    <div class="ftools" id="fTools"><button type="button" class="tl" id="fPick" aria-expanded="false">写真 ▾</button><button type="button" class="tl sp-only" id="fWhen" aria-label="日付と時刻を選ぶ">日付：今日</button><button type="button" class="tl where" id="fWhere" aria-expanded="false"></button></div>
+    <div id="fPhotoBox"><span class="lab">写真</span><div class="pbtns"><button type="button" class="pgo" id="fPhone">スマホの写真を選ぶ</button><button type="button" class="pgo" id="fIgPaste">Instagram・X のリンクを貼る</button></div><div class="shin" id="fIgIn" hidden><input type="text" placeholder="ここに貼り付け（長押し →「ペースト」）" autocomplete="off"></div><p class="phint">Instagram は、投稿の「…」→「リンクをコピー」してから押してください。<button type="button" id="fIgOpen">Instagramを開く ↗</button></p></div>
     <div id="fWhereBox"><div class="scope" id="fScope"></div><button type="button" class="loc sp-only" id="fLoc">いまの位置も付ける</button></div>
     <div class="row when" id="fWhenRow"><input type="date" id="fDate" required aria-label="日付"><input type="time" id="fTime" aria-label="時刻（空なら今の時刻）" title="空のままなら、今の時刻"><span class="kbd pc-only">⌘/CTRL + ENTER</span></div>
     <div class="compose"><textarea id="fText" rows="2" placeholder="ひとこと（#タグも書けます）"></textarea><button class="btn" id="fSave" type="submit">のこす</button></div>
     <textarea id="fDetail" class="pc-only" placeholder="くわしく（道順、見つけたもの、天気、寄ったお店、気づいたこと…）"></textarea>
     <div id="fTags" class="pc-only"></div>
-    <div class="row links" id="fLinksRow" hidden><input id="fLinks" type="url" inputmode="url" autocomplete="off" placeholder="写真のリンク（Instagram・X）"><button type="button" class="mini" id="fLinksX" aria-label="リンクをはずす">はずす</button></div>
+    <div class="row links" id="fLinksRow" hidden><input id="fLinks" type="hidden"></div>
     <div class="thumbs edit" id="fThumbs"></div>
     <button type="button" class="share" id="fShare" hidden><i></i><span></span></button>
   </form>
@@ -946,7 +967,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.6.1', VERSION_DATE = '2026.11.23';
+const VERSION = '2.6.2', VERSION_DATE = '2026.11.23';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -2352,7 +2373,7 @@ function scopeChips(box, keys, cur, onPick) {
 function buildScope() {
   formKey = S.sel.key;
   scopeChips($('#fScope'), ancestors(S.sel.key), formKey, k => { formKey = k; paintWhere(); });
-  $('#fWhereBox').classList.remove('open'); paintWhere();
+  $('#fWhereBox').classList.remove('open'); $('#fPhotoBox').classList.remove('open'); paintWhere(); paintPick();
 }
 function paintWhere() {   // 場所：稲村ガ崎四丁目 ▾ — where this memo goes (and whether it has your position)
   const b = $('#fWhere'); if (!b || !formKey) return;
@@ -2360,9 +2381,25 @@ function paintWhere() {   // 場所：稲村ガ崎四丁目 ▾ — where this m
   b.classList.toggle('on', !!formShop);
   b.setAttribute('aria-expanded', $('#fWhereBox').classList.contains('open') ? 'true' : 'false');
 }
-$('#fWhere').onclick = () => { $('#fWhereBox').classList.toggle('open'); paintWhere(); };
-function paintLinks() { $('#fLinksRow').hidden = !$('#fLinks').value.trim(); }
-$('#fLinksX').onclick = () => { $('#fLinks').value = ''; paintLinks(); };
+$('#fWhere').onclick = () => { $('#fWhereBox').classList.toggle('open'); $('#fPhotoBox').classList.remove('open'); paintWhere(); paintPick(); };   // one box at a time
+// the photos on this memo: each as the same mark a memo shows (写真 ▸ IG), with × to take it off
+function paintLinks(fresh) {
+  const row = $('#fLinksRow'), ls = parseLinks($('#fLinks').value);
+  row.querySelectorAll('.lkc').forEach(x => x.remove());
+  ls.forEach(u => {
+    const w = document.createElement('span'); w.className = 'lkc' + (u === fresh ? ' new' : '');
+    w.appendChild(chips([u]));
+    w.appendChild(mkBtn('×', 'lkx', () => { $('#fLinks').value = parseLinks($('#fLinks').value).filter(x => x !== u).join(' '); paintLinks(); }, 'この写真をはずす'));
+    row.appendChild(w);
+  });
+  row.hidden = !ls.length; paintPick();
+}
+function paintPick() {   // 写真 ▾ → 写真 2 ▾ once something is on
+  const b = $('#fPick'); if (!b) return;
+  const n = (typeof formThumbs === 'undefined' ? 0 : formThumbs.length) + parseLinks($('#fLinks').value).length, open = $('#fPhotoBox').classList.contains('open');
+  b.textContent = '写真' + (n ? ' ' + n : '') + ' ▾';
+  b.setAttribute('aria-expanded', open ? 'true' : 'false'); b.classList.toggle('on', n > 0);
+}
 
 /* ---- tag input: chips + suggestions (used tags first, then a few starters) ---- */
 function tagInput(host, init) {
@@ -2886,22 +2923,23 @@ function addPhotoUI(node, n) {
     if (!ls.length) return toast('リンクが見つかりませんでした');
     const cur = Store.notes.get(n.id) || n;
     Store.putNote({ ...cur, p: parseLinks([...(cur.p || []), ...ls].join(' ')) });
-    toast(photoPost(ls[0]) ? '写真のリンクを付けました' : 'リンクを付けました');
+    const pp = photoPost(ls[0]); toast(pp ? `${pp.svc === 'x' ? 'X' : 'Instagram'} の写真を付けました` : 'リンクを付けました');
   };
-  const paste = mkBtn('リンクを貼る', 'btn', async () => {
-    try { const ls = parseLinks(await navigator.clipboard.readText()); if (ls.length) return go(ls); } catch (e) {}
+  const paste = mkBtn('Instagram・X のリンクを貼る', 'pgo', async () => {
+    let t = null; try { t = await navigator.clipboard.readText(); } catch (e) {}
+    if (t != null) { const ls = parseLinks(t); if (ls.length) return go(ls); return toast('コピーされたリンクが見つかりませんでした。Instagram で投稿の「…」→「リンクをコピー」してから、もう一度押してください', 4200); }
     if (!box.querySelector('input')) {   // clipboard not readable here: paste by hand
       const inp = document.createElement('input'); inp.type = 'url'; inp.placeholder = 'ここに貼り付け（長押し →「ペースト」）';
-      const ok = mkBtn('付ける', 'btn ghost', () => go([inp.value]));
+      const ok = mkBtn('付ける', 'pgo', () => go([inp.value]));
       box.appendChild(inp); box.appendChild(ok); inp.focus();
     }
   });
-  const pick = mkBtn('写真を選ぶ', 'btn ghost', () => pickPhotos(8 - ((Store.notes.get(n.id) || n).im || []).length, async ds => {
+  const pick = mkBtn('スマホの写真を選ぶ', 'pgo', () => pickPhotos(8 - ((Store.notes.get(n.id) || n).im || []).length, async ds => {
     const ids = await saveThumbs(ds), cur = Store.notes.get(n.id) || n;
     Store.putNote({ ...cur, im: [...(cur.im || []), ...ids].slice(0, 8) });
     toast('写真をのこしました');
   }));
-  box.append(paste, pick);
+  box.append(pick, paste);
   node.appendChild(box);
 }
 function otherEntry(n, opt) {   // someone else's memo in the group: read only, no GPS
@@ -3122,7 +3160,7 @@ $('#sForm').onsubmit = ev => {
   Store.putNote({ id: nid, k, d, at, t, x, p: links, loc: formLoc, tags, s: shop });
   if (ds.length) saveThumbs(ds).then(im => { const n = Store.notes.get(nid); if (n) Store.putNote({ ...n, im }); });
   spread(sp, pt);
-  $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; paintLinks(); $('#fWhereBox').classList.remove('open'); fTags.set([]); formThumbs = []; paintFormThumbs(); paintSave();
+  $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; $('#fWhereBox').classList.remove('open'); $('#fPhotoBox').classList.remove('open'); fTags.set([]); formThumbs = []; paintFormThumbs(); paintLinks(); paintSave();
   setFormLoc(null); setFormShop(null); fShop.clear(); shopDone();
   $('#fTime').value = ''; if (!pc) { $('#fDate').value = today(); $('#fWhenRow').classList.remove('open'); } paintWhen();
   toast((d !== today() ? `${d.slice(5).replace('-', '/')}の分として、` : '') + (k === S.sel.key ? 'のこしました' : `${placeName(k)} にのこしました`) + (shareOn() ? `（#${GR.gtag()} のみんなにも）` : ''));
@@ -3137,16 +3175,45 @@ let formThumbs = [];
 function paintFormThumbs() {
   const box = $('#fThumbs'); box.innerHTML = '';
   formThumbs.forEach((o, i) => box.appendChild(thumbStrip({ imd: [o.s || o] }, () => { formThumbs.splice(i, 1); paintFormThumbs(); }).firstChild));
+  paintPick();
 }
-$('#fPick').onclick = () => pickPhotos(6 - formThumbs.length, ds => { formThumbs = formThumbs.concat(ds).slice(0, 6); paintFormThumbs(); });
+$('#fPick').onclick = () => { $('#fPhotoBox').classList.toggle('open'); $('#fWhereBox').classList.remove('open'); $('#fIgIn').hidden = true; paintPick(); paintWhere(); };
+$('#fPhone').onclick = () => pickPhotos(6 - formThumbs.length, ds => { formThumbs = formThumbs.concat(ds).slice(0, 6); paintFormThumbs(); $('#fPhotoBox').classList.remove('open'); paintPick(); });
+// Instagram・X: copy the post's link there, come back, one tap
+function addPhotoLinks(txt) {
+  const ls = parseLinks(txt);
+  if (!ls.length) return false;
+  if (ls.every(mapUrl)) { fShop.take(txt); $('#fPhotoBox').classList.remove('open'); paintPick(); return true; }   // a map link is a shop
+  const ps = ls.filter(u => !mapUrl(u)), had = parseLinks($('#fLinks').value);
+  $('#fLinks').value = parseLinks([...had, ...ps].join(' ')).join(' ');
+  paintLinks(ps.find(u => !had.includes(u)));
+  const p = photoPost(ps[0]);
+  toast(p ? `${p.svc === 'x' ? 'X' : 'Instagram'} の写真を付けました` : 'リンクを付けました');
+  $('#fIgIn').hidden = true; $('#fIgPaste').classList.remove('ready'); $('#fPhotoBox').classList.remove('open'); paintPick();
+  shopDone();
+  return true;
+}
+$('#fIgPaste').onclick = async () => {
+  let t = null; try { t = await navigator.clipboard.readText(); } catch (e) {}
+  if (t == null) { const w = $('#fIgIn'), i = w.querySelector('input'); w.hidden = false; i.value = ''; i.focus(); return; }   // can't read here: paste by hand
+  if (!addPhotoLinks(t)) toast('コピーされたリンクが見つかりませんでした。Instagram で投稿の「…」→「リンクをコピー」してから、もう一度押してください', 4200);
+};
+$('#fIgIn input').addEventListener('input', e => { if ((e.target.value.match(URL_RE) || []).length) addPhotoLinks(e.target.value); });
+$('#fIgOpen').onclick = () => {   // remember the memo, like when going to Google Maps
+  shopGo = { t: Date.now(), kind: 'form', box: 'photo', sel: S.sel && S.sel.key, text: $('#fText').value, detail: $('#fDetail').value, date: $('#fDate').value, time: $('#fTime').value, when: $('#fWhenRow').classList.contains('open'), links: $('#fLinks').value };
+  try { localStorage.setItem('sanpo-shopgo', JSON.stringify(shopGo)); } catch (e) {}
+  window.open('https://www.instagram.com/', '_blank', 'noopener');
+};
 $('#fText').addEventListener('paste', e => {   // pasting a link into the memo puts it where photo links go
   const raw = (e.clipboardData || {}).getData ? e.clipboardData.getData('text') : '', P = pullLinks(raw);
   if (!P.links.length) return;
   e.preventDefault();
   if (P.links.some(mapUrl)) { if (fShop.take(raw) && !$('#fText').value.trim()) $('#fText').value = (parseShop(raw) || {}).n || ''; return; }
-  $('#fLinks').value = parseLinks([$('#fLinks').value, ...P.links].join(' ')).join(' ');
+  const had = parseLinks($('#fLinks').value);
+  $('#fLinks').value = parseLinks([...had, ...P.links].join(' ')).join(' ');
   if (P.text) document.execCommand('insertText', false, P.text);
-  paintLinks(); toast('リンクは、写真のリンクとして付けました');
+  paintLinks(P.links.find(u => !had.includes(u)));
+  const pp = photoPost(P.links[0]); toast(pp ? `${pp.svc === 'x' ? 'X' : 'Instagram'} の写真を付けました` : 'リンクを付けました');
 });
 function paintWhen() {
   const d = $('#fDate').value || today(), t = $('#fTime').value, open = $('#fWhenRow').classList.contains('open');
@@ -3336,7 +3403,7 @@ function goFind(name, k, ctx) {
 function shopDone() { shopGo = null; try { localStorage.removeItem(SHOPGO); } catch (e) {} }
 function shopBack() {   // back from the map app: the button to attach rises, once
   if (!shopGo || shopGo.shown || Date.now() - shopGo.t > 6e5) return;
-  const b = [...document.querySelectorAll('.shopf .shpaste')].find(x => x.offsetParent);
+  const b = [...document.querySelectorAll(shopGo.box === 'photo' ? '#fIgPaste' : '.shopf .shpaste')].find(x => x.offsetParent);
   if (!b) return;
   shopGo.shown = true;
   b.classList.remove('ready'); void b.offsetWidth; b.classList.add('ready');
@@ -3440,8 +3507,9 @@ function shopAfterOpen() {   // the sheet has opened: finish what was waiting fo
     if (g.date) $('#fDate').value = g.date;
     if (g.time) $('#fTime').value = g.time;
     if (g.when) $('#fWhenRow').classList.add('open');
+    if (g.links && !$('#fLinks').value) { $('#fLinks').value = g.links; paintLinks(); }
     fShop.name(g.name); paintWhen(); paintWbar();
-    $('#sForm').classList.remove('collapsed'); $('#fWhereBox').classList.add('open'); paintWhere();
+    $('#sForm').classList.remove('collapsed'); $(g.box === 'photo' ? '#fPhotoBox' : '#fWhereBox').classList.add('open'); paintWhere(); paintPick();
   }
   if (pendingShop && pendingShop.k === S.sel.key) {
     const ps = pendingShop; pendingShop = null;
