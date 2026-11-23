@@ -39,7 +39,7 @@ button{background:none;border:0;cursor:pointer}
 #tBorder{fill:none;stroke:#bdbdb6;stroke-width:.5;pointer-events:none}
 #tDots{fill:none;stroke:var(--ink);stroke-linecap:round;pointer-events:none;transition:opacity .4s}
 #map .dot{vector-effect:none}
-#muniEdge{fill:none;stroke:var(--ink);stroke-width:1.1;pointer-events:none}
+#muniEdge{fill:none;stroke:#9c9c95;stroke-width:.8;pointer-events:none}
 .ctx{stroke:var(--ctxline)!important;stroke-width:.8!important}
 .off{pointer-events:none}
 .hidden{opacity:0!important;pointer-events:none!important}
@@ -99,6 +99,12 @@ body.sp #bHome{padding-left:10px;padding-right:10px}
 #scale i{display:block;height:5px;border:1px solid var(--ink);border-top:0;transition:width .2s}
 #tools{position:fixed;right:calc(22px + var(--safe-r));bottom:calc(20px + var(--safe-b));display:flex;gap:6px}
 #bHome,#bUp,#bList{display:none!important}
+#editBar{position:fixed;left:0;right:0;top:0;z-index:30;display:flex;align-items:center;gap:8px;padding:8px 14px calc(8px + var(--safe-b));background:rgba(255,255,255,.97);border-top:1px solid var(--hair);box-shadow:0 -6px 18px rgba(0,0,0,.06)}
+#editBar.kb{padding-bottom:8px}
+#editBar span{flex:1;font-size:12px;color:var(--mute);letter-spacing:.04em}
+#editBar .btn{min-height:44px;padding:0 18px}
+body.editing #sForm{display:none!important}
+@media (max-width:720px){body.editing .pbody{padding-bottom:calc(84px + var(--safe-b))}}
 #first{display:none;position:fixed;left:0;right:0;bottom:calc(36px + var(--safe-b));z-index:6;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
 #first>*{pointer-events:auto}
 body.first #first{display:flex;animation:fade .8s .9s both}
@@ -194,6 +200,8 @@ body.sp #fWhenRow.open{display:flex}
 .compose{display:flex;gap:8px;align-items:stretch}
 .compose textarea{flex:1;min-width:0}
 .compose .btn{flex:none;align-self:flex-end;min-height:44px;padding:0 16px}
+#sForm.sharing #fText{border-color:var(--gc);box-shadow:0 0 0 1px var(--gc)}
+#sForm.sharing #fSave{white-space:nowrap}
 .form input[type=url]{padding:8px 12px;font-size:13px}
 .form textarea:focus,.form input:focus{border-color:var(--ink);outline:none}
 .mini{flex:none;font:10px/1 var(--mono);letter-spacing:.1em;border:1px solid var(--hair);border-radius:8px;padding:11px 10px 10px}
@@ -235,6 +243,7 @@ body.sp.sheet-open #fab,body.sp.drawer-open #fab,body.sp.wsheet-open #fab{transf
 .entry .tg:empty,.phead .tg:empty{display:none}
 .phead .tg{margin-top:12px}
 .htag{font-size:11px;color:var(--ink);background:#f0f0eb;border-radius:4px;padding:3px 7px 2px;transition:background var(--ui),color var(--ui)}
+.htag.shared{background:#fff;box-shadow:inset 0 0 0 1px var(--ink)}
 .htag:hover{background:var(--ink);color:#fff}
 .entry .pl{grid-column:1/3}
 .plink{font-size:12px;color:var(--mute);text-decoration:underline;text-underline-offset:3px;text-decoration-color:#d0d0ca}
@@ -250,9 +259,10 @@ body.sp.sheet-open #fab,body.sp.drawer-open #fab,body.sp.wsheet-open #fab{transf
 .walk .ti{font-size:15px;margin-top:7px}
 .walk .ti.auto,.big.auto{color:inherit}
 .walk .tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}
+.walk .sm{font-size:12px;color:#666;margin-top:5px;line-height:1.6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .walk .tags:empty{display:none}
 .walk.cur .ti,.walk:hover .ti{text-decoration:underline;text-underline-offset:3px}
-.addlink{width:100%}
+.btn.addlink{width:100%}
 .ycal{margin:2px 0 16px}
 .ycl{display:flex;align-items:baseline;gap:6px;font-size:11px;color:var(--mute);margin-bottom:8px}
 .ycl b{font:300 22px/1 var(--mono);color:var(--ink)}
@@ -333,7 +343,7 @@ body:not(.sp).drawer-open #hud{left:342px}
 #gLegend{display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:flex-end;font:9px/1 var(--mono);letter-spacing:.06em;color:var(--mute)}
 #gLegend:empty{display:none}
 #gLegend span,.who{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
-#gLegend b{font-weight:400;color:var(--ink)}
+#gLegend b{font-weight:400;color:var(--ink);margin-left:2px}
 #gLegend i,.who i,.mem i{flex:none;width:7px;height:7px;border-radius:50%;display:inline-block}
 .who{font:10px/1 var(--mono);letter-spacing:.04em;color:#555}
 .entry.other .acts{display:none}
@@ -384,6 +394,8 @@ body:not(.sp).drawer-open #hud{left:342px}
 .li .c{font:10px/1 var(--mono);color:var(--mute);letter-spacing:.04em}
 .li .b{grid-column:1/3;height:2px;background:#ecece7;position:relative;overflow:hidden}
 .li .b i{position:absolute;left:0;top:0;bottom:0;background:var(--accent)}
+.li:not(.v) .b{display:none}
+#dBody .more{display:block;width:100%;text-align:left;min-height:48px;font-size:13px;color:#555;border-bottom:1px solid #efefea}
 .li:hover .n{text-decoration:underline;text-underline-offset:3px}
 .log{width:100%;text-align:left;padding:12px 0;border-bottom:1px solid #efefea;display:block}
 .log .d{font:10px/1 var(--mono);color:var(--mute);letter-spacing:.06em}
@@ -421,7 +433,9 @@ body.rec .brand i{animation:pulse 1.6s infinite}
 #routeDlg label.chk input{width:20px;height:20px;accent-color:var(--accent)}
 #routeDlg .acts{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
 #routeDlg .note{font-size:12px;color:var(--mute);margin-top:10px;line-height:1.7}
-.addrow{display:flex;gap:8px;margin:2px 0 16px}
+.addrow{display:flex;gap:4px 14px;margin:0 0 12px;flex-wrap:wrap}
+.addq{min-height:44px;padding:0;font-size:12px;color:#555;letter-spacing:.04em;text-decoration:underline;text-decoration-color:#cfcfc8;text-underline-offset:4px}
+.addq:hover{color:var(--ink);text-decoration-color:var(--ink)}
 .btn.addpics{display:flex;width:100%;justify-content:center;align-items:center;min-height:44px;margin:2px 0 8px}
 #routeDlg .okstep{display:grid;grid-template-columns:28px minmax(0,1fr);gap:6px 10px;align-items:center;border-top:1px solid var(--hair);padding:14px 0}
 #routeDlg .okstep>b{grid-row:1/3;align-self:start;width:24px;height:24px;border-radius:50%;border:1px solid var(--ink);display:grid;place-items:center;font:500 12px/1 var(--mono)}
@@ -450,6 +464,7 @@ body.rec .brand i{animation:pulse 1.6s infinite}
 .th img{display:block;width:100%;height:100%;object-fit:cover}
 .th.miss:after{content:"べつの\A端末に";white-space:pre;text-align:center;font-size:11px;line-height:1.4;position:absolute;inset:0;display:grid;place-items:center;color:var(--mute)}
 .th.miss{background:#f3f3ef;border:1px dashed var(--hair)}
+.empty.mine{border-top:1px solid var(--hair);margin-top:12px;padding-top:14px}
 .phnote{display:inline-block;font-size:12px;color:var(--mute);margin:2px 8px 6px 0}
 .th .rm{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;background:rgba(17,17,17,.72);color:#fff;font:12px/1 var(--mono);display:grid;place-items:center}
 .thumbs.edit{margin-top:8px}
@@ -705,6 +720,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <button class="pill" id="bData">設定</button>
 </div>
 <div id="toast"></div>
+<div id="editBar" hidden><span>なおしています</span><button type="button" class="btn ghost" id="ebCancel">キャンセル</button><button type="button" class="btn" id="ebSave">保存</button></div>
 <div id="first"><button type="button" id="firstGo">いまいる町を、ぬる</button><button type="button" id="firstMap">地図から、えらぶ</button></div>
 <button type="button" id="okPill" hidden>おかえりなさい。今日をふりかえる ›</button>
 <div id="replay" aria-live="polite"><span class="clk">--:--</span><span class="txt"></span><button type="button" aria-label="たどるのをやめる">■</button></div>
@@ -860,7 +876,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.5.0', VERSION_DATE = '2026.11.23';
+const VERSION = '2.5.1', VERSION_DATE = '2026.11.23';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -1592,13 +1608,19 @@ function paintGroup() {
   if (on) {
     $('#gvMe').classList.toggle('on', GR.view !== 'group');
     $('#gvAll').classList.toggle('on', GR.view === 'group');
-    $('#gvAll').textContent = GR.g.name || 'GROUP';
+    $('#gvAll').textContent = GR.g.name || 'みんな';
     const lg = $('#gLegend'); lg.innerHTML = '';
-    if (GR.view === 'group' && GX) GR.members().forEach(m => {
-      const sp = document.createElement('span'), i = document.createElement('i'), b = document.createElement('b');
-      i.style.background = GR.color(m.uid); b.textContent = GX.towns.get(m.uid) || 0;
-      sp.append(i, document.createTextNode(m.name || '…'), b); lg.appendChild(sp);
-    });
+    if (GR.view === 'group' && GX) {
+      const me = GR.me(), memos = new Map();
+      for (const n of GX.feed) memos.set(n.by, (memos.get(n.by) || 0) + 1);
+      for (const n of Store.notes.values()) if (GR.isShared(n)) memos.set(me, (memos.get(me) || 0) + 1);
+      GR.members().forEach(m => {
+        const sp = document.createElement('span'), i = document.createElement('i'), b = document.createElement('b');
+        i.style.background = GR.color(m.uid); b.textContent = `町${GX.towns.get(m.uid) || 0}・メモ${memos.get(m.uid) || 0}`;
+        sp.title = `${m.name || ''}：歩いた町 ${GX.towns.get(m.uid) || 0}、共有したメモ ${memos.get(m.uid) || 0}`;
+        sp.append(i, document.createTextNode(m.name || '…'), b); lg.appendChild(sp);
+      });
+    }
   }
   grPaintBox(); paintShare();
 }
@@ -2720,7 +2742,7 @@ function tagChips(tags) {
   const gt = GR.on() ? GR.gtags() : [], gc = GR.on() ? GR.color(GR.me()) : null;
   (tags || []).forEach(t => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'htag'; b.textContent = '#' + t; b.onclick = () => openTag(t);
-    if (gt.includes(t)) { b.style.background = gc; b.style.color = isLight(gc) ? 'var(--ink)' : '#fff'; b.title = 'グループに共有中'; }
+    if (gt.includes(t)) { b.classList.add('shared'); b.title = 'グループに共有中'; }
     f.appendChild(b);
   });
   return f;
@@ -2732,7 +2754,7 @@ function entryNode(n, opt = {}) {
   const d = document.createElement('div'); d.className = 'entry'; d.dataset.id = n.id;
   d.innerHTML = `<div class="meta"><span class="d"></span></div><div class="acts"><button class="ad" type="button" aria-label="写真を足す">＋写真</button><button class="ed" type="button">なおす</button></div><div class="pl"></div><div class="t"></div><div class="dx"></div><div class="ph"></div><div class="tg"></div>`;
   d.classList.add('own');
-  d.querySelector('.d').textContent = (opt.timeOnly ? (n.at || '--:--') : n.d.replace(/-/g, '.') + (n.at ? '  ' + n.at : ''));
+  d.querySelector('.d').textContent = (opt.timeOnly ? (n.at || '--:--') : fmtDay(n.d) + (n.at ? '  ' + n.at : ''));
   const meta = d.querySelector('.meta');
   if (!opt.timeOnly) meta.appendChild(mkBtn('この日の散歩 ›', 'tag', () => openWalk(n.d), 'この日の散歩を見る'));
   if (n.loc) meta.appendChild(mkBtn('地図で見る', 'tag', () => showPin(n.loc, n.k), fmtLoc(n.loc) + '（押すと、書いた場所を地図で見る）'));
@@ -2791,7 +2813,7 @@ function otherEntry(n, opt) {   // someone else's memo in the group: read only, 
   d.innerHTML = `<div class="meta"></div><div class="acts"></div><div class="pl"></div><div class="t"></div><div class="dx"></div><div class="ph"></div><div class="tg"></div>`;
   const meta = d.querySelector('.meta');
   meta.appendChild(whoChip(n.by));
-  const dt = document.createElement('span'); dt.className = 'd'; dt.textContent = n.d.replace(/-/g, '.') + (n.at ? '  ' + n.at : ''); meta.appendChild(dt);
+  const dt = document.createElement('span'); dt.className = 'd'; dt.textContent = fmtDay(n.d) + (n.at ? '  ' + n.at : ''); meta.appendChild(dt);
   const pl = d.querySelector('.pl');
   if (opt.place) pl.appendChild(mkBtn(placeLabel(n.k) + ' ›', 'plink', () => jumpTo(n.k))); else pl.remove();
   d.querySelector('.t').textContent = n.t || '';
@@ -2804,6 +2826,25 @@ function otherEntry(n, opt) {   // someone else's memo in the group: read only, 
   return d;
 }
 let editing = null;
+// phone: while a memo (or a day) is being fixed, 保存 / キャンセル ride just above the keyboard
+function editBar(edit, onSave, onCancel) {
+  const bar = $('#editBar'), vv = window.visualViewport;
+  document.body.classList.add('editing');
+  if (W >= 720) { const mo = new MutationObserver(() => { if (!edit.isConnected) { document.body.classList.remove('editing'); mo.disconnect(); } }); mo.observe(document.body, { childList: true, subtree: true }); return; }
+  const place = () => {
+    const h = bar.offsetHeight, kb = !!vv && vv.height < innerHeight - 120;
+    bar.classList.toggle('kb', kb);
+    bar.style.top = Math.round((vv ? vv.offsetTop + vv.height : innerHeight) - h) + 'px';
+  };
+  const done = () => { bar.hidden = true; document.body.classList.remove('editing'); if (vv) { vv.removeEventListener('resize', place); vv.removeEventListener('scroll', place); } mo.disconnect(); };
+  const mo = new MutationObserver(() => { if (!edit.isConnected) done(); });
+  mo.observe(document.body, { childList: true, subtree: true });
+  $('#ebSave').onclick = () => onSave();
+  $('#ebCancel').onclick = () => onCancel();
+  bar.hidden = false; place();
+  if (vv) { vv.addEventListener('resize', place); vv.addEventListener('scroll', place); }
+  setTimeout(place, 350);
+}
 function editEntry(node, n) {
   editing = n.id;
   node.innerHTML = `<div class="edit">
@@ -2841,6 +2882,7 @@ function editEntry(node, n) {
   };
   q('.eS').onclick = save;
   q('.eC').onclick = () => { editing = null; refreshPanels(); };
+  editBar(node.querySelector('.edit'), save, () => q('.eC').click());
   node.querySelectorAll('textarea').forEach(t => t.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); save(); } }));
   (W < 720 ? q('.eT') : q('.eX')).focus();
 }
@@ -2857,10 +2899,15 @@ function renderEntries() {
   $('#sCount').textContent = `メモ ${own.length}`;
   photosBtn($('#sCount'), own);
   const box = $('#sEntries'); box.innerHTML = '';
-  if (!own.length) box.innerHTML = `<div class="empty">${'まだ、この' + (k[0] === 't' ? '町' : k[0] === 'p' ? '県' : '市') + 'の話はありません。'}<br>${W < 720 ? '下の欄に、ひとこと。' : '下の「新しいメモを書く」から、ひとこと。'}</div>`;
+  const grp = GR.showing(), theirs = grp && GX.others.has(k) ? GX.others.get(k) : [];
+  const hereW = k[0] === 't' ? '町' : k[0] === 'p' ? '県' : '市', writeW = W < 720 ? '下の欄に、ひとこと。' : '下の「ここに、ひとこと」から。';
+  if (!own.length && theirs.length) {   // nothing of yours yet: the group's memos come first
+    $('#sCount').textContent = `みんなのメモ ${theirs.length}`; photosBtn($('#sCount'), theirs);
+    theirs.forEach(n => box.appendChild(entryNode(n, { other: true })));
+    const e = el2('div', 'empty mine'); e.innerHTML = `あなたのメモは、まだありません。<br>${writeW}`; box.appendChild(e);
+  } else if (!own.length) box.innerHTML = `<div class="empty">まだ、この${hereW}の話はありません。<br>${writeW}</div>`;
   own.forEach(n => box.appendChild(entryNode(n)));
-  const grp = GR.showing();
-  if (grp && GX.others.has(k)) {
+  if (own.length && theirs.length) {
     const os = GX.others.get(k);
     const r = document.createElement('div'); r.className = 'rule'; r.textContent = `みんなのメモ ${os.length}`; photosBtn(r, os); box.appendChild(r);
     os.forEach(n => box.appendChild(entryNode(n, { other: true })));
@@ -2923,7 +2970,18 @@ function paintShare() {
   b.style.background = on ? c : ''; b.style.borderColor = on ? c : '';
   b.querySelector('span').textContent = on ? `#${GR.gtag()} のみんなにも見える` : `いまは自分だけ／押すと #${GR.gtag()} にも`;
   b.title = on ? '今日はこの設定のまま。明日になると「自分だけ」に戻ります' : '';
+  paintSave();
 }
+function paintSave() {   // when what you write will also reach the group, the button says so
+  const f = $('#sForm'), gt = GR.on() ? GR.gtags() : [];
+  const txt = $('#fText').value + ' ' + $('#fDetail').value;
+  let ft = []; try { ft = fTags.get(); } catch (e) {}
+  const share = GR.on() && (shareOn() || ft.some(t => gt.includes(t)) || hashtags(txt).some(t => gt.includes(t)));
+  $('#fSave').textContent = share ? 'のこす（みんなにも）' : 'のこす';
+  f.classList.toggle('sharing', share);
+  if (share) f.style.setProperty('--gc', GR.color(GR.me())); else f.style.removeProperty('--gc');
+}
+['#fText', '#fDetail'].forEach(id => $(id).addEventListener('input', () => { if (GR.on()) paintSave(); }));
 $('#fShare').onclick = () => { try { shareOn() ? localStorage.removeItem('sanpo-share-day') : localStorage.setItem('sanpo-share-day', today()); } catch (e) {} paintShare(); };
 $('#sForm').onsubmit = ev => {
   ev.preventDefault();
@@ -2943,7 +3001,7 @@ $('#sForm').onsubmit = ev => {
   Store.putNote({ id: nid, k, d, at, t, x, p: links, loc: formLoc, tags });
   if (ds.length) saveThumbs(ds).then(im => { const n = Store.notes.get(nid); if (n) Store.putNote({ ...n, im }); });
   spread(sp, pt);
-  $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; paintLinks(); $('#fWhereBox').classList.remove('open'); fTags.set([]); formThumbs = []; paintFormThumbs();
+  $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; paintLinks(); $('#fWhereBox').classList.remove('open'); fTags.set([]); formThumbs = []; paintFormThumbs(); paintSave();
   setFormLoc(null);
   $('#fTime').value = ''; if (!pc) { $('#fDate').value = today(); $('#fWhenRow').classList.remove('open'); } paintWhen();
   toast((d !== today() ? `${d.slice(5).replace('-', '/')}の分として、` : '') + (k === S.sel.key ? 'のこしました' : `${placeName(k)} にのこしました`) + (shareOn() ? `（#${GR.gtag()} のみんなにも）` : ''));
@@ -3193,7 +3251,7 @@ $('#fab').onclick = () => goHere(true);
 $('#bLoc').onclick = () => goHere(false);
 
 /* ---------- drawer: LIST · WALKS · TAGS ---------- */
-let dTab = 'walks', dRaw = false, dTag = null;
+let dTab = 'walks', dRaw = false, dTag = null, dMore = false;
 function walkDays() {
   const s = new Set([...IX.byDate.keys(), ...Store.walks.keys()]);
   return [...s].sort().reverse();
@@ -3233,7 +3291,7 @@ function yearCal(days) {
 function walkStat(d) {
   const ns = IX.byDate.get(d) || [];
   const towns = uniq(ns.filter(n => n.k[0] === 't').map(n => n.k)).length;
-  const raw = ns.filter(n => !n.x).length;
+  const raw = (Store.walks.get(d) || {}).sum ? 0 : 1;   // まだ書いていない日 = この日のことを、まだ書いていない
   return { ns, towns, raw };
 }
 function renderDrawer() {
@@ -3249,7 +3307,19 @@ function renderDrawer() {
     if (S.level === 'japan') rows = D.P.map(([pc, n, m]) => { const a = AG.pref.get(pc); return { n, c: a ? `${a.munis.size}/${m}` : `0/${m}`, f: a ? a.munis.size / m : 0, v: !!a, memo: IX.byPlace.has('p' + pc), go: () => { origin = null; go(pc); } }; });
     else if (S.level === 'pref') rows = D.pref[S.pc].feats.slice().sort((a, b) => a.c < b.c ? -1 : 1).map(f => { const a = AG.muni.get(f.c), T = D.pref[S.pc].T[f.c] || 0; return { n: f.n, c: `${a ? a.towns : 0}/${T}`, f: T && a ? a.towns / T : (a ? 1 : 0), v: !!a, memo: IX.byPlace.has('m' + f.c), go: () => { origin = null; go(f.c); } }; });
     else if (townData) rows = townData.towns.map((t, i) => ({ n: t.n, c: (IX.byPlace.get(t.k) || []).length || '', v: visK(t.k), go: () => selectTown(i, true) }));
-    rows.filter(r => !q || r.n.includes(q)).slice(0, 3000).forEach(r => {
+    const unit = S.level === 'japan' ? '都道府県' : S.level === 'pref' ? '市区町村' : '町';
+    let shown = rows.filter(r => !q || r.n.includes(q));
+    if (!q && shown.some(r => r.v) && shown.some(r => !r.v)) {   // walked first; the others behind one line
+      const rest = shown.filter(r => !r.v);
+      shown = shown.filter(r => r.v);
+      if (dMore) shown = shown.concat(rest);
+      setTimeout(() => {
+        const t = mkBtn(dMore ? `まだ歩いていない${unit}を、たたむ` : `まだ歩いていない${unit} ${rest.length} ▾`, 'more', () => { dMore = !dMore; renderDrawer(); });
+        const vs = body.querySelectorAll('.li.v'); const last = vs[vs.length - 1];
+        last ? last.after(t) : body.prepend(t);
+      });
+    }
+    shown.slice(0, 3000).forEach(r => {
       const b = document.createElement('button'); b.className = 'li' + (r.v ? ' v' : '');
       b.innerHTML = `<span class="n"><i></i><span></span>${r.memo ? '<em>メモ</em>' : ''}</span><span class="c"></span>` + (r.f !== undefined ? `<span class="b"><i style="width:${Math.round(r.f * 100)}%"></i></span>` : '');
       b.querySelector('.n span').textContent = r.n; b.querySelector('.c').textContent = r.c;
@@ -3259,14 +3329,14 @@ function renderDrawer() {
   } else if (dTab === 'walks') {
     const days = walkDays();
     if (!q) {
-      frag.appendChild(mkBtn('写真をまとめて入れる', 'btn addpics', () => pickBulk(), 'その日の写真をまとめて選ぶと、撮った時刻で近いメモに振り分けます'));
       const ar = document.createElement('div'); ar.className = 'addrow';
-      ar.appendChild(mkBtn('＋ 道のり（GPX）', 'btn ghost', pickGPX, 'ほかのアプリで記録した道のり（GPXファイル）を読みこむ'));
+      ar.appendChild(mkBtn('＋ 写真をまとめて', 'addq addpics', () => pickBulk(), 'その日の写真をまとめて選ぶと、撮った時刻で近いメモに振り分けます'));
+      ar.appendChild(mkBtn('＋ 道のり（GPX）', 'addq', pickGPX, 'ほかのアプリで記録した道のり（GPXファイル）を読みこむ'));
       frag.appendChild(ar);
-      ar.insertBefore(mkBtn('＋ 写真のリンク', 'btn ghost addlink', async () => {
+      ar.insertBefore(mkBtn('＋ 写真のリンク', 'addq addlink', async () => {
         try { const ls = parseLinks(await navigator.clipboard.readText()); if (ls.length) return attachLink(ls[0]); } catch (e) {}
         attachAsk();
-      }, 'コピーしたリンクを、投稿の時刻に近いメモに付けます'), ar.firstChild);
+      }, 'コピーしたリンクを、投稿の時刻に近いメモに付けます'), ar.children[1]);
       frag.appendChild(yearCal(days));
     }
     const nraw = days.filter(d => walkStat(d).raw).length;
@@ -3292,7 +3362,7 @@ function renderDrawer() {
       b.querySelector('.d b').textContent = (w.km ? fmtKm(w.km) + ' · ' : '') + `メモ ${st.ns.length}` + (st.towns ? ` · 町 ${st.towns}` : '');
       const ti = b.querySelector('.ti'); ti.textContent = w.title || autoTitle(d); ti.classList.toggle('auto', !w.title);
       const tg = b.querySelector('.tags');
-      if (w.sum) { const s = document.createElement('span'); s.className = 'tag'; s.textContent = 'まとめ済'; tg.appendChild(s); }
+      if (w.sum) { const s = el2('div', 'sm', w.sum.replace(/\s+/g, ' ').slice(0, 60)); b.insertBefore(s, tg); }
       (w.tags || []).forEach(t => { const s = document.createElement('span'); s.className = 'tag'; s.textContent = '#' + t; tg.appendChild(s); });
       b.onclick = () => openWalk(d);
       frag.appendChild(b);
@@ -3309,9 +3379,10 @@ function renderDrawer() {
         if (n.d.slice(0, 7) !== month) { month = n.d.slice(0, 7); const r = document.createElement('div'); r.className = 'rule'; r.textContent = month.replace('-', '.'); frag.appendChild(r); }
         const b = document.createElement('button'); b.className = 'log';
         b.innerHTML = '<div class="d"></div><div class="p"></div><div class="t"></div>';
-        b.querySelector('.d').append(whoChip(n.by), document.createTextNode(n.d.replace(/-/g, '.') + (n.at ? '  ' + n.at : '')));
+        b.querySelector('.d').append(whoChip(n.by), document.createTextNode(fmtDay(n.d) + (n.at ? '  ' + n.at : '')));
         b.querySelector('.p').textContent = placeLabel(n.k);
-        b.querySelector('.t').textContent = n.t || n.x || '';
+        const nph = +n.ph || (n.im || []).length || (Array.isArray(n.imd) ? n.imd.length : 0);
+        b.querySelector('.t').textContent = n.t || n.x || (nph ? (n.by === me ? `写真 ${nph} 枚（この端末に）` : `写真 ${nph} 枚は、本人の手もとに`) : '');
         b.onclick = () => { jumpTo(n.k); if (W < 720) closePanel('drawer'); };
         frag.appendChild(b);
       });
@@ -3383,6 +3454,7 @@ function syncTools() {
 function closePanel(id, quiet) {
   const p = $('#' + id); p.classList.remove('open');
   document.body.classList.remove(id + '-open');
+  if (id === 'sheet' || id === 'wsheet') { $('#editBar').hidden = true; document.body.classList.remove('editing'); }
   if (id === 'sheet' && !quiet) { select(null); }
   if (id === 'wsheet') { curWalk = null; editing = null; Replay.stop(); }
   if (id === 'drawer') syncTools();
@@ -3456,7 +3528,7 @@ function renderWalk() {
   $('#wEyebrow').textContent = fmtDay(d) + 'の散歩';
   const ti = $('#wTitle'); ti.textContent = w.title || autoTitle(d); ti.classList.toggle('auto', !w.title);
   const places = uniq(st.ns.map(n => n.k[0] === 'p' ? placeName(n.k) : placeName('m' + n.k.slice(1, 6))));
-  $('#wStat').textContent = [w.km ? fmtKm(w.km) + (w.t0 && w.t1 ? ` ${w.t0}〜${w.t1}` : '') : '', places.join('・'), st.towns ? `町 ${st.towns}` : '', w.tw ? `通った町 ${w.tw.length}` : '', `メモ ${st.ns.length}`, st.raw ? `メモだけ ${st.raw}` : ''].filter(Boolean).join(' · ');
+  $('#wStat').textContent = [w.km ? fmtKm(w.km) + (w.t0 && w.t1 ? ` ${w.t0}〜${w.t1}` : '') : '', places.join('・'), st.towns ? `町 ${st.towns}` : '', w.tw ? `通った町 ${w.tw.length}` : '', `メモ ${st.ns.length}`].filter(Boolean).join(' · ');
   const wt = $('#wTags'); wt.innerHTML = ''; wt.appendChild(tagChips(w.tags));
   const body = $('#wBody'); body.innerHTML = '';
   // summary
@@ -3484,6 +3556,7 @@ function editWalk(node, d) {
   const save = () => { editing = null; const s = q('.wS').value.trim(); Store.putWalk(d, { title: q('.wT').value.trim(), sum: s, tags: uniq([...tg.get(), ...hashtags(s)]) }); toast('保存しました'); };
   q('.wOk').onclick = save;
   q('.wNo').onclick = () => { editing = null; renderWalk(); };
+  editBar(node.querySelector('.edit'), save, () => q('.wNo').click());
   const wt = q('.wTrk');
   if (wt) wt.onclick = () => {
     if (!wt.classList.contains('arm')) { wt.classList.add('arm'); wt.textContent = 'ほんとに？（もう一度押すと、けします）'; setTimeout(() => { wt.classList.remove('arm'); wt.textContent = '道のりをけす'; }, 3000); return; }
