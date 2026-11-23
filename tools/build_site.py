@@ -241,5 +241,8 @@ for name, b64 in json.load(open(os.path.join(ROOT, 'tools', 'icons.json'))).item
 for name in ['index.html', 'README.md', 'firebase-config.js', 'manifest.webmanifest', 'sw.js']:
     if os.path.exists(os.path.join(ROOT, name)):
         shutil.copy(os.path.join(ROOT, name), os.path.join(SITE, name))
+for name in ['css', 'js']:   # the parts of the page (v2.12.0~)
+    if os.path.isdir(os.path.join(ROOT, name)):
+        shutil.copytree(os.path.join(ROOT, name), os.path.join(SITE, name))
 open(os.path.join(SITE, '.nojekyll'), 'w').close()
 print('built', len(os.listdir(OUT)), 'data files', file=sys.stderr)
