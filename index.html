@@ -140,6 +140,9 @@ body.busy .brand i{animation:pulse .6s var(--ease) infinite}
 @keyframes drawon{0%{stroke-dashoffset:1}55%{stroke-dashoffset:0}100%{stroke-dashoffset:-1}}
 #toast{position:fixed;left:50%;top:calc(22px + var(--safe-t));transform:translate(-50%,-10px);font:10px/1 var(--mono);letter-spacing:.1em;background:var(--ink);color:#fff;padding:9px 13px 8px;border-radius:999px;opacity:0;transition:opacity var(--ui),transform var(--panel);pointer-events:none;z-index:30}
 #toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.act.show{pointer-events:auto;display:flex;align-items:center;gap:12px;padding:5px 5px 5px 14px;white-space:nowrap;max-width:none}
+#toast .tact{font:500 12px/1 var(--sans);letter-spacing:.06em;color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:999px;min-height:30px;padding:0 14px;white-space:nowrap}
+@media (max-width:720px){#toast .tact{min-height:40px;font-size:14px;padding:0 16px}}
 
 /* ---------- panels ---------- */
 .panel{position:fixed;top:0;bottom:0;width:380px;background:#fff;display:flex;flex-direction:column;transition:transform var(--panel);z-index:10}
@@ -544,6 +547,18 @@ body.rec .brand i{animation:pulse 1.6s infinite}
 #routeDlg .pick{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .okshop .pick{margin-top:10px}
 .okshop .pick .lab{width:100%;font-size:13px;color:#333}
+.welcome{padding:2px 0 14px;border-bottom:1px solid var(--hair);margin-bottom:12px}
+.welcome .wh{font-size:15px;color:#333;letter-spacing:.04em}
+.welcome .big2{font:300 30px/1.1 var(--mono);letter-spacing:.01em;margin-top:8px}
+.welcome .big2 small{font-size:13px;color:var(--mute);margin-left:6px}
+.welcome .fresh{font-size:13px;line-height:1.7;color:var(--accent);margin:6px 0 10px}
+.wsum .shnote{font-size:12px;line-height:1.7;color:#555;margin-top:8px}
+.twlist{display:flex;flex-wrap:wrap;gap:4px 14px}
+.log.dayrow .p{font-weight:500}
+.addday{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 2px}
+.addday .lab{width:100%;font:10px/1 var(--mono);color:var(--mute);letter-spacing:.12em}
+#routeDlg .okday{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+#routeDlg .okday input[type=date]{font:13px var(--mono);border:1px solid var(--hair);border-radius:8px;padding:8px 10px;min-height:40px}
 #routeDlg .okshops{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 #routeDlg .big2 small{display:inline;font:inherit;font-size:14px;color:#555;margin-left:8px;letter-spacing:.04em}
 #routeDlg.ok{align-items:flex-end;background:rgba(239,239,234,.25);backdrop-filter:none;-webkit-backdrop-filter:none}
@@ -577,6 +592,20 @@ body.rec .brand i{animation:pulse 1.6s infinite}
 .addph{grid-column:1/3;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 0 2px}
 .addph input{flex:1 1 180px;min-width:0;font:inherit;font-size:16px;border:1px solid var(--hair);border-radius:10px;padding:10px 12px}
 .entry.own{cursor:pointer}
+.edit .ftools{flex-wrap:wrap;margin:0}
+.edit .ftools .where{max-width:100%}
+.edit .ebox{display:none;padding:10px 12px;border:1px solid var(--hair);border-radius:12px;background:#fafaf7}
+.edit .ebox.open{display:block;animation:boxIn var(--t-switch) var(--ease-out) both}
+.edit .ebox .lab{display:block;font:9px/1 var(--mono);color:var(--mute);letter-spacing:.12em;margin:0 0 8px}
+.edit .ebox .pbtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.edit .ebox label{margin-top:0}
+.edit .eL{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.edit .eL:empty{display:none}
+.edit .eL .lkc{display:inline-flex;align-items:center}
+.edit .lkx{font:12px/1 var(--mono);color:var(--mute);min-width:32px;min-height:32px}
+.edit .eIgIn{display:flex;margin-top:8px}
+.edit .eIgIn[hidden]{display:none}
+.edit .eWhereBox .scope{margin-bottom:6px}
 .edit .eDel{margin-left:auto;font:11px/1 var(--mono);letter-spacing:.08em;color:var(--mute);padding:12px 4px}
 .edit .eDel.arm{color:var(--ink);font-weight:600;text-decoration:underline;text-underline-offset:3px}
 #attach .card{max-width:440px}
@@ -1013,7 +1042,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.9.0', VERSION_DATE = '2026.11.23';
+const VERSION = '2.10.0', VERSION_DATE = '2026.11.23';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -1686,7 +1715,7 @@ const GR = {
       if (im && im.length) r.ph = im.length;   // only how many: the photos themselves stay on your device
       out.notes.set(me + '_' + n.id, { ...r, by: me });
     }
-    for (const w of Store.walks.values()) if ((w.tags || []).some(t => ts.includes(t))) { const { trk, tw, ...r } = w; out.walks.set(me + '_' + w.d, { ...r, by: me }); }
+    for (const w of Store.walks.values()) if ((w.tags || []).some(t => ts.includes(t))) { const { trk, ...r } = w; out.walks.set(me + '_' + w.d, { ...r, by: me }); }   // the towns passed go too; the line itself stays here
     return out;
   },
   soon(ms) { if (!this.on() || !this.ready) return; clearTimeout(this.t); this.t = setTimeout(() => this.push(), ms == null ? 1500 : ms); },
@@ -1745,6 +1774,15 @@ function groupIndex() {
   };
   for (const n of Store.notes.values()) if (GR.isShared(n)) { add(n.k, me, n.d, ct(n)); link(n, me); }   // the group map shows only what was shared
   for (const x of GR.docs.notes.values()) if (x.by !== me && M[x.by] && okKey(String(x.k))) { add(x.k, x.by, x.d, ct(x)); link(x, x.by); const a = others.get(x.k); a ? a.push(x) : others.set(x.k, [x]); feed.push(x); }
+  const days = [], gts = GR.gtags();   // days shared with the group: their towns passed count as walked
+  const addDay = (w, by) => {
+    const tw = (Array.isArray(w.tw) ? w.tw : []).map(String).filter(k => k[0] === 't' && okKey(k));
+    for (const k of tw) add(k, by, w.d, Infinity);
+    days.push({ by, d: w.d, title: String(w.title || '').slice(0, 80), sum: String(w.sum || ''), tw, km: +w.km || 0, t0: String(w.t0 || ''), t1: String(w.t1 || ''), tags: Array.isArray(w.tags) ? w.tags.map(String) : [] });
+  };
+  for (const w of Store.walks.values()) if ((w.tags || []).some(t => gts.includes(t))) addDay(w, me);
+  for (const x of GR.docs.walks.values()) if (x.by !== me && M[x.by] && /^\d{4}-\d{2}-\d{2}$/.test(String(x.d || ''))) addDay(x, x.by);
+  days.sort((a, b) => a.d < b.d ? 1 : a.d > b.d ? -1 : 0);
   const order = uid => (M[uid] && M[uid].joined) || 0;
   const own = new Map();
   let multi = 0;
@@ -1755,7 +1793,7 @@ function groupIndex() {
     if (k[0] === 't') { for (const uid of m.keys()) towns.set(uid, (towns.get(uid) || 0) + 1); if (m.size > 1) multi++; }
   }
   for (const a of others.values()) a.sort(newestFirst);
-  GX = { first, own, others, feed, towns, together, mine, multi, visited: new Set(first.keys()) };
+  GX = { first, own, others, feed, towns, together, mine, multi, days, visited: new Set(first.keys()) };
 }
 const idTime = id => { const m = /^[0-9a-z]{8}/.exec(String(id || '')), t = m ? parseInt(m[0], 36) : NaN; return t > 1.5e12 && t < Date.now() + 864e5 ? t : Infinity; };   // when a memo was first written (its id)
 const deep = hex => { const v = parseInt(String(hex).slice(1), 16), f = c => Math.round(c * .6).toString(16).padStart(2, '0'); return '#' + f(v >> 16) + f(v >> 8 & 255) + f(v & 255); };
@@ -2951,40 +2989,24 @@ function firstDays() {
   for (const [d, w] of Store.walks) for (const k of w.tw || []) put(k, d);
   return m;
 }
-function okaeri(d, nm) {
+let welcomeDay = null;
+function okaeri(d, nm) {   // おかえり: the day's own page, with a welcome on top; the new towns light up one by one
   d = d || today();
-  const all = dayTowns(d), fd = firstDays(), fresh = all.filter(k => fd.get(k) === d), w = Store.walks.get(d) || {};
-  photoInfo();   // so 「バックアップする」 is ready inside the tap
-  const big = el2('div', 'big2', String(all.length)); big.appendChild(el2('small', '', '町を歩きました'));
-  const body = [big];
-  if (fresh.length) body.push(el2('p', 'fresh', `はじめての町 ${fresh.length}：` + fresh.slice(0, 8).map(k => placeName(k)).join('、') + (fresh.length > 8 ? ` ほか ${fresh.length - 8}` : '')));
-  const shopLine = el2('p', 'okn');
-  const paintShopLine = () => { const ss = (IX.byDate.get(d) || []).filter(n => n.s); shopLine.textContent = ss.length ? `寄ったお店 ${ss.length}：` + ss.slice(0, 6).map(n => n.s.n || n.t).join('、') + (ss.length > 6 ? ' ほか' : '') : ''; shopLine.hidden = !ss.length; };
-  paintShopLine(); body.push(shopLine);
-  const pick = el2('div', 'pick');
-  const sf = shopField({ init: nm, k: () => dayTowns(d)[0] || null, ctx: () => ({ kind: 'day', d }), onShop: p => { if (p) addShopDay(d, p, pick, () => { sf.clear(); paintShopLine(); }); } });
-  const sw = el2('div', 'okshop'); sw.append(sf.el, pick);
-  const step = (n, title, node) => { const r = el2('div', 'okstep'); r.append(el2('b', '', n), el2('span', '', title)); if (node) r.appendChild(node); return r; };
-  const ti = el2('input'); ti.type = 'text'; ti.maxLength = 80; ti.value = w.title || ''; ti.placeholder = autoTitle(d);
-  const keepTitle = () => { const v = ti.value.trim(); if (v !== ((Store.walks.get(d) || {}).title || '')) Store.putWalk(d, { title: v }); };
-  ti.onchange = keepTitle;
-  body.push(
-    step('1', '今日の写真を、まとめて入れる', mkBtn('写真をまとめて入れる', 'btn ghost', () => { keepTitle(); pickBulk(() => okaeri(d)); })),
-    step('2', '寄ったお店を、あとから足す', sw),
-    step('3', 'この日に、名前をつける', ti),
-    step('4', '写真ごと、バックアップする', mkBtn('バックアップする', 'btn ghost', () => { keepTitle(); $('#mPics').value = 'big'; (W < 720 && navigator.canShare ? $('#mShare') : $('#mDown')).onclick(); })));
-  routeDlg('おかえりなさい', body, [['おわる', 'btn', () => { keepTitle(); closeRoute(); openWalk(d); }]]);
-  $('#routeDlg').classList.add('ok');
-  fresh.slice(0, 12).forEach((k, i) => setTimeout(() => burst(k), 600 + i * 380));   // the new towns light up, one by one
+  welcomeDay = d;
   try { localStorage.setItem('sanpo-okaeri', d); } catch (e) {}
   $('#okPill').hidden = true;
+  photoInfo();   // so バックアップする is ready inside the tap
+  openWalk(d);
+  const fd = firstDays(), fresh = dayTowns(d).filter(k => fd.get(k) === d);
+  fresh.slice(0, 12).forEach((k, i) => setTimeout(() => burst(k), 700 + i * 380));
+  if (nm) setTimeout(() => shopAddDlg(d, nm), 500);   // came back from the map app with a shop
 }
 function okaeriPill() {   // in the evening of a day with something written: a quiet way in
   let seen = ''; try { seen = localStorage.getItem('sanpo-okaeri') || ''; } catch (e) {}
   const d = today(), has = (IX.byDate.get(d) || []).length || ((Store.walks.get(d) || {}).trk);
   $('#okPill').hidden = !(has && new Date().getHours() >= 16 && seen !== d && !Rec.st && !document.body.classList.contains('first'));
 }
-$('#okPill').onclick = () => { const d = today(); openWalk(d); setTimeout(() => okaeri(d), 700); };
+$('#okPill').onclick = () => okaeri(today());
 document.addEventListener('visibilitychange', () => { if (!document.hidden) okaeriPill(); });
 setTimeout(okaeriPill, 2500);
 async function saveThumbs(ds) { const ids = []; for (const o of ds) { const id = Thumbs.newId(); await Thumbs.put(id, o.d || o, false, o.s); ids.push(id); } return ids; }
@@ -3103,24 +3125,51 @@ function editBar(edit, onSave, onCancel) {
   if (vv) { vv.addEventListener('resize', place); vv.addEventListener('scroll', place); }
   setTimeout(place, 350);
 }
-function editEntry(node, n) {
+function editEntry(node, n) {   // なおす: the same order and words as writing — 写真 · 日付 · 場所 ▾, then ひとこと, くわしく, タグ
   editing = n.id;
-  node.innerHTML = `<div class="edit">
-    <div class="erow"><div><label>日付</label><input type="date" class="eD"></div><div><label>時刻</label><input type="time" class="eA"></div></div>
-    <div class="scope eK"></div>
-    <div class="eShop"></div>
+  node.innerHTML = `<div class="edit ew">
+    <div class="ftools"><button type="button" class="tl ePick" aria-expanded="false"></button><button type="button" class="tl eWhen" aria-expanded="false"></button><button type="button" class="tl where eWhere" aria-expanded="false"></button></div>
+    <div class="ebox ePhotoBox"><span class="lab">写真</span><div class="eI"></div><div class="eL"></div><div class="pbtns"><button type="button" class="pgo ePhone">スマホの写真を選ぶ</button><button type="button" class="pgo eIg">Instagram・X のリンクを貼る</button></div><div class="shin eIgIn" hidden><input type="url" placeholder="ここに貼り付け（長押し →「ペースト」）"></div></div>
+    <div class="ebox eWhenBox"><div class="erow"><div><label>日付</label><input type="date" class="eD"></div><div><label>時刻</label><input type="time" class="eA"></div></div></div>
+    <div class="ebox eWhereBox"><div class="scope eK"></div><div class="eShop"></div></div>
     <label>ひとこと</label><textarea class="eT" rows="2"></textarea>
     <label>くわしく</label><textarea class="eX big" placeholder="道順、見つけたもの、天気、寄ったお店、気づいたこと…"></textarea>
     <label>タグ</label><div class="eG"></div>
-    <label>写真のリンク（1行に1つ）</label><textarea class="eP" rows="2" placeholder="https://www.instagram.com/p/…　https://x.com/…/status/…"></textarea>
-    <label>写真</label><div class="eI"></div>
     <div class="row"><button class="btn eS" type="button">保存</button><button class="btn ghost eC" type="button">キャンセル</button><button class="eDel" type="button">このメモをけす</button></div></div>`;
   const q = c => node.querySelector(c);
-  let k = n.k;
-  scopeChips(q('.eK'), ancestors(n.k), n.k, x => { k = x; });
-  q('.eD').value = n.d; q('.eA').value = n.at || ''; q('.eT').value = n.t || ''; q('.eX').value = n.x || ''; q('.eP').value = (n.p || []).join('\n');
-  const tg = tagInput(q('.eG'), n.tags);
+  let k = n.k, links = (n.p || []).slice(), im = (n.im || []).slice(), gone = [];
   let shop = n.s ? { ...n.s } : null, eloc = n.loc || null;
+  const BOX = { ePick: '.ePhotoBox', eWhen: '.eWhenBox', eWhere: '.eWhereBox' };
+  const openBox = which => { for (const b in BOX) { const on = b === which && !q(BOX[b]).classList.contains('open'); q(BOX[b]).classList.toggle('open', on); q('.' + b).setAttribute('aria-expanded', on ? 'true' : 'false'); } };   // one box at a time, like writing
+  for (const b in BOX) q('.' + b).onclick = () => openBox(b);
+  const paintChips = () => {
+    const np = im.length + links.length, d = q('.eD').value || n.d, a = q('.eA').value;
+    q('.ePick').textContent = '写真' + (np ? ' ' + np : '') + ' ▾'; q('.ePick').classList.toggle('on', np > 0);
+    q('.eWhen').textContent = '日付：' + (d === today() ? '今日' : (d.slice(0, 4) === today().slice(0, 4) ? '' : d.slice(0, 4) + '/') + `${+d.slice(5, 7)}/${+d.slice(8)}`) + (a ? ' ' + a : '');
+    q('.eWhere').textContent = '場所：' + (placeName(k) || '') + (shop && shop.n ? '・' + shop.n : '') + ' ▾';
+  };
+  const paintLinksE = () => {
+    const box = q('.eL'); box.innerHTML = '';
+    links.forEach(u => { const w = el2('span', 'lkc'); w.appendChild(chips([u])); w.appendChild(mkBtn('×', 'lkx', () => { links = links.filter(x => x !== u); paintLinksE(); paintChips(); }, 'この写真をはずす')); box.appendChild(w); });
+  };
+  scopeChips(q('.eK'), ancestors(n.k), n.k, x => { k = x; paintChips(); });
+  q('.eD').value = n.d; q('.eA').value = n.at || ''; q('.eT').value = n.t || ''; q('.eX').value = n.x || '';
+  ['.eD', '.eA'].forEach(c => q(c).addEventListener('input', paintChips));
+  const tg = tagInput(q('.eG'), n.tags);
+  const addLinks = txt => {   // the same as writing: Instagram・X → a photo; a map link → the shop
+    const ls = parseLinks(txt); if (!ls.length) return false;
+    if (ls.every(mapUrl)) { sf.take(txt); openBox('eWhere'); return true; }
+    const ps = ls.filter(u => !mapUrl(u)); links = parseLinks([...links, ...ps].join(' '));
+    paintLinksE(); paintChips(); q('.eIgIn').hidden = true;
+    const pp = photoPost(ps[0]); toast(pp ? `${pp.svc === 'x' ? 'X' : 'Instagram'} の写真を付けました` : 'リンクを付けました');
+    return true;
+  };
+  q('.eIg').onclick = async () => {
+    let t = null; try { t = await navigator.clipboard.readText(); } catch (e) {}
+    if (t == null) { const w = q('.eIgIn'), i = w.querySelector('input'); w.hidden = false; i.value = ''; i.focus(); return; }   // can't read here: paste by hand
+    if (!addLinks(t)) toast('コピーされたリンクが見つかりませんでした。Instagram で投稿の「…」→「リンクをコピー」してから、もう一度押してください', 4200);
+  };
+  q('.eIgIn input').addEventListener('input', e => { if ((e.target.value.match(URL_RE) || []).length) addLinks(e.target.value); });
   const sf = shopField({
     name: () => firstLine(q('.eT').value), k: () => k, ctx: () => ({ kind: 'note', id: n.id }),
     onShop: async p => {
@@ -3129,31 +3178,27 @@ function editEntry(node, n) {
       shop = p;
       if (p.ll) eloc = [p.ll[0], p.ll[1], 0];
       if (res && res.key !== k && (sure(res) || !within(res.key, k))) {   // in another town: the memo moves there
-        k = res.key; scopeChips(q('.eK'), ancestors(k), k, x => { k = x; });
+        k = res.key; scopeChips(q('.eK'), ancestors(k), k, x => { k = x; paintChips(); });
         if (!p.ll && eloc) eloc = null;
         toast(`${name} を付けました（${placeName(k)} に移します）`, 3000);
       } else toast(sure(res) || (res && res.key === k) ? `${name} を付けました` : `${name} を付けました。町だけ、たしかめてください`, 3000);
       if (!q('.eT').value.trim()) q('.eT').value = name;
-      sf.show(shop, k);
+      sf.show(shop, k); paintChips();
     }
   });
   q('.eShop').appendChild(sf.el); sf.show(shop, k);
   q('.eT').addEventListener('input', () => sf.fill());
-  let im = (n.im || []).slice(), gone = [];
   const paintIm = () => {
     const box = q('.eI'); box.innerHTML = '';
-    const st = thumbStrip({ im }, id => { im = im.filter(v => v !== id); gone.push(id); paintIm(); }); st.classList.add('edit'); box.appendChild(st);
-    if (im.length < 8) box.appendChild(mkBtn('写真を選ぶ', 'btn ghost', () => pickPhotos(8 - im.length, async ds => { im = im.concat(await saveThumbs(ds)).slice(0, 8); paintIm(); })));
+    if (!im.length) return;
+    const st = thumbStrip({ im }, id => { im = im.filter(v => v !== id); gone.push(id); paintIm(); paintChips(); }); st.classList.add('edit'); box.appendChild(st);
   };
-  paintIm();
-  const del = q('.eDel');
-  del.onclick = () => {
-    if (!del.classList.contains('arm')) { del.classList.add('arm'); del.textContent = 'ほんとに？（もう一度押すと、けします）'; setTimeout(() => { del.classList.remove('arm'); del.textContent = 'このメモをけす'; }, 3000); return; }
-    editing = null; Store.delNote(n.id); Thumbs.del(n.im); toast('けしました');
-  };
+  q('.ePhone').onclick = () => { if (im.length >= 8) return toast('写真は8枚までです'); pickPhotos(8 - im.length, async ds => { im = im.concat(await saveThumbs(ds)).slice(0, 8); paintIm(); paintChips(); }); };
+  paintIm(); paintLinksE(); paintChips();
+  q('.eDel').onclick = () => delNoteUndo(n);
   const save = () => {
     const T = pullLinks(q('.eT').value), X = pullLinks(q('.eX').value), t = T.text, x = X.text;
-    const all = parseLinks([q('.eP').value, ...T.links, ...X.links].join(' ')), ml = all.find(mapUrl);
+    const all = parseLinks([...links, ...T.links, ...X.links].join(' ')), ml = all.find(mapUrl);
     if (!shop && ml) shop = { u: ml, n: urlName(ml) || firstLine(t) };   // a map link written in the memo is its shop
     editing = null; shopDone();
     Store.putNote({ ...n, k, d: q('.eD').value || n.d, at: q('.eA').value || '', t: t || (shop && shop.n) || '', x, im, p: all.filter(u => !mapUrl(u)), loc: eloc || undefined, s: shopOut(shop), tags: uniq([...tg.get(), ...hashtags(t + ' ' + x)]) });
@@ -3659,7 +3704,7 @@ function shopResume() {   // the page was reloaded while you were in the map app
   shopGo = { ...g, shown: false };
   if (g.kind === 'form' && g.sel) { pendingDraft = g; jumpTo(g.sel); }
   else if (g.kind === 'note') { const n = Store.notes.get(g.id); if (n) { pendingEdit = n.id; jumpTo(n.k); } }
-  else if (g.kind === 'day') { openWalk(g.d); setTimeout(() => okaeri(g.d, g.name), 700); }
+  else if (g.kind === 'day') okaeri(g.d, g.name);
   else if (g.kind === 'add') setTimeout(() => shopAddDlg(g.d, g.name), 300);
   setTimeout(shopBack, 1500);
 }
@@ -3688,6 +3733,43 @@ async function addShopDay(d, p, host, done) {
 const okStep = (n, title, node) => { const r = el2('div', 'okstep'); r.append(el2('b', '', n), el2('span', '', title)); if (node) r.appendChild(node); return r; };
 const yday = () => { const x = new Date(today() + 'T12:00:00'); x.setDate(x.getDate() - 1); return x.toISOString().slice(0, 10); };
 const dayLabel = d => d === today() ? '今日' : d === yday() ? '昨日' : `${+d.slice(5, 7)}/${+d.slice(8)}`;
+function pickDay() {   // ＋ 日をえらんで足す: choose the day, then its page does the rest
+  let d = today();
+  const di = el2('input'); di.type = 'date'; di.value = d; di.max = today(); di.setAttribute('aria-label', '日付');
+  const chips = el2('div', 'pick'), days = uniq([today(), yday(), ...walkDays()]).filter(x => x <= today()).slice(0, 4);
+  const paint = () => { chips.innerHTML = ''; days.forEach(x => chips.appendChild(mkBtn(dayLabel(x), 'sc' + (x === d ? ' on' : ''), () => { d = x; di.value = x; paint(); }))); };
+  di.onchange = () => { if (di.value) { d = di.value; paint(); } };
+  const w1 = el2('div', 'okday'); w1.append(chips, di); paint();
+  routeDlg('どの日に足しますか', [el2('p', '', '写真・お店・写真のリンクを足す日をえらぶと、その日のページが開きます。'), w1],
+    [['この日を開く', 'btn', () => { if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d > today()) return toast('今日までの日をえらんでください'); closeRoute(); openWalk(d); }], ['やめる', 'btn ghost', closeRoute]]);
+}
+let theirDay = null;
+function openTheirDay(by, d) {   // someone's shared day, to read: what they wrote and the towns they passed — never the line
+  if (by === GR.me()) return openWalk(d);
+  const w = GX && GX.days.find(x => x.by === by && x.d === d); if (!w) return;
+  Replay.stop(); Pane.before('wsheet');
+  if (S.sel) select(null);
+  curWalk = null; theirDay = { by, d }; editing = null;
+  const ns = GX.feed.filter(n => n.by === by && n.d === d).sort(byTime);
+  $('#wEyebrow').textContent = `${GR.name(by)}・${fmtDay(d)}の散歩`;
+  const ti = $('#wTitle'); ti.textContent = w.title || '名前のない散歩'; ti.classList.toggle('auto', !w.title);
+  $('#wStat').textContent = [w.km ? fmtKm(w.km) + (w.t0 && w.t1 ? ` ${w.t0}〜${w.t1}` : '') : '', w.tw.length ? `通った町 ${w.tw.length}` : '', `メモ ${ns.length}`].filter(Boolean).join(' · ');
+  const wt = $('#wTags'); wt.innerHTML = ''; wt.appendChild(tagChips(w.tags));
+  const body = $('#wBody'); body.innerHTML = '';
+  if (w.sum) { const sm = el2('div', 'wsum'), p = el2('div', 'dx', w.sum); p.style.borderLeftColor = GR.color(by); sm.appendChild(p); body.appendChild(sm); }
+  if (w.tw.length) {
+    body.appendChild(el2('div', 'rule', `通った町 ${w.tw.length}`));
+    const box = el2('div', 'twlist'); w.tw.forEach(k => box.appendChild(mkBtn(placeName(k) + ' ›', 'plink', () => jumpTo(k)))); body.appendChild(box);
+  }
+  body.appendChild(el2('div', 'rule', `メモ ${ns.length}`));
+  if (!ns.length) body.appendChild(el2('div', 'empty', 'この日のメモはありません。'));
+  ns.forEach(n => body.appendChild(entryNode(n, { other: true, place: true })));
+  $('#wsheet').classList.add('open'); document.body.classList.add('wsheet-open');
+  Pane.after('wsheet');
+  const keys = uniq([...ns.map(n => n.k), ...w.tw]);
+  setHighlight({ kind: 'their', label: `${GR.name(by)}・${fmtDay(d)}の散歩`, keys });
+  focusKeys(keys, true);
+}
 function shopAddDlg(d0, nm) {   // 記録 → ＋ お店: any day, even one with nothing written
   let d = d0 || today();
   const di = el2('input'); di.type = 'date'; di.value = d; di.max = today(); di.setAttribute('aria-label', '日付');
@@ -3942,14 +4024,9 @@ function renderDrawer() {
     const days = walkDays();
     if (!q) {
       const ar = document.createElement('div'); ar.className = 'addrow';
-      ar.appendChild(mkBtn('＋ 写真をまとめて', 'addq addpics', () => pickBulk(), 'その日の写真をまとめて選ぶと、撮った時刻で近いメモに振り分けます'));
-      ar.appendChild(mkBtn('＋ お店', 'addq addshop', () => shopAddDlg(), 'あとから、寄ったお店をメモに（Googleマップで探して、コピーして、付ける）'));
+      ar.appendChild(mkBtn('＋ 日をえらんで足す', 'addq addday', () => pickDay(), '写真・お店・写真のリンクを、えらんだ日に足す（その日のページが開きます）'));
       ar.appendChild(mkBtn('＋ 道のり（GPX）', 'addq', pickGPX, 'ほかのアプリで記録した道のり（GPXファイル）を読みこむ'));
       frag.appendChild(ar);
-      ar.insertBefore(mkBtn('＋ 写真のリンク', 'addq addlink', async () => {
-        try { const ls = parseLinks(await navigator.clipboard.readText()); if (ls.length) return attachLink(ls[0]); } catch (e) {}
-        attachAsk();
-      }, 'コピーしたリンクを、投稿の時刻に近いメモに付けます'), ar.children[1]);
       frag.appendChild(yearCal(days));
     }
     const nraw = days.filter(d => walkStat(d).raw).length;
@@ -3984,12 +4061,23 @@ function renderDrawer() {
     if (!GR.on() || !GX) empty('グループに入っていません。設定からグループを作るか、招待リンクを開いてください。');
     else {
       const me = GR.me();
-      const all = [...[...Store.notes.values()].filter(n => GR.isShared(n)).map(n => ({ ...n, by: me })), ...GX.feed].sort(newestFirst)
-        .filter(n => !q || (n.t || '').includes(q) || (n.x || '').includes(q) || placeLabel(n.k).includes(q) || GR.name(n.by).includes(q)).slice(0, 200);
+      const dayRows = GX.days.map(w => ({ ...w, day: true })).filter(w => !q || w.title.includes(q) || w.sum.includes(q) || GR.name(w.by).includes(q));
+      const all = [...[...Store.notes.values()].filter(n => GR.isShared(n)).map(n => ({ ...n, by: me })), ...GX.feed]
+        .filter(n => !q || (n.t || '').includes(q) || (n.x || '').includes(q) || placeLabel(n.k).includes(q) || GR.name(n.by).includes(q)).sort(newestFirst).slice(0, 200);
+      for (const w of dayRows) { const i = all.findIndex(n => n.d <= w.d); all.splice(i < 0 ? all.length : i, 0, w); }   // a day sits above its memos
       if (!all.length) empty(q ? '見つかりませんでした' : `まだ共有されたメモはありません。メモに #${GR.gtag()} を付けると、ここに出ます。`);
       let month = '';
       all.forEach(n => {
         if (n.d.slice(0, 7) !== month) { month = n.d.slice(0, 7); const r = document.createElement('div'); r.className = 'rule'; r.textContent = month.replace('-', '.'); frag.appendChild(r); }
+        if (n.day) {   // a shared day: its name, and how many towns it passed
+          const b = document.createElement('button'); b.className = 'log dayrow';
+          b.innerHTML = '<div class="d"></div><div class="p"></div><div class="t"></div>';
+          b.querySelector('.d').append(whoChip(n.by), document.createTextNode(fmtDay(n.d) + ' の散歩'));
+          b.querySelector('.p').textContent = (n.title || '名前のない散歩') + (n.tw.length ? `（通った町 ${n.tw.length}）` : '');
+          b.querySelector('.t').textContent = n.sum.replace(/\s+/g, ' ').slice(0, 60);
+          b.onclick = () => openTheirDay(n.by, n.d);
+          frag.appendChild(b); return;
+        }
         const b = document.createElement('button'); b.className = 'log';
         b.innerHTML = '<div class="d"></div><div class="p"></div><div class="t"></div>';
         b.querySelector('.d').append(whoChip(n.by), document.createTextNode(fmtDay(n.d) + (n.at ? '  ' + n.at : '')));
@@ -4020,8 +4108,13 @@ function renderDrawer() {
       acts.appendChild(inp); acts.appendChild(mkBtn('OK', 'tag', ok)); inp.focus(); inp.select();
     }, '名前を変える（既にあるタグ名にするとまとめられます）'));
     const del = mkBtn('はずす', 'tag', () => {
-      if (!del.classList.contains('arm')) { del.classList.add('arm'); del.textContent = 'ほんとに？'; setTimeout(() => { del.classList.remove('arm'); del.textContent = 'はずす'; }, 2500); return; }
-      Store.renameTag(t, ''); dTag = null; setHighlight(null); toast(`#${t} を外しました`); renderDrawer();
+      const ns = [...Store.notes.values()].filter(n => (n.tags || []).includes(t)).map(n => ({ ...n })), ws = [...Store.walks.values()].filter(w => (w.tags || []).includes(t)).map(w => ({ ...w }));
+      Store.renameTag(t, ''); dTag = null; setHighlight(null); renderDrawer();
+      toast(`#${t} を外しました`, 5200, ['もどす', () => {
+        for (const n of ns) if (Store.notes.has(n.id)) Store.notes.set(n.id, cleanNote({ ...Store.notes.get(n.id), tags: n.tags, u: Date.now() }));
+        for (const w of ws) if (Store.walks.has(w.d)) Store.walks.set(w.d, cleanWalk({ ...Store.walks.get(w.d), tags: w.tags, u: Date.now() }));
+        Store.commit(); openTag(t); toast('もどしました');
+      }]);
     }, 'このタグをすべてのメモから外す（メモは消えません）');
     acts.appendChild(del);
     head.appendChild(acts);
@@ -4073,6 +4166,7 @@ const Pane = {
     if (id === 'drawer') return { id, tab: dTab, tag: dTag, q: $('#dFilter').value, y, label: 'ノート' };
     if (id === 'sheet' && S.sel) return { id, key: S.sel.key, y, label: placeName(S.sel.key) || 'この場所' };
     if (id === 'wsheet' && curWalk) return { id, d: curWalk, y, label: mdy(curWalk) };
+    if (id === 'wsheet' && theirDay) return { id, their: { ...theirDay }, y, label: `${GR.name(theirDay.by)} ${mdy(theirDay.d)}` };
     return null;
   },
   still(id) { const p = $('#' + id); p.classList.add('still'); setTimeout(() => p.classList.remove('still'), 80); },   // a swap, not a slide
@@ -4107,7 +4201,7 @@ const Pane = {
     const s = this.stack.pop(); if (!s) return;
     this.backTo = s.id; this.backT = Date.now();
     if (s.id === 'drawer') { dTab = s.tab; dTag = s.tag; $('#dFilter').value = s.q || ''; renderDrawer(); showDrawer(); $('#dBody').scrollTop = s.y; }
-    else if (s.id === 'wsheet') { openWalk(s.d); $('#wBody').scrollTop = s.y; }
+    else if (s.id === 'wsheet') { if (s.their) openTheirDay(s.their.by, s.their.d); else openWalk(s.d); $('#wBody').scrollTop = s.y; }
     else if (s.id === 'sheet') {   // the map goes there first, then the page comes back
       if (W < 720) { const f = this.open(); if (f) closePanel(f, true); }
       jumpTo(s.key); this.scrollTo = s.y;
@@ -4126,7 +4220,7 @@ function closePanel(id, quiet) {
   document.body.classList.remove(id + '-open');
   if (id === 'sheet' || id === 'wsheet') { $('#editBar').hidden = true; document.body.classList.remove('editing'); }
   if (id === 'sheet' && !quiet) { select(null); }
-  if (id === 'wsheet') { curWalk = null; editing = null; Replay.stop(); }
+  if (id === 'wsheet') { curWalk = null; theirDay = null; editing = null; Replay.stop(); welcomeDay = null; }
   if (id === 'drawer') syncTools();
   if (id === 'ig') IG.clear();
   if (['sheet', 'wsheet', 'drawer'].includes(id) && SHEET.small[id]) {   // next time it opens at 80% again (after it has slid away)
@@ -4257,6 +4351,16 @@ function renderWalk() {
   $('#wStat').textContent = [w.km ? fmtKm(w.km) + (w.t0 && w.t1 ? ` ${w.t0}〜${w.t1}` : '') : '', places.join('・'), st.towns ? `町 ${st.towns}` : '', w.tw ? `通った町 ${w.tw.length}` : '', `メモ ${st.ns.length}`].filter(Boolean).join(' · ');
   const wt = $('#wTags'); wt.innerHTML = ''; wt.appendChild(tagChips(w.tags));
   const body = $('#wBody'); body.innerHTML = '';
+  if (welcomeDay === d) {   // おかえり
+    const all = dayTowns(d), fd = firstDays(), fresh = all.filter(k => fd.get(k) === d);
+    const wl = el2('div', 'welcome');
+    wl.appendChild(el2('div', 'wh', 'おかえりなさい'));
+    const big = el2('div', 'big2', String(all.length)); big.appendChild(el2('small', '', '町を歩きました')); wl.appendChild(big);
+    if (fresh.length) wl.appendChild(el2('p', 'fresh', `はじめての町 ${fresh.length}：` + fresh.slice(0, 8).map(k => placeName(k)).join('、') + (fresh.length > 8 ? ` ほか ${fresh.length - 8}` : '')));
+    const bk = mkBtn('写真ごと、バックアップする', 'btn ghost', () => { $('#mPics').value = 'big'; (W < 720 && navigator.canShare ? $('#mShare') : $('#mDown')).onclick(); });
+    wl.appendChild(bk); unbackedPhotos().then(n => { if (!n) bk.remove(); });   // only when photos are waiting
+    body.appendChild(wl);
+  }
   // summary
   const sum = document.createElement('div'); sum.className = 'wsum';
   if (w.sum) { const p = document.createElement('div'); p.className = 'dx'; p.textContent = w.sum; sum.appendChild(p); }
@@ -4265,6 +4369,13 @@ function renderWalk() {
   if (Replay.items(d).length > 1 || w.trk) row.appendChild(mkBtn('▶ たどる', w.title || w.sum ? 'tag' : 'btn ghost', () => Replay.start(d), 'この日の散歩を、メモの順にたどる'));
   sum.appendChild(row);
   body.appendChild(sum);
+  if (GR.on() && (w.tags || []).some(t => GR.gtags().includes(t))) sum.appendChild(el2('p', 'shnote', `#${GR.gtag()} で共有中：名前・この日のこと・通った町が、みんなにも見えます（道の線は出ません）`));
+  const add = el2('div', 'addday');   // この日に足す: what used to sit on top of ノート, now where the day is already chosen
+  add.appendChild(el2('span', 'lab', 'この日に足す'));
+  add.append(mkBtn('＋ 写真をまとめて', 'pgo', () => pickBulk(() => openWalk(d)), 'この日の写真をまとめて選ぶと、撮った時刻で近いメモに振り分けます'),
+    mkBtn('＋ お店', 'pgo', () => shopAddDlg(d), '寄ったお店を、この日のメモに（Googleマップで探して、コピーして、付ける）'),
+    mkBtn('＋ 写真のリンク', 'pgo', async () => { try { const ls = parseLinks(await navigator.clipboard.readText()); if (ls.length) return attachLink(ls[0]); } catch (e) {} attachAsk(); }, 'コピーした Instagram・X のリンクを、投稿の時刻に近いメモに付けます'));
+  body.appendChild(add);
   const r = document.createElement('div'); r.className = 'rule'; r.textContent = `メモ ${st.ns.length}`; photosBtn(r, st.ns); body.appendChild(r);
   if (!st.ns.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'この日のメモはありません。'; body.appendChild(e); }
   st.ns.forEach(n => body.appendChild(entryNode(n, { place: true, timeOnly: true })));
@@ -4285,8 +4396,9 @@ function editWalk(node, d) {
   editBar(node.querySelector('.edit'), save, () => q('.wNo').click());
   const wt = q('.wTrk');
   if (wt) wt.onclick = () => {
-    if (!wt.classList.contains('arm')) { wt.classList.add('arm'); wt.textContent = 'ほんとに？（もう一度押すと、けします）'; setTimeout(() => { wt.classList.remove('arm'); wt.textContent = '道のりをけす'; }, 3000); return; }
-    editing = null; Store.putWalk(d, { trk: '', km: 0, t0: '', t1: '', tw: [] }); toast('道のりを、けしました'); openWalk(d);
+    const w0 = Store.walks.get(d) || {}, keep = { trk: w0.trk, km: w0.km, t0: w0.t0, t1: w0.t1, tw: w0.tw };
+    editing = null; Store.putWalk(d, { trk: '', km: 0, t0: '', t1: '', tw: [] }); openWalk(d);
+    toast('道のりを、けしました', 5200, ['もどす', () => { Store.putWalk(d, keep); openWalk(d); toast('もどしました'); }]);
   };
   q('.wS').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); save(); } });
   (W < 720 ? q('.wT') : q('.wS')).focus();
@@ -4879,7 +4991,22 @@ addEventListener('online', () => { Sync.soon(0); FB.soon(0); });
 addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && FB.t) FB.soon(0); });
 
 let toastT;
-function toast(s, ms) { const t = $('#toast'); t.textContent = s; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms || 2400); }
+function toast(s, ms, act) {   // act: [label, fn] — one button, e.g. もどす
+  const t = $('#toast'); t.textContent = s; t.classList.toggle('act', !!act);
+  if (act) { const b = document.createElement('button'); b.type = 'button'; b.className = 'tact'; b.textContent = act[0]; b.onclick = e => { e.stopPropagation(); clearTimeout(toastT); t.classList.remove('show', 'act'); act[1](); }; t.appendChild(b); }
+  t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show', 'act'), ms || 2400);
+}
+async function delNoteUndo(n) {   // けす: gone at once, with 5 seconds to take it back (photos too)
+  editing = null;
+  const keep = { ...n }, pics = [];
+  for (const id of n.im || []) { try { const d = await Thumbs.src(id); if (d) pics.push([id, d, await Thumbs.small(id)]); } catch (e) {} }
+  Store.delNote(n.id); Thumbs.del(n.im);
+  toast('メモをけしました', 5200, ['もどす', () => {
+    Store.deleted.delete('n:' + keep.id);
+    for (const [id, d, sm] of pics) Thumbs.put(id, d, false, sm || undefined);
+    Store.putNote(keep); toast('もどしました');
+  }]);
+}
 
 /* ---------- pointer: hover, click, pan, pinch, wheel ---------- */
 let hoverEl = null;
