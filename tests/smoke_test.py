@@ -51,8 +51,16 @@ async def app(b, phone, base):
     check(f'{tag}: a memo is kept in its town, with its tag', bool(r) and r[0] == '小町二丁目' and 'テスト' in r[1] and r[2] >= 1, r)
     # なおす
     await m.evaluate("() => document.querySelector('#sEntries .entry .ed').click()"); await m.wait_for_timeout(300)
+    r = await m.evaluate("() => [...document.querySelectorAll('.edit .ftools .tl')].map(b => b.textContent.split('：')[0].replace(/ \\d+/, ''))")
+    check(f'{tag}: なおす has the same chips as writing (写真 · 日付 · 場所)', r == ['写真 ▾', '日付', '場所'], r)
     await m.fill('.edit .eT', 'テストの散歩（なおした）'); await m.evaluate("() => document.querySelector('.edit .eS').click()"); await m.wait_for_timeout(500)
     check(f'{tag}: なおす changes the memo', await m.evaluate("() => [...Store.notes.values()].some(n => n.t === 'テストの散歩（なおした）')"))
+    # けす: gone at once, もどす within 5 seconds
+    await m.evaluate("() => document.querySelector('#sEntries .entry .ed').click()"); await m.wait_for_timeout(300)
+    await m.evaluate("() => document.querySelector('.edit .eDel').click()"); await m.wait_for_timeout(600)
+    gone = await m.evaluate("() => ![...Store.notes.values()].some(n => n.t === 'テストの散歩（なおした）') && $('#toast').textContent.includes('もどす')")
+    await m.click('#toast .tact'); await m.wait_for_timeout(600)
+    check(f'{tag}: けす is at once, and もどす brings it back', gone and await m.evaluate("() => [...Store.notes.values()].some(n => n.t === 'テストの散歩（なおした）')"))
     # an Instagram link pasted into the memo becomes a photo mark
     await m.evaluate("() => { if ($('#sForm').classList.contains('collapsed')) $('#fOpen').click(); const e = new Event('paste', { bubbles: true, cancelable: true }); e.clipboardData = { getData: () => 'https://www.instagram.com/p/TEST12345/' }; $('#fText').dispatchEvent(e); }"); await m.wait_for_timeout(400)
     check(f'{tag}: a pasted Instagram link becomes a photo', await m.evaluate("() => parseLinks($('#fLinks').value).length === 1 && $('#fPick').textContent.includes('1')"))
@@ -86,11 +94,11 @@ async def app(b, phone, base):
     check(f'{tag}: the backup card appears when photos wait', await m.evaluate("() => !$('#bkPill').hidden && $('#bkTxt').textContent.includes('2枚')"))
     await m.click('#bkLater'); await m.wait_for_timeout(300)
     check(f'{tag}: あとで puts it away for a week', await m.evaluate("async () => { await backupPill(); return $('#bkPill').hidden; }"))
-    # おかえり (after a walk) also says バックアップ
-    await m.evaluate("() => okaeri()"); await m.wait_for_timeout(500)
-    t = await m.evaluate("() => $('#routeDlg').innerText")
-    check(f'{tag}: おかえり says バックアップ', 'バックアップする' in t and 'ファイル' not in t, t[-120:])
-    await m.evaluate("() => closeRoute()"); await m.wait_for_timeout(300)
+    # おかえり is the day's own page (no separate window), and says バックアップ when photos wait
+    await m.evaluate("() => okaeri()"); await m.wait_for_timeout(900)
+    t = await m.evaluate("() => ($('#wBody .welcome') || {}).innerText || ''")
+    check(f'{tag}: おかえり opens the day page, and says バックアップ', await m.evaluate("() => $('#wsheet').classList.contains('open') && !$('#routeDlg').classList.contains('open') && !!$('#wBody .addday')") and 'おかえりなさい' in t and 'バックアップする' in t and 'ファイル' not in t, t[-120:])
+    await m.evaluate("() => closePanel('wsheet')"); await m.wait_for_timeout(300)
     # the record format
     r = await m.evaluate("() => { const v = Store.dump().v; const n = Store.absorb({ app: 'sanpo-log', v: 2, notes: { old2: { id: 'old2', k: 'p13', d: '2024-05-05', t: '第2版', u: 1 } } }); return [v, n, !!Store.notes.get('old2')]; }")
     check(f'{tag}: records are 第3版 and old ones still open', r == [3, 1, True], r)
@@ -152,6 +160,14 @@ async def together(b, base):   # a group: わたしも行った on someone's mem
     await m.evaluate("() => [...document.querySelectorAll('#rtActs button')].find(b => b.textContent === '別の日に行った').click()"); await m.wait_for_timeout(300)
     await m.evaluate("() => { document.querySelector('#rtBody input[type=date]').value = '2025-05-01'; [...document.querySelectorAll('#rtActs button')].find(b => b.textContent === 'のこす').click(); }"); await m.wait_for_timeout(1500)
     check('group: another, earlier day makes the town mine', await m.evaluate("() => townNodes[22].style.fill === hexRgb(deep(GR.color('u1'))) && $('#sStat').textContent.indexOf('あなた') < $('#sStat').textContent.indexOf('はなこ')"))
+    # a day shared with the group: its towns passed are coloured, and it can be read from ノート → みんな (never the line)
+    await m.evaluate("""() => { const M = window.__FBMOCK, ts = D.towns['14204'];
+      M.__write(`groups/${GR.gid}/walks/u2_2026-11-23`, { d: '2026-11-23', title: 'ニトリ、サイゼリア', sum: '昼飲み', tags: ['散歩部'], tw: [ts[30].k, ts[31].k], u: Date.now(), by: 'u2' }); }""")
+    await m.wait_for_timeout(1200)
+    await m.evaluate("() => { closePanel('sheet'); openDrawer('group'); }"); await m.wait_for_timeout(700)
+    ok = await m.evaluate("() => townNodes[30].style.fill === hexRgb(GR.color('u2')) && [...document.querySelectorAll('#dBody .log.dayrow')].some(b => b.textContent.includes('ニトリ、サイゼリア'))")
+    await m.evaluate("() => document.querySelector('#dBody .log.dayrow').click()"); await m.wait_for_timeout(1200)
+    check('group: a shared day shows its towns, and opens to read (no line)', ok and await m.evaluate("() => $('#wTitle').textContent === 'ニトリ、サイゼリア' && !$('#track').getAttribute('d') && $('#wBody').innerText.includes('通った町 2')"))
     check('group: no errors on the page', not errs, errs)
     await ctx.close()
 
