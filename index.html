@@ -394,13 +394,25 @@ body.rec .brand i{animation:pulse 1.6s infinite}
 #routeDlg .acts{margin-top:18px;display:flex;gap:8px;flex-wrap:wrap}
 #routeDlg .note{font-size:12px;color:var(--mute);margin-top:10px;line-height:1.7}
 .addrow{display:flex;gap:8px;margin:2px 0 16px}
+.btn.addpics{display:flex;width:100%;justify-content:center;align-items:center;min-height:44px;margin:2px 0 8px}
+#routeDlg .acts{position:sticky;bottom:-26px;background:#fff;padding:12px 0 10px;margin-bottom:-10px;z-index:1}
+#routeDlg .bulk{margin-top:12px;border-top:1px solid var(--hair)}
+#routeDlg .brow{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--hair)}
+#routeDlg .brow img{width:64px;height:64px;object-fit:cover;border-radius:8px;flex:none;background:#ecece7}
+#routeDlg .bi{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px}
+#routeDlg .bi b{font:500 12px/1.3 var(--mono);letter-spacing:.04em}
+#routeDlg .bi select{width:100%;font:inherit;font-size:16px;min-height:44px;border:1px solid var(--hair);border-radius:10px;padding:0 10px;background:#fff;color:var(--ink)}
+#routeDlg .bi small{font-size:11px;color:var(--mute)}
+#routeDlg .brow.off img{opacity:.35}
 .addrow .btn{flex:1;margin:0!important;padding-left:8px;padding-right:8px}
 /* small photos */
 .thumbs{grid-column:1/3;display:flex;flex-wrap:wrap;gap:6px}
 .thumbs:empty{display:none}
 .th{position:relative;width:64px;height:64px;border-radius:8px;overflow:hidden;background:#ecece7;padding:0;flex:none}
 .th img{display:block;width:100%;height:100%;object-fit:cover}
-.th.miss:after{content:"…";position:absolute;inset:0;display:grid;place-items:center;color:var(--mute)}
+.th.miss:after{content:"べつの\A端末に";white-space:pre;text-align:center;font-size:11px;line-height:1.4;position:absolute;inset:0;display:grid;place-items:center;color:var(--mute)}
+.th.miss{background:#f3f3ef;border:1px dashed var(--hair)}
+.phnote{display:inline-block;font-size:12px;color:var(--mute);margin:2px 8px 6px 0}
 .th .rm{position:absolute;top:2px;right:2px;width:22px;height:22px;border-radius:50%;background:rgba(17,17,17,.72);color:#fff;font:12px/1 var(--mono);display:grid;place-items:center}
 .thumbs.edit{margin-top:8px}
 [hidden]{display:none!important}
@@ -441,8 +453,10 @@ body.rec .brand i{animation:pulse 1.6s infinite}
 .igf iframe.on{opacity:1}
 .igl{position:absolute;left:16px;right:16px;top:120px;text-align:center;font:10px/1.8 var(--mono);letter-spacing:.12em;color:var(--mute);pointer-events:none}
 .igh{font-size:11px;line-height:1.7;color:var(--mute);padding:10px 2px 0}
-#ig .igkeep{width:auto;align-self:center;margin-top:12px;min-height:44px;padding:0 18px;font-size:12px;letter-spacing:.06em;background:#fff}
-#ig .igkeep:hover{background:var(--ink);color:#fff}
+#ig .igacts{display:flex;gap:8px;margin-top:12px}
+#ig .igacts .btn{flex:1 1 0;min-width:0;min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:0 10px;font-size:12px;letter-spacing:.06em;text-decoration:none;white-space:nowrap}
+#ig .igacts .ghost{background:#fff}
+#ig .igacts .ghost:hover{background:var(--ink);color:#fff}
 .rule .rl{order:2;font:9px/1 var(--mono);letter-spacing:.1em;color:var(--ink);border:1px solid var(--ink);border-radius:999px;padding:5px 8px 4px;transition:background var(--ui),color var(--ui)}
 .steps{margin:14px 0 2px 20px;font-size:13px;line-height:1.75;color:#333}
 .steps li{margin:6px 0;padding-left:2px}
@@ -452,6 +466,7 @@ body.rec .brand i{animation:pulse 1.6s infinite}
 .card h3{font-weight:300;font-size:22px}
 .card p{font-size:12px;line-height:1.75;color:#555;margin-top:10px}
 .card .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.card select{width:100%;font:inherit;font-size:16px;min-height:44px;border:1px solid var(--hair);border-radius:10px;padding:0 12px;background:#fff;color:var(--ink);margin-top:10px}
 .card textarea{width:100%;height:110px;margin-top:12px;border:1px solid var(--hair);border-radius:8px;padding:10px;font:11px/1.5 var(--mono);resize:vertical}
 .card{counter-reset:mbox}
 .mbox{margin-top:26px;border-top:1px solid var(--ink);padding-top:14px;counter-increment:mbox}
@@ -741,7 +756,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <div class="igcap" id="igCap"></div>
   <div class="igf" id="igBox"><div class="igl" id="igL"></div></div>
   <div class="igh" id="igH"></div>
-  <button class="btn ghost igkeep" id="igKeep" type="button" hidden>◫ この写真を、アプリにものこす</button>
+  <div class="igacts" id="igActs" hidden><a class="btn igopen" id="igGo" target="_blank" rel="noopener noreferrer">Instagram で見る ↗</a><button class="btn ghost" id="igKeep" type="button">◫ アプリにのこす</button></div>
 </div>
 <div id="modal" role="dialog" aria-modal="true">
   <div class="card">
@@ -782,7 +797,9 @@ body.sp input,body.sp textarea{font-size:16px!important}
     </section>
     <section class="mbox"><h4>もしものとき</h4>
     <p>記録をファイルにしておけば、スマホをなくしても、ブラウザのデータを消しても、そこから戻せます。</p>
+    <p id="mPhotos"></p>
     <div class="rule">ファイルにする</div>
+    <select id="mPics" aria-label="写真をファイルに入れるか"><option value="big">写真もいっしょに</option><option value="small">写真は小さくして</option><option value="none">写真なし（メモだけ）</option></select>
     <div class="acts"><button class="btn sp-only" id="mShare">送る（AirDrop・LINEなど）</button><button class="btn" id="mDown">ファイルに保存</button><button class="btn ghost" id="mCopy">コピー</button></div>
     <div class="rule">ファイルから戻す</div>
     <p>保存したファイルを選んでください。PCではこの画面にファイルをドラッグしてもOK。今ある記録に合流します（消えません）。</p>
@@ -801,7 +818,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.3.1', VERSION_DATE = '2026.11.22';
+const VERSION = '2.4.0', VERSION_DATE = '2026.11.22';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -1302,7 +1319,7 @@ const FB = {
       }
       for (const [op, c, id, data] of ops) op === 'set' ? this.remote[c].set(id, +data.u || 0) : this.remote[c].delete(id);
       this.state = 'ok'; this.last = Date.now(); this.msg = '';
-      Thumbs.upload();
+      Thumbs.migrate();
     } catch (e) {
       this.state = 'err'; this.msg = navigator.onLine === false ? 'オフラインです。つながったら自動で同期します。' : '同期できませんでした。少しあとでもう一度試します。';
       this.soon(60000);
@@ -1451,8 +1468,8 @@ const GR = {
   want() {
     const me = this.me(), ts = this.gtags(), out = { notes: new Map(), places: new Map(), walks: new Map() };
     for (const n of Store.notes.values()) if (this.isShared(n)) {
-      const { loc, im, ...r } = n;
-      if (im && im.length) { const imd = im.map(id => Thumbs.memS.get(id)).filter(Boolean); if (imd.length) r.imd = imd; }   // the small copy (≈240px), never the sharp one
+      const { loc, im, imd, ...r } = n;
+      if (im && im.length) r.ph = im.length;   // only how many: the photos themselves stay on your device
       out.notes.set(me + '_' + n.id, { ...r, by: me });
     }
     for (const w of Store.walks.values()) if ((w.tags || []).some(t => ts.includes(t))) { const { trk, tw, ...r } = w; out.walks.set(me + '_' + w.d, { ...r, by: me }); }
@@ -1464,10 +1481,9 @@ const GR = {
     if (this.busy) { this.again = true; return; }
     this.busy = true;
     try {
-      for (const n of Store.notes.values()) if (n.im && this.isShared(n)) for (const id of n.im) await Thumbs.small(id);   // so shared memos carry their small photos
       const s = FB.sdk, me = this.me(), gid = this.gid, want = this.want(), ops = [];
       for (const c of ['notes', 'places', 'walks']) {
-        for (const [id, x] of want[c]) { const r = this.docs[c].get(id); if (!r || (+x.u || 0) > (+r.u || 0)) ops.push(['set', c, id, JSON.parse(JSON.stringify(x))]); }
+        for (const [id, x] of want[c]) { const r = this.docs[c].get(id); if (!r || (+x.u || 0) > (+r.u || 0) || r.imd) ops.push(['set', c, id, JSON.parse(JSON.stringify(x))]); }   // r.imd: photos copied by 2.3.1 or older are taken back out
         for (const [id, r] of this.docs[c]) if (r.by === me && !want[c].has(id)) ops.push(['del', c, id]);
       }
       for (let i = 0; i < ops.length; i += 400) {
@@ -1574,7 +1590,7 @@ function grPaintBox() {
   });
   const inp = $('#grMyName'); if (document.activeElement !== inp) inp.value = GR.name(me);
   const gn = $('#grGName'); $('#grNameRow').hidden = !owner; if (document.activeElement !== gn) gn.value = GR.g.name || '';
-  $('#grWhat').textContent = `メモは基本「自分だけ」です。グループに見えるのは、#${GR.gtag()} を付けたメモと、#${GR.gtag()} を付けた日の散歩（その日のメモ全部）だけ。地図のグループ表示も、共有したメモの町だけが塗られます。メモの正確な位置（GPS）は共有しません。`;
+  $('#grWhat').textContent = `メモは基本「自分だけ」です。グループに見えるのは、#${GR.gtag()} を付けたメモと、#${GR.gtag()} を付けた日の散歩（その日のメモ全部）だけ。地図のグループ表示も、共有したメモの町だけが塗られます。メモの正確な位置（GPS）と写真は共有しません（写真は、それぞれの端末の中だけ）。`;
 }
 let confirmPublic = false;
 const confirm2 = () => confirmPublic;
@@ -2244,7 +2260,7 @@ function postTime(u) {
 const noteLinks = n => Array.isArray(n.p) ? n.p.filter(u => /^https?:\/\//.test(u)) : [];
 const capOf = n => [n.d ? n.d.slice(5).replace('-', '.') + (n.at ? ' ' + n.at : '') : '', n.k ? placeName(n.k) : '', n.t].filter(Boolean).join(' · ');
 // what the viewer shows for one memo: its own small photos first, then posts that open inside
-const noteItems = n => [...(n.im || []), ...(Array.isArray(n.imd) ? n.imd : [])].map(img => ({ img, cap: capOf(n), nid: n.id, by: n.by }))
+const noteItems = n => (n.im || []).map(img => ({ img, cap: capOf(n), nid: n.id, by: n.by }))
   .concat(noteLinks(n).filter(photoPost).map(u => ({ u, cap: capOf(n), nid: n.id, by: n.by })));
 // a memo of mine (not someone else's in the group) that still has room for photos
 const keepNote = it => { const n = it && it.nid && Store.notes.get(it.nid); return n && (!it.by || it.by === GR.me()) && (n.im || []).length < 8 ? n : null; };
@@ -2264,19 +2280,20 @@ const IG = {
     $('#igPrev').hidden = $('#igNext').hidden = !many;
     $('#igCap').textContent = it.cap || '';
     this.clear();
-    $('#igKeep').hidden = !!it.img || !keepNote(it);
+    $('#igActs').hidden = !!it.img; $('#igKeep').hidden = !!it.img || !keepNote(it);
     if (it.img) {   // a photo kept in the app
       box.classList.add('pic'); out.hidden = true; hint.hidden = true;
       const im = new Image(); im.className = 'igImg'; im.alt = it.cap || '写真';
       box.appendChild(im); this.f = im;
-      Thumbs.src(it.img).then(d => { if (this.f !== im) return; if (d) im.src = d; else L.textContent = '写真を読み込めませんでした'; });
+      Thumbs.src(it.img).then(d => { if (this.f !== im) return; if (d) im.src = d; else L.textContent = 'この写真は、入れた端末の中にあります\n（写真は、端末どうしでコピーしません）'; });
       return;
     }
     const p = photoPost(it.u);
-    box.classList.remove('pic'); out.hidden = false; hint.hidden = false;
+    box.classList.remove('pic'); out.hidden = true; hint.hidden = false;   // the big button below does the opening
     out.href = p.url; out.textContent = p.name + ' ↗';
     const svc = p.svc === 'x' ? 'X' : 'Instagram';
-    hint.textContent = `出てこないときは、鍵をかけた${p.svc === 'x' ? 'ポスト' : '投稿'}かもしれません。鍵つきのものは ${svc} のきまりで、ここには出せません（自分のものでも）。右上の ${p.name} ↗ から開けば、${svc} で見られます。`;
+    $('#igGo').href = p.url; $('#igGo').textContent = `${svc} で見る ↗`;
+    hint.textContent = `出てこないときは、鍵をかけた${p.svc === 'x' ? 'ポスト' : '投稿'}かもしれません。鍵つきのものは ${svc} のきまりで、ここには出せません（自分のものでも）。「${svc} で見る」で開いて、見終わったら${W < 720 ? '左上の ◀ で' : 'このタブに'}戻ってください。`;
     L.textContent = 'LOADING…';
     // a new frame each time: changing an iframe's src would add a Back-button step
     const f = document.createElement('iframe');
@@ -2286,7 +2303,7 @@ const IG = {
     f.onload = () => { if (this.f !== f) return; clearTimeout(this.t); f.classList.add('on'); L.textContent = ''; };
     f.src = p.svc === 'ig' ? p.embed + '&wp=' + w : p.embed;   // with these, the embed reports its real height
     box.appendChild(f); box.scrollTop = 0; this.f = f;
-    this.t = setTimeout(() => { if (this.f === f && !f.classList.contains('on')) L.textContent = `読み込めませんでした\n${p.name} ↗ から開いてください`; }, 15000);
+    this.t = setTimeout(() => { if (this.f === f && !f.classList.contains('on')) L.textContent = `読み込めませんでした\n「${svc} で見る」から開いてください`; }, 15000);
   },
   step(d) { if (this.list.length < 2) return; this.i = (this.i + d + this.list.length) % this.list.length; this.show(); },
   keep() {   // pick the same photo from the phone: it goes onto the memo, and shows here right away
@@ -2357,11 +2374,11 @@ function thumbStrip(n, edit) {
   return box;
 }
 
-/* ---------- photos: kept in this browser (IndexedDB), and in your cloud space when signed in.
-   Each has a sharp copy (d, about 800px) and a small one (s, about 240px) for lists and the group. ---------- */
+/* ---------- photos: kept only in this browser (IndexedDB) — never sent to the cloud or the group.
+   Each has a sharp copy (d, about 800px) and a small one (s, about 240px) for lists. ---------- */
 const idbReq = r => new Promise((res, rej) => { r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 const Thumbs = {
-  db: null, mem: new Map(), memS: new Map(), upping: false,
+  db: null, mem: new Map(), memS: new Map(), moving: false,
   open() {
     if (!this.db) this.db = new Promise((res, rej) => { const r = indexedDB.open('sanpo-thumbs', 1); r.onupgradeneeded = () => r.result.createObjectStore('t'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
     return this.db;
@@ -2373,10 +2390,7 @@ const Thumbs = {
     if (/^data:image\//.test(x)) return x;
     if (this.mem.has(x)) return this.mem.get(x);
     try { const v = await idbReq((await this.os()).get(x)); if (v && v.d) { this.mem.set(x, v.d); if (v.s) this.memS.set(x, v.s); return v.d; } } catch (e) {}
-    if (FB.user && FB.sdk) {
-      try { const sn = await FB.sdk.getDoc(FB.sdk.doc(FB.db, 'users', FB.user.uid, 'thumbs', x)); const o = sn.exists() ? sn.data() : null; if (o && o.d) { await this.put(x, o.d, true, o.s); return o.d; } } catch (e) {}
-    }
-    return null;
+    return null;   // not on this device (photos are not copied between devices)
   },
   async small(x) {
     if (!x) return null;
@@ -2394,31 +2408,43 @@ const Thumbs = {
   },
   async put(id, d, up, s) {
     this.mem.set(id, d); if (s) this.memS.set(id, s);
-    try { await idbReq((await this.os('readwrite')).put(s ? { d, s, up: !!up } : { d, up: !!up }, id)); } catch (e) {}
-    if (!up) this.upload();
+    try { await idbReq((await this.os('readwrite')).put(s ? { d, s } : { d }, id)); } catch (e) {}
   },
   async del(ids) {
     for (const id of ids || []) {
       this.mem.delete(id); this.memS.delete(id);
       try { await idbReq((await this.os('readwrite')).delete(id)); } catch (e) {}
-      if (FB.user && FB.sdk) try { await FB.sdk.deleteDoc(FB.sdk.doc(FB.db, 'users', FB.user.uid, 'thumbs', id)); } catch (e) {}
     }
   },
+  async count() { try { return await idbReq((await this.os()).count()); } catch (e) { return 0; } },
   async entries() {
     try { const o = await this.os(), kq = o.getAllKeys(), vq = o.getAll(); const ks = await idbReq(kq), vs = await idbReq(vq); return ks.map((k, i) => [k, vs[i] || {}]); } catch (e) { return []; }
   },
   async all() { const out = {}; for (const [k, v] of await this.entries()) if (v.d) out[k] = v.d; return out; },
-  async upload() {   // small photos made while signed out (or offline) go up once you are signed in
-    if (!FB.user || !FB.ready || this.upping) return;
-    this.upping = true;
+  // until 2.3.1 photos were also copied to your cloud space: bring them down to this device, then remove them there.
+  // A cloud copy is removed only after it is safely stored here.
+  async migrate() {
+    if (!FB.user || !FB.sdk || !FB.sdk.getDocs || this.moving) return;
+    const s = FB.sdk, uid = FB.user.uid;
+    try { if (localStorage.getItem('sanpo-thumbs-moved') === uid) return; } catch (e) {}
+    this.moving = true;
+    let got = 0, left = 0;
     try {
-      for (const [k, v] of await this.entries()) if (v.d && !v.up) {
-        const ref = FB.sdk.doc(FB.db, 'users', FB.user.uid, 'thumbs', k);
-        try { await FB.sdk.setDoc(ref, v.s ? { d: v.d, s: v.s, u: Date.now() } : { d: v.d, u: Date.now() }); }
-        catch (e) { if (!v.s || !/permission/.test(e && e.code || '')) throw e; await FB.sdk.setDoc(ref, { d: v.s, u: Date.now() }); }   // a stricter cloud: keep at least the small one there
-        await idbReq((await this.os('readwrite')).put({ ...v, up: true }, k));
+      const snap = await s.getDocs(s.collection(FB.db, 'users', uid, 'thumbs'));
+      for (const doc of snap.docs) {
+        const o = doc.data() || {}, id = doc.id;
+        let have = null; try { have = await idbReq((await this.os()).get(id)); } catch (e) {}
+        if ((!have || !have.d) && /^t[a-z0-9]{6,40}$/.test(id) && /^data:image\//.test(o.d || '')) {
+          await this.put(id, o.d, true, /^data:image\//.test(o.s || '') ? o.s : null);
+          let back = null; try { back = await idbReq((await this.os()).get(id)); } catch (e) {}
+          if (!back || back.d !== o.d) { left++; continue; }
+          got++;
+        }
+        await s.deleteDoc(doc.ref);
       }
-    } catch (e) {} finally { this.upping = false; }
+      if (!left) try { localStorage.setItem('sanpo-thumbs-moved', uid); } catch (e) {}
+      if (got) { toast(`クラウドにあった写真 ${got} 枚を、この端末に移しました`, 3600); refreshPanels(); }
+    } catch (e) {} finally { this.moving = false; }
   }
 };
 // a photo from the phone becomes two copies: about 800px (60–120KB, sharp even on a full screen) and
@@ -2451,6 +2477,131 @@ function pickPhotos(max, done) {   // must start inside a tap
   };
   inp.click();
 }
+/* ---------- 写真をまとめて: pick the day's photos; each goes to the memo nearest to when (and where) it was taken ---------- */
+// the time, and the place if the photo picker was asked to keep it, that the camera wrote inside a JPEG
+function exifRead(b, t0, out) {
+  const le = b.getUint16(t0) === 0x4949, u16 = o => b.getUint16(t0 + o, le), u32 = o => b.getUint32(t0 + o, le);
+  const ifd = o => { const n = u16(o), m = new Map(); for (let i = 0; i < n && i < 400; i++) { const e = o + 2 + i * 12; m.set(u16(e), { cnt: u32(e + 4), at: e + 8 }); } return m; };
+  const str = e => { const at = e.cnt > 4 ? u32(e.at) : e.at; let s = ''; for (let i = 0; i < e.cnt - 1 && i < 40; i++) s += String.fromCharCode(b.getUint8(t0 + at + i)); return s; };
+  const rat = (e, i) => { const at = u32(e.at) + i * 8; return u32(at) / (u32(at + 4) || 1); };
+  const i0 = ifd(u32(4));
+  const ex = i0.has(0x8769) ? ifd(u32(i0.get(0x8769).at)) : new Map();
+  const dt = ex.get(0x9003) || ex.get(0x9004) || i0.get(0x0132);
+  if (dt) { const m = str(dt).match(/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2})/); if (m && +m[1] > 1990) out.t = `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}`; }
+  if (i0.has(0x8825)) {
+    const g = ifd(u32(i0.get(0x8825).at)), deg = k => { const e = g.get(k); return e && e.cnt >= 3 ? rat(e, 0) + rat(e, 1) / 60 + rat(e, 2) / 3600 : null; };
+    let lat = deg(2), lng = deg(4);
+    if (lat != null && lng != null && (lat || lng)) {
+      if (g.has(1) && str(g.get(1))[0] === 'S') lat = -lat;
+      if (g.has(3) && str(g.get(3))[0] === 'W') lng = -lng;
+      out.ll = [lat, lng];
+    }
+  }
+}
+async function photoMeta(file) {
+  const out = { t: null, ll: null };
+  try {
+    const b = new DataView(await file.slice(0, 262144).arrayBuffer());
+    if (b.getUint16(0) === 0xFFD8) for (let p = 2; p + 10 < b.byteLength;) {
+      const mk = b.getUint16(p), len = b.getUint16(p + 2);
+      if (mk === 0xFFE1 && b.getUint32(p + 4) === 0x45786966) { exifRead(b, p + 10, out); break; }
+      if ((mk & 0xFF00) !== 0xFF00 || mk === 0xFFDA) break;
+      p += 2 + len;
+    }
+  } catch (e) {}
+  if (!out.t) { const m = String(file.name || '').match(/(20\d{2})[-_]?(\d{2})[-_]?(\d{2})[ _T-]?(\d{2})[-_.]?(\d{2})[-_.]?(\d{2})/); if (m && +m[2] <= 12 && +m[3] <= 31 && +m[4] < 24) out.t = `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}`; }
+  return out;
+}
+const hmMin = s => /^\d{2}:\d{2}/.test(s || '') ? +s.slice(0, 2) * 60 + +s.slice(3, 5) : null;
+function photoHome(x) {   // the memo this photo most likely belongs to: the same day, the nearest time, the same town counts extra
+  if (!x.t) return null;
+  const d = x.t.slice(0, 10), pm = hmMin(x.t.slice(11));
+  let best = null, bs = Infinity;
+  for (const n of Store.notes.values()) {
+    if (n.d !== d || (n.im || []).length >= 8) continue;
+    const nm = hmMin(n.at), here = !!x.k && (n.k === x.k || within(n.k, x.k));
+    const gap = nm == null ? 150 : Math.abs(nm - pm);
+    if (gap > 180 && !here) continue;
+    const sc = gap - (here ? 60 : 0);
+    if (sc < bs) { bs = sc; best = n; }
+  }
+  return best;
+}
+function pickBulk() {   // must start inside a tap
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.hidden = true;
+  document.body.appendChild(inp);
+  inp.onchange = async () => {
+    const all = [...inp.files], fs = all.slice(0, 40); inp.remove();
+    if (!fs.length) return;
+    const ph = [];
+    for (let i = 0; i < fs.length; i++) {
+      toast(`写真を読んでいます… ${i + 1} / ${fs.length}`, 8000);
+      try { const [m, th] = await Promise.all([photoMeta(fs[i]), makeThumb(fs[i])]); ph.push({ ...m, ...th }); } catch (e) {}
+    }
+    if (!ph.length) return toast('写真を読み込めませんでした');
+    if (ph.some(x => x.ll)) toast('撮った場所を調べています…', 8000);
+    for (const x of ph) if (x.ll) { try { x.k = (await townsPassed([[[x.ll[0], x.ll[1]]]]))[0] || null; } catch (e) {} }
+    clearTimeout(toastT); $('#toast').classList.remove('show');
+    bulkDlg(ph, all.length - fs.length);
+  };
+  inp.click();
+}
+function bulkDlg(ph, over) {
+  ph.sort((a, b) => (a.t || '9999') < (b.t || '9999') ? -1 : (a.t || '9999') > (b.t || '9999') ? 1 : 0);   // unknown times last
+  const rows = [], list = el2('div', 'bulk');
+  const recent = [...Store.notes.values()].sort(newestFirst).slice(0, 20);
+  for (const x of ph) {
+    const r = el2('div', 'brow'), im = new Image(); im.src = x.s; im.alt = ''; r.appendChild(im);
+    const info = el2('div', 'bi'), day = x.t ? x.t.slice(0, 10) : null, sel = el2('select');
+    info.appendChild(el2('b', '', x.t ? `${x.t.slice(5, 10).replace('-', '/')}  ${x.t.slice(11, 16)}` : '撮った時刻：不明'));
+    const ns = day ? [...Store.notes.values()].filter(n => n.d === day).sort((a, b) => (a.at || '').localeCompare(b.at || '')) : recent;
+    const opt = (v, t) => { const o = el2('option', '', t); o.value = v; sel.appendChild(o); };
+    for (const n of ns) opt('n:' + n.id, `${day ? '' : n.d.slice(5).replace('-', '/') + ' '}${n.at || '--:--'}  ${placeName(n.k)}${n.t ? '・' + n.t.slice(0, 16) : ''}${(n.im || []).length >= 8 ? '（写真いっぱい）' : ''}`);
+    if (x.k) opt('new:' + x.k, `＋ 新しいメモ（${placeName(x.k)}）`);
+    opt('', 'のこさない');
+    const home = photoHome(x);
+    sel.value = home ? 'n:' + home.id : x.k ? 'new:' + x.k : '';
+    info.appendChild(sel);
+    if (!home && !x.k) info.appendChild(el2('small', '', x.t ? 'この時刻の近くに、メモがありません' : '撮った時刻が分からない写真です。メモをえらんでください'));
+    r.appendChild(info); list.appendChild(r); rows.push([x, sel, r]);
+  }
+  const count = () => rows.filter(([, sel]) => sel.value).length;
+  const paint = () => { rows.forEach(([, sel, r]) => r.classList.toggle('off', !sel.value)); const b = $('#rtActs').firstChild; if (b) { b.textContent = `のこす（${count()} 枚）`; b.disabled = !count(); } };
+  rows.forEach(([, sel]) => sel.onchange = paint);
+  const go = async () => {
+    closeRoute();
+    const toNote = new Map(), toNew = new Map(); let saved = 0, full = 0;
+    const push = (m, key, x) => { const a = m.get(key); a ? a.push(x) : m.set(key, [x]); };
+    for (const [x, sel] of rows) {
+      const v = sel.value; if (!v) continue;
+      if (v.startsWith('n:')) push(toNote, v.slice(2), x);
+      else push(toNew, v.slice(4) + '|' + (x.t ? x.t.slice(0, 10) : today()), x);
+    }
+    for (const [id, xs] of toNote) {
+      const n = Store.notes.get(id); if (!n) { full += xs.length; continue; }
+      const use = xs.slice(0, Math.max(0, 8 - (n.im || []).length)); full += xs.length - use.length;
+      if (!use.length) continue;
+      const ids = await saveThumbs(use), cur = Store.notes.get(id);
+      Store.putNote({ ...cur, im: [...(cur.im || []), ...ids] }); saved += ids.length;
+    }
+    for (const [key, xs] of toNew) {   // one new memo per town and day (8 photos each)
+      const [k, d] = key.split('|');
+      for (let i = 0; i < xs.length; i += 8) {
+        const part = xs.slice(i, i + 8), f = part[0], ids = await saveThumbs(part);
+        Store.putNote({ id: newId(), k, d, at: f.t ? f.t.slice(11, 16) : '', t: '', im: ids, ...(f.ll ? { loc: [+f.ll[0].toFixed(6), +f.ll[1].toFixed(6)] } : {}) });
+        saved += ids.length;
+      }
+    }
+    toast(`写真 ${saved} 枚を、メモにのこしました` + (full ? `（${full} 枚は、メモがいっぱいでした。1つのメモに8枚まで）` : ''), 3600);
+  };
+  routeDlg('写真を、メモへ', [
+    `${ph.length} 枚。撮った時刻で、近いメモに分けました。ちがっていたら、えらびなおしてください。`,
+    over ? el2('p', '', `一度に入れられるのは40枚までです（のこりの ${over} 枚は、もう一度どうぞ）。`) : null,
+    list,
+    el2('p', '', '写真は、この端末の中だけに置きます。写真に入っていた場所の情報は、分けるのに使ったら消します。')
+  ], [['のこす', 'btn', go], ['やめる', 'btn ghost', closeRoute]]);
+  paint();
+}
 async function saveThumbs(ds) { const ids = []; for (const o of ds) { const id = Thumbs.newId(); await Thumbs.put(id, o.d || o, false, o.s); ids.push(id); } return ids; }
 function tagChips(tags) {
   const f = document.createDocumentFragment();
@@ -2477,7 +2628,7 @@ function entryNode(n, opt = {}) {
   if (!n.x) { const t = document.createElement('span'); t.className = 'tag raw'; t.textContent = 'メモだけ'; t.title = 'くわしい文章は、まだ書いていません'; meta.appendChild(t); }
   const pl = d.querySelector('.pl');
   if (opt.place) { pl.appendChild(mkBtn(placeLabel(n.k) + ' ›', 'plink', () => jumpTo(n.k))); } else pl.remove();
-  d.querySelector('.t').textContent = n.t || (n.x ? '' : '（メモなし）');
+  d.querySelector('.t').textContent = n.t || (n.x ? '' : (n.im || []).length ? '（写真だけ）' : '（メモなし）');
   d.querySelector('.dx').textContent = n.x || '';
   d.querySelector('.ph').appendChild(chips(n.p, n));
   d.insertBefore(thumbStrip(n), d.querySelector('.ph'));
@@ -2535,8 +2686,9 @@ function otherEntry(n, opt) {   // someone else's memo in the group: read only, 
   d.querySelector('.t').textContent = n.t || '';
   d.querySelector('.dx').textContent = n.x || '';
   d.querySelector('.dx').style.borderLeftColor = GR.color(n.by);
+  const nph = +n.ph || (Array.isArray(n.imd) ? n.imd.length : 0);
+  if (nph) d.querySelector('.ph').appendChild(el2('span', 'phnote', `写真 ${nph} 枚は、本人の手もとに`));
   d.querySelector('.ph').appendChild(chips(noteLinks(n), n));
-  d.insertBefore(thumbStrip({ ...n, im: [] }), d.querySelector('.ph'));
   d.querySelector('.tg').appendChild(tagChips(Array.isArray(n.tags) ? n.tags : []));
   return d;
 }
@@ -3000,6 +3152,7 @@ function renderDrawer() {
   } else if (dTab === 'walks') {
     const days = walkDays();
     if (!q) {
+      frag.appendChild(mkBtn('◫ 写真をまとめて入れる', 'btn addpics', pickBulk, 'その日の写真をまとめて選ぶと、撮った時刻で近いメモに振り分けます'));
       const ar = document.createElement('div'); ar.className = 'addrow';
       ar.appendChild(mkBtn('＋ 道のり（GPX）', 'btn ghost', pickGPX, 'ほかのアプリで記録した道のり（GPXファイル）を読みこむ'));
       frag.appendChild(ar);
@@ -3158,8 +3311,8 @@ $('#bLog').onclick = () => openDrawer('walks');
 $('#bUp').onclick = up;
 function whereText() {
   const cnt = `メモ ${Store.notes.size} 件・散歩 ${walkDays().length} 日`;
-  $('#mWhere').textContent = FB.user ? `記録はこの端末と、Googleアカウントのクラウドに保存されています（${cnt}）。スマホとPCで自動で同じになります。`
-    : FB.enabled() ? `記録は今、このブラウザの中だけに保存されています（${cnt}）。「Googleでログイン」をすると、クラウドにも保存されて、スマホとPCで同じになります。`
+  $('#mWhere').textContent = FB.user ? `記録はこの端末と、Googleアカウントのクラウドに保存されています（${cnt}）。スマホとPCで自動で同じになります。写真だけは、クラウドに送らず、この端末の中に置いています。`
+    : FB.enabled() ? `記録は今、このブラウザの中だけに保存されています（${cnt}）。「Googleでログイン」をすると、クラウドにも保存されて、スマホとPCで同じになります（写真だけは、ログインしてもこの端末の中です）。`
     : `記録はこのブラウザの中に保存されています（${cnt}）。ブラウザのデータを消すと記録も消えるので、時々「ファイルに保存」でバックアップしてください。スマホ→PCへ移すときも、書き出し→読み込みでOKです。`;
 }
 function a2hsText() {
@@ -3630,12 +3783,29 @@ function focusKeys(keys, fitRoute) {
 }
 
 /* ---------- data modal ---------- */
-let exportThumbs = {};   // read when DATA opens, so saving/sharing stays inside the tap
-function exportJSON() { return JSON.stringify({ ...Store.dump(), thumbs: exportThumbs, exported: new Date().toISOString() }, null, 1); }
+let exportThumbs = {}, exportSmall = {};   // read when DATA opens, so saving/sharing stays inside the tap
+const picMode = () => $('#mPics').value || 'big';
+function exportJSON() { const m = picMode(); return JSON.stringify({ ...Store.dump(), thumbs: m === 'big' ? exportThumbs : m === 'small' ? exportSmall : {}, exported: new Date().toISOString() }, null, 1); }
+const MB = n => n < 1e6 ? `${Math.max(.1, n / 1e6).toFixed(1)}MB` : `${(n / 1e6).toFixed(n < 1e7 ? 1 : 0)}MB`;
+let lastOut = 0; try { lastOut = +localStorage.getItem('sanpo-exported') || 0; } catch (e) {}
+function exported() {   // a file with the photos in it was made
+  if (picMode() === 'none') return;
+  lastOut = Date.now(); try { localStorage.setItem('sanpo-exported', String(lastOut)); } catch (e) {}
+  photoInfo();
+}
+async function photoInfo() {
+  const es = (await Thumbs.entries()).filter(([, v]) => v.d);
+  exportThumbs = {}; exportSmall = {}; let big = 0, small = 0;
+  for (const [k, v] of es) { exportThumbs[k] = v.d; big += v.d.length; const sm = v.s || (v.d.length <= 20000 ? v.d : null); if (sm) { exportSmall[k] = sm; small += sm.length; } }
+  const when = lastOut ? `最後にファイルにしたのは ${new Date(lastOut).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}。` : (es.length ? 'まだ一度もファイルにしていません。' : '');
+  $('#mPhotos').textContent = `この端末の写真 ${es.length} 枚（約 ${MB(big)}）。写真はクラウドにも、グループにも送らず、この端末の中だけに置いています。${when}`;
+  const o = $('#mPics').options; o[0].textContent = `写真もいっしょに（約 ${MB(big)}）`; o[1].textContent = `写真は小さくして（約 ${MB(small)}）`;
+  for (const [k, v] of es) if (!exportSmall[k]) Thumbs.small(k).then(sm => { if (sm) exportSmall[k] = sm; });   // old backups without a small copy
+}
 $('#verTxt').textContent = `SANPO LOG v${VERSION}（${VERSION_DATE}）`;
 $('#bData2').onclick = () => $('#bData').onclick();
 $('#bData').onclick = () => {
-  Thumbs.all().then(m => { exportThumbs = m; });
+  photoInfo();
   if (FB.enabled() && !FB.sdk) FB.load().then(() => Sync.paint()).catch(() => {});
   Sync.paint();
   whereText(); a2hsText();
@@ -3649,12 +3819,12 @@ $('#mDown').onclick = () => {
     a.href = URL.createObjectURL(new Blob([exportJSON()], { type: 'application/json' }));
     a.download = `sanpo-log-${today()}.json`;
     document.body.appendChild(a); a.click(); a.remove();
-    toast('保存しました（保存されない場合は「コピー」を）');
+    toast('保存しました（保存されない場合は「コピー」を）'); exported();
   } catch (e) { toast('この環境では保存できません。「コピー」を使ってください'); }
 };
 $('#mCopy').onclick = async () => {
   const s = exportJSON();
-  try { await navigator.clipboard.writeText(s); toast('コピーしました'); }
+  try { await navigator.clipboard.writeText(s); toast('コピーしました'); exported(); }
   catch (e) { $('#mText').value = s; $('#mText').select(); toast('下の欄を選択してコピーしてください'); }
 };
 function importText(s) {
@@ -3670,10 +3840,17 @@ function importText(s) {
 $('#mShare').onclick = async () => {
   try {
     const file = new File([exportJSON()], `sanpo-log-${today()}.json`, { type: 'application/json' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'SANPO LOG' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'SANPO LOG' }); exported(); }
     else $('#mDown').click();
   } catch (e) { if (e && e.name !== 'AbortError') toast('送れませんでした。「ファイルに保存」を使ってください'); }
 };
+// photos live only here: now and then, a quiet word about keeping a copy
+setTimeout(async () => {
+  let nudged = 0; try { nudged = +localStorage.getItem('sanpo-nudged') || 0; } catch (e) {}
+  if (Date.now() - nudged < 14 * 864e5 || Date.now() - lastOut < 30 * 864e5 || (await Thumbs.count()) < 5) return;
+  try { localStorage.setItem('sanpo-nudged', String(Date.now())); } catch (e) {}
+  toast('写真は、この端末の中だけにあります。ときどき DATA の「ファイルにする」で、のこしておくと安心です', 6000);
+}, 6000);
 let dragN = 0;
 addEventListener('dragenter', e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { dragN++; $('#drop').classList.add('on'); } });
 addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; $('#drop').classList.remove('on'); } });
