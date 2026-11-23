@@ -86,6 +86,7 @@ body.sp #bHome{padding-left:10px;padding-right:10px}
 #stats b{font-weight:300;color:var(--ink);font-size:22px;letter-spacing:.01em;font-family:var(--mono)}
 #stats>div>span{font:10px/1 var(--sans);letter-spacing:.08em;color:var(--mute)}
 #stats b em{font-style:normal;color:#b9b9b3;font-size:10px;letter-spacing:.06em;margin-left:2px}
+#stats #cT{font-size:34px;font-weight:300}
 #store{flex-basis:100%;flex-direction:row!important;justify-content:flex-end;align-items:center;gap:6px!important;font-size:9px;color:#a5a59f}
 #store i{width:5px;height:5px;border-radius:50%;background:#c9c9c3;display:inline-block}
 #store.cloud i{background:#2bb673}
@@ -97,6 +98,21 @@ body.sp #bHome{padding-left:10px;padding-right:10px}
 #scale{margin-top:10px;display:flex;align-items:center;gap:8px;font:9px/1 var(--mono);color:var(--mute)}
 #scale i{display:block;height:5px;border:1px solid var(--ink);border-top:0;transition:width .2s}
 #tools{position:fixed;right:calc(22px + var(--safe-r));bottom:calc(20px + var(--safe-b));display:flex;gap:6px}
+#bHome,#bUp,#bList{display:none!important}
+#first{display:none;position:fixed;left:0;right:0;bottom:calc(36px + var(--safe-b));z-index:6;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+#first>*{pointer-events:auto}
+body.first #first{display:flex;animation:fade .8s .9s both}
+#firstGo{min-height:58px;padding:0 34px;border-radius:29px;background:var(--accent);color:#fff;font-size:16px;letter-spacing:.12em;box-shadow:0 12px 30px rgba(255,79,0,.32);transition:transform var(--ui)}
+#firstGo:active{transform:scale(.96)}
+#firstGo[disabled]{opacity:.7}
+#firstMap{min-height:44px;padding:0 14px;font-size:13px;color:var(--mute);text-decoration:underline;text-underline-offset:4px}
+body.first #tools>*:not(#bData),body.first #fab,body.first #recBtn,body.first #hud,body.first #okPill{display:none!important}
+body.first #stats>div{visibility:hidden}
+#okPill{position:fixed;left:14px;bottom:calc(150px + var(--safe-b));z-index:5;min-height:44px;padding:0 18px;border-radius:22px;background:var(--ink);color:#fff;font-size:13px;letter-spacing:.04em;box-shadow:0 8px 22px rgba(0,0,0,.14);animation:fade .5s both}
+body:not(.sp) #okPill{left:auto;right:calc(22px + var(--safe-r));bottom:calc(72px + var(--safe-b))}
+body.sheet-open #okPill,body.wsheet-open #okPill,body.drawer-open #okPill,body.rec #okPill{display:none}   /* going up: the path at the top (日本 / 神奈川県 / …) */
+body.sp.rec #bLog{display:none}   /* on a walk: where am I, and ＋ */
+#crumb button{font-size:12px}
 .pill{font:10px/1 var(--mono);letter-spacing:.12em;padding:8px 11px 7px;border:1px solid var(--hair);background:rgba(255,255,255,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:999px;transition:border-color var(--ui),background var(--ui),color var(--ui)}
 .pill:hover,.pill.on{border-color:var(--ink);background:var(--ink);color:#fff}
 #hint{position:fixed;left:50%;bottom:calc(24px + var(--safe-b));transform:translateX(-50%);font:10px/1 var(--mono);color:var(--mute);letter-spacing:.1em;pointer-events:none;transition:opacity 1s;white-space:nowrap}
@@ -123,7 +139,8 @@ body.busy .brand i{animation:pulse .6s var(--ease) infinite}
 .toggle{margin-top:18px;display:inline-flex;align-items:center;gap:10px;font:11px/1 var(--mono);letter-spacing:.12em;padding:9px 14px 8px 10px;border:1px solid var(--ink);border-radius:999px;transition:background var(--ui),color var(--ui),border-color var(--ui)}
 .toggle i{width:12px;height:12px;border-radius:50%;border:1px solid currentColor;transition:background var(--ui),transform var(--panel)}
 .toggle.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.toggle.on i{background:#fff;transform:scale(.7)}
+.toggle i{display:grid;place-items:center;font:700 9px/1 var(--sans);font-style:normal}
+.toggle.on i{background:#fff;color:var(--accent);border-color:#fff;transform:scale(1.1)}
 .toggle[disabled]{cursor:default}
 .pbody{flex:1;overflow:auto;padding:0 24px 24px;-webkit-overflow-scrolling:touch}
 .rule{display:flex;align-items:center;gap:10px;font:10px/1 var(--mono);color:var(--mute);letter-spacing:.12em;margin:18px 0 6px}
@@ -166,6 +183,17 @@ body.sp #fWhenRow.open{display:flex}
 #fText{min-height:46px}
 #fDetail{min-height:120px;margin-top:8px}
 .form .links{margin:8px 0 0}
+.ftools{display:flex;gap:6px;align-items:center;margin-bottom:8px;min-width:0}
+.ftools .tl{flex:none;min-height:34px;padding:0 13px;border:1px solid var(--hair);border-radius:999px;font-size:12px;color:#555;background:#fff;white-space:nowrap;transition:border-color var(--ui),color var(--ui)}
+.ftools .tl.on,.ftools .tl[aria-expanded=true]{border-color:var(--ink);color:var(--ink)}
+.ftools .where{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#fWhereBox{display:none;margin:0 0 8px;padding:10px 12px;border:1px solid var(--hair);border-radius:12px;background:#fafaf7}
+#fWhereBox.open{display:block}
+#fWhereBox .scope{margin-bottom:0}
+#fWhereBox .loc{margin-top:8px}
+.compose{display:flex;gap:8px;align-items:stretch}
+.compose textarea{flex:1;min-width:0}
+.compose .btn{flex:none;align-self:flex-end;min-height:44px;padding:0 16px}
 .form input[type=url]{padding:8px 12px;font-size:13px}
 .form textarea:focus,.form input:focus{border-color:var(--ink);outline:none}
 .mini{flex:none;font:10px/1 var(--mono);letter-spacing:.1em;border:1px solid var(--hair);border-radius:8px;padding:11px 10px 10px}
@@ -395,6 +423,16 @@ body.rec .brand i{animation:pulse 1.6s infinite}
 #routeDlg .note{font-size:12px;color:var(--mute);margin-top:10px;line-height:1.7}
 .addrow{display:flex;gap:8px;margin:2px 0 16px}
 .btn.addpics{display:flex;width:100%;justify-content:center;align-items:center;min-height:44px;margin:2px 0 8px}
+#routeDlg .okstep{display:grid;grid-template-columns:28px minmax(0,1fr);gap:6px 10px;align-items:center;border-top:1px solid var(--hair);padding:14px 0}
+#routeDlg .okstep>b{grid-row:1/3;align-self:start;width:24px;height:24px;border-radius:50%;border:1px solid var(--ink);display:grid;place-items:center;font:500 12px/1 var(--mono)}
+#routeDlg .okstep>span{font-size:13px;color:#333}
+#routeDlg .okstep>.btn,#routeDlg .okstep>input{grid-column:2;justify-self:start}
+#routeDlg .okstep>input{width:100%;font:inherit;font-size:16px;min-height:44px;border:1px solid var(--hair);border-radius:10px;padding:0 12px}
+#routeDlg .fresh{color:var(--accent)!important}
+#routeDlg .big2 small{display:inline;font:inherit;font-size:14px;color:#555;margin-left:8px;letter-spacing:.04em}
+#routeDlg.ok{align-items:flex-end;background:rgba(239,239,234,.25);backdrop-filter:none;-webkit-backdrop-filter:none}
+#routeDlg.ok .card{box-shadow:0 -10px 40px rgba(0,0,0,.08)}
+@media (max-width:720px){#routeDlg.ok{padding:0}#routeDlg.ok .card{border-radius:16px 16px 0 0;max-height:62dvh;width:100%;padding-bottom:calc(16px + var(--safe-b))}}
 #routeDlg .acts{position:sticky;bottom:-26px;background:#fff;padding:12px 0 10px;margin-bottom:-10px;z-index:1}
 #routeDlg .bulk{margin-top:12px;border-top:1px solid var(--hair)}
 #routeDlg .brow{display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--hair)}
@@ -508,6 +546,7 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   label.btn{display:inline-flex;align-items:center}
   .entry .meta .tag.raw,.entry .meta .who{min-height:26px}
   .mini{min-height:44px;font-size:12px}
+  .ftools .tl{min-height:44px;font-size:13px}
   .loc{min-height:44px;font-size:11px}
   .form input[type=date],.form input[type=time],.edit input[type=date],.edit input[type=time]{min-height:44px;padding:0 12px}
   .toggle{min-height:40px}
@@ -534,8 +573,9 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   #stats>div:nth-child(1){grid-area:1/3}#stats>div:nth-child(2){grid-area:1/4}#stats>div:nth-child(3){grid-area:1/5}
   #stats>div{flex-direction:row;align-items:baseline;gap:4px}
   #stats>div>span{font-size:11px;letter-spacing:.02em}
-  #stats b{font-size:14px}
+  #stats b{font-size:13px;color:#555}
   #stats b em{font-size:11px}
+  #stats #cT{font-size:19px;color:var(--ink);font-weight:400}
   #store{grid-area:1/6;flex-basis:auto}
   #store span{display:none}
   #title{grid-area:2/1/3/-1;margin-top:8px;gap:10px}
@@ -637,16 +677,16 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <button class="brand" id="brand" title="日本全体へ"><i></i><span>SANPO LOG</span></button>
     <nav id="crumb"></nav>
     <div id="title"><h1 id="name">日本</h1><button id="memoHere" hidden>＋ メモ</button></div>
-    <div id="kind">JAPAN</div>
-    <button id="bData2" type="button" aria-label="データ（記録のありか・みんなで・バックアップ）"><i></i>DATA</button>
+    <div id="kind">日本</div>
+    <button id="bData2" type="button" aria-label="設定（スマホとPCをそろえる・みんなで・バックアップ）"><i></i>設定</button>
     <p id="intro" hidden></p>
   </div>
   <div id="stats">
     <div><span id="lP">県</span><b id="cP">0<em>/47</em></b></div>
     <div><span id="lM">市区町村</span><b id="cM">0</b></div>
     <div><span id="lT">町</span><b id="cT">0</b></div>
-    <div id="store"><i></i><span>LOCAL</span></div>
-    <div id="grp" hidden><span class="gseg"><button id="gvMe" title="自分の記録だけ">ME</button><button id="gvAll" title="グループみんなの地図">GROUP</button></span><span id="gLegend"></span></div>
+    <div id="store"><i></i><span>この端末に保存</span></div>
+    <div id="grp" hidden><span class="gseg"><button id="gvMe" title="自分の記録だけ">自分</button><button id="gvAll" title="グループみんなの地図">みんな</button></span><span id="gLegend"></span></div>
   </div>
 </header>
 
@@ -655,21 +695,23 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <div id="hCoord" class="mono">—</div>
   <div id="scale"><i></i><span></span></div>
 </div>
-<div id="hint">CLICK TO DIVE · DRAG TO MOVE · SCROLL TO ZOOM · ESC TO RISE</div>
+<div id="hint">押すと近づく ・ ドラッグで動かす ・ スクロールで拡大 ・ Esc でもどる</div>
 <div id="tools">
-  <button class="pill sp-only" id="bLoc" title="現在地">◎ いま</button>
+  <button class="pill sp-only" id="bLoc" title="いまいる場所を地図に出す">いまの場所</button>
   <button class="pill" id="bHome" title="日本全体へ" aria-label="日本全体へ"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 6.2 6 2l4.5 4.2M3 5v5h6V5"/></svg><span>HOME</span></button>
   <button class="pill" id="bUp" title="上の階層へ (Esc)">↑ もどる</button>
   <button class="pill" id="bList">LIST</button>
-  <button class="pill" id="bLog">LOG</button>
-  <button class="pill" id="bData">DATA</button>
+  <button class="pill" id="bLog" title="場所・散歩・タグの一覧">記録</button>
+  <button class="pill" id="bData">設定</button>
 </div>
 <div id="toast"></div>
+<div id="first"><button type="button" id="firstGo">いまいる町を、ぬる</button><button type="button" id="firstMap">地図から、えらぶ</button></div>
+<button type="button" id="okPill" hidden>おかえりなさい。今日をふりかえる ›</button>
 <div id="replay" aria-live="polite"><span class="clk">--:--</span><span class="txt"></span><button type="button" aria-label="たどるのをやめる">■</button></div>
 <div id="hlbar"><span></span><button aria-label="ハイライトを消す">×</button></div>
 <button id="recBtn" type="button" aria-label="さんぽの道のりを記録する"><i></i><span>さんぽ、はじめる</span></button>
 <button id="fab" aria-label="今いる場所でメモ">＋<small>ここでメモ</small></button>
-<div id="drop">DROP JSON / GPX</div>
+<div id="drop">ここに落とすと、読みこみます（JSON・GPX）</div>
 
 <aside id="sheet" class="panel" aria-label="メモ">
   <div class="phead">
@@ -684,15 +726,15 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <form class="form" id="sForm">
     <button type="button" id="fOpen" class="wbar"><i>＋</i><span>ここに、ひとこと</span></button>
     <button type="button" id="fFold" aria-label="たたんで、メモを読む"><svg viewBox="0 0 16 8" aria-hidden="true"><path d="M2 1.5 8 6.5l6-5"/></svg></button>
-    <div class="scope" id="fScope"></div>
+    <div class="ftools" id="fTools"><button type="button" class="tl" id="fPick" title="スマホの写真を、アプリにのこす">写真</button><button type="button" class="tl sp-only" id="fWhen" aria-label="日付と時刻を選ぶ">日付：今日</button><button type="button" class="tl where" id="fWhere" aria-expanded="false"></button></div>
+    <div id="fWhereBox"><div class="scope" id="fScope"></div><button type="button" class="loc sp-only" id="fLoc">いまの位置も付ける</button></div>
     <div class="row when" id="fWhenRow"><input type="date" id="fDate" required aria-label="日付"><input type="time" id="fTime" aria-label="時刻（空なら今の時刻）" title="空のままなら、今の時刻"><span class="kbd pc-only">⌘/CTRL + ENTER</span></div>
-    <textarea id="fText" rows="2" placeholder="ひとことメモ（#タグも書けます）"></textarea>
+    <div class="compose"><textarea id="fText" rows="2" placeholder="ひとこと（#タグも書けます）"></textarea><button class="btn" id="fSave" type="submit">のこす</button></div>
     <textarea id="fDetail" class="pc-only" placeholder="くわしく（道順、見つけたもの、天気、寄ったお店、気づいたこと…）"></textarea>
     <div id="fTags" class="pc-only"></div>
-    <div class="row links"><input id="fLinks" type="url" inputmode="url" autocomplete="off" placeholder="写真のリンク（Instagram・X）"><button type="button" class="mini sp-only" id="fPaste">貼る</button><button type="button" class="mini" id="fPick" title="スマホの写真を小さくして、アプリにのこす">◫ 写真</button></div>
+    <div class="row links" id="fLinksRow" hidden><input id="fLinks" type="url" inputmode="url" autocomplete="off" placeholder="写真のリンク（Instagram・X）"><button type="button" class="mini" id="fLinksX" aria-label="リンクをはずす">はずす</button></div>
     <div class="thumbs edit" id="fThumbs"></div>
     <button type="button" class="share" id="fShare" hidden><i></i><span></span></button>
-    <div class="row" style="margin:10px 0 0"><button class="btn" id="fSave" type="submit">のこす</button><button type="button" class="loc sp-only" id="fLoc">◉ 位置を付ける</button><button type="button" class="loc sp-only" id="fWhen" aria-label="日付と時刻を選ぶ">◷ 今日</button></div>
   </form>
 </aside>
 
@@ -710,7 +752,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <aside id="drawer" class="panel" aria-label="一覧">
   <div class="phead">
     <button class="x" data-close="drawer" aria-label="閉じる">×</button>
-    <div class="tabs"><button id="t_list" class="on">LIST</button><button id="t_walks">WALKS</button><button id="t_tags">TAGS</button><button id="t_group" hidden>GROUP</button></div>
+    <div class="tabs"><button id="t_list">場所</button><button id="t_walks" class="on">散歩</button><button id="t_tags">タグ</button><button id="t_group" hidden>みんな</button></div>
     <input class="filter" id="dFilter" placeholder="名前で絞り込み" autocomplete="off">
   </div>
   <div class="pbody" id="dBody"></div>
@@ -748,7 +790,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <h3 id="joinTitle">グループに招待されています</h3>
     <p id="joinText"></p>
     <div class="acts"><button class="btn" id="joinOk">参加する</button><button class="btn ghost" id="joinNo">やめる</button></div>
-    <small>参加しても、あなたのメモは「自分だけ」のままです。グループ名のタグを付けたメモだけが、グループの人に見えます（正確な位置はのぞく）。抜けるのはいつでも DATA からできます。</small>
+    <small>参加しても、あなたのメモは「自分だけ」のままです。グループ名のタグを付けたメモだけが、グループの人に見えます（正確な位置はのぞく）。抜けるのはいつでも 設定 からできます。</small>
   </div>
 </div>
 <div id="ig" role="dialog" aria-modal="true" aria-label="写真">
@@ -756,12 +798,12 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <div class="igcap" id="igCap"></div>
   <div class="igf" id="igBox"><div class="igl" id="igL"></div></div>
   <div class="igh" id="igH"></div>
-  <div class="igacts" id="igActs" hidden><a class="btn igopen" id="igGo" target="_blank" rel="noopener noreferrer">Instagram で見る ↗</a><button class="btn ghost" id="igKeep" type="button">◫ アプリにのこす</button></div>
+  <div class="igacts" id="igActs" hidden><a class="btn igopen" id="igGo" target="_blank" rel="noopener noreferrer">Instagram で見る ↗</a><button class="btn ghost" id="igKeep" type="button">アプリにのこす</button></div>
 </div>
 <div id="modal" role="dialog" aria-modal="true">
   <div class="card">
     <button class="x" data-close="modal" aria-label="閉じる" style="top:12px">×</button>
-    <h3>データ</h3>
+    <h3>設定</h3>
     <section class="mbox"><h4>記録のありか</h4>
     <p id="mWhere"></p>
     <div id="fbBox" hidden>
@@ -818,7 +860,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.4.0', VERSION_DATE = '2026.11.22';
+const VERSION = '2.5.0', VERSION_DATE = '2026.11.23';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -1193,16 +1235,16 @@ const Sync = {
     const st = $('#store'); if (!st) return;
     st.classList.remove('ok', 'busy', 'err');
     const hm = this.last ? new Date(this.last).toTimeString().slice(0, 5) : '';
-    let txt = 'SAVED · THIS BROWSER';
+    let txt = 'この端末に保存';
     if (FB.user) {
       const fm = FB.last ? new Date(FB.last).toTimeString().slice(0, 5) : '';
-      if (FB.state === 'busy') { txt = 'SYNCING…'; st.classList.add('busy'); }
-      else if (FB.state === 'err') { txt = 'SYNC ERROR'; st.classList.add('err'); }
-      else { txt = 'SYNCED · CLOUD' + (fm ? ' ' + fm : ''); st.classList.add('ok'); }
+      if (FB.state === 'busy') { txt = '同期しています…'; st.classList.add('busy'); }
+      else if (FB.state === 'err') { txt = '同期できませんでした'; st.classList.add('err'); }
+      else { txt = '同期しました' + (fm ? ' ' + fm : ''); st.classList.add('ok'); }
     } else if (this.on()) {
-      if (this.state === 'busy') { txt = 'SYNCING…'; st.classList.add('busy'); }
-      else if (this.state === 'err') { txt = 'SYNC ERROR'; st.classList.add('err'); }
-      else { txt = 'SYNCED · GITHUB' + (hm ? ' ' + hm : ''); st.classList.add('ok'); }
+      if (this.state === 'busy') { txt = '同期しています…'; st.classList.add('busy'); }
+      else if (this.state === 'err') { txt = '同期できませんでした'; st.classList.add('err'); }
+      else { txt = '同期しました（GitHub）' + (hm ? ' ' + hm : ''); st.classList.add('ok'); }
     }
     st.querySelector('span').textContent = txt;
     const b2 = $('#bData2'); if (b2) { b2.className = st.className; b2.title = txt; }
@@ -1918,7 +1960,7 @@ function tick(id, val, tot) {
 let TOT = { m: 0, t: 0 };
 function logBadge() {
   const n = IX.raw;
-  $('#bLog').textContent = W >= 720 && n ? `LOG · メモだけ ${n}` : 'LOG';
+  $('#bLog').textContent = '記録';
 }
 function counters() {
   logBadge();
@@ -2047,13 +2089,13 @@ function enter(level, pc, mc) {
 function updateHeader() {
   const c = $('#crumb'); c.innerHTML = '';
   const add = (label, h) => { const b = document.createElement('button'); b.textContent = label; b.onclick = () => go(h); c.appendChild(b); const s = document.createElement('span'); s.textContent = '/'; c.appendChild(s); };
-  let name = '日本', kind = 'JAPAN · 47 PREFECTURES';
-  if (S.level !== 'japan') add('JAPAN', '');
-  if (S.level === 'pref') { name = D.prefInfo[S.pc].n; kind = `PREF ${S.pc} · ${D.pref[S.pc].feats.length} CITIES`; }
+  let name = '日本', kind = '47 都道府県';
+  if (S.level !== 'japan') add('日本', '');
+  if (S.level === 'pref') { name = D.prefInfo[S.pc].n; kind = `${D.pref[S.pc].feats.length} 市区町村`; }
   if (S.level === 'muni') {
     add(D.prefInfo[S.pc].n, S.pc);
     name = D.muni[S.mc].n;
-    kind = `CITY ${S.mc} · ${(D.towns[S.mc] || []).length} TOWNS`;
+    kind = `${(D.towns[S.mc] || []).length} 町`;
   }
   const n = $('#name');
   n.innerHTML = '';
@@ -2066,10 +2108,29 @@ function updateHeader() {
   refreshMemoBtn(); intro();
 }
 function intro() {
-  const p = $('#intro'), show = S.level === 'japan' && !Store.notes.size && !Store.places.size && !GR.showing();
+  const empty = !Store.notes.size && !Store.places.size && !GR.showing();
+  let started = false; try { started = !!localStorage.getItem('sanpo-started'); } catch (e) {}
+  const first = empty && !started;   // the very first time: one button only
+  document.body.classList.toggle('first', first);
+  const p = $('#intro'), show = S.level === 'japan' && empty;
   p.hidden = !show;
-  if (show) p.innerHTML = '<b>歩いた町が、ぬられていく。</b><br>' + (W < 720 ? '右下の ＋ で、いまいる町にひとこと。' : '地図を押して町までおりると、ひとこと残せます。');
+  if (show) p.innerHTML = '<b>歩いた町が、ぬられていく。</b><br>' + (first ? 'まずは、いまいる町から。' : W < 720 ? '右下の ＋ で、いまいる町にひとこと。' : '地図を押して町までおりると、ひとこと残せます。');
 }
+function started() { try { localStorage.setItem('sanpo-started', '1'); } catch (e) {} intro(); }
+async function firstTown() {
+  if (locBusy) return;
+  const b = $('#firstGo'); b.disabled = true; b.textContent = 'いまいる町を、さがしています…';
+  locBusy = true;
+  try {
+    const r = await locate();
+    started();
+    jumpTo(r.key);
+    setTimeout(() => { if (!isV(r.key)) Store.setVisited(r.key, true); burst(r.key); toast(`これが、あなたの1町目。${r.key[0] === 't' ? r.name : placeName(r.key)}`, 4200); }, 1300);
+  } catch (e) { geoErr(e, firstTown); }
+  finally { locBusy = false; b.disabled = false; b.textContent = 'いまいる町を、ぬる'; }
+}
+$('#firstGo').onclick = firstTown;
+$('#firstMap').onclick = () => { started(); toast('地図を押して、歩いた町までおりてください', 3200); };
 function refreshMemoBtn() {
   if (S.level === 'japan') return;
   const k = S.level === 'pref' ? 'p' + S.pc : 'm' + S.mc;
@@ -2129,18 +2190,18 @@ function selInfo() {
   if (s.lv === 't') {
     const f = GR.showing() && GX.first.get(s.key);
     const stat = f ? 'ここを歩いた人　' + [...f.entries()].sort((a, b) => a[1] < b[1] ? -1 : 1).map(([u, d]) => `${GR.name(u)} ${d.slice(5).replace('-', '.')}`).join('　') : '';
-    return { eyebrow: `TOWN · ${D.prefInfo[pc].n} ${D.muni[s.mc].n}`, ...info, stat };
+    return { eyebrow: `${D.prefInfo[pc].n} ${D.muni[s.mc].n}`, ...info, stat };
   }
   if (s.lv === 'm') {
     const mc = s.key.slice(1), a = AG.muni.get(mc), T = D.pref[pc].T[mc] || 0;
-    return { eyebrow: `CITY ${mc} · ${D.prefInfo[pc].n}`, ...info, stat: T ? `歩いた町 ${a ? a.towns : 0} / ${T}` : '' };
+    return { eyebrow: D.prefInfo[pc].n, ...info, stat: T ? `歩いた町 ${a ? a.towns : 0} / ${T}` : '' };
   }
   const a = AG.pref.get(pc), P = D.prefInfo[pc];
-  return { eyebrow: `PREF ${pc}`, ...info, stat: `歩いた市区町村 ${a ? a.munis.size : 0} / ${P.m}　町 ${a ? a.towns : 0} / ${P.t.toLocaleString('en')}` };
+  return { eyebrow: '日本', ...info, stat: `歩いた市区町村 ${a ? a.munis.size : 0} / ${P.m}　町 ${a ? a.towns : 0} / ${P.t.toLocaleString('en')}` };
 }
 const fmtLL = ll => `${Math.abs(ll[1]).toFixed(4)}°${ll[1] >= 0 ? 'N' : 'S'}  ${ll[0].toFixed(4)}°E`;
 const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-const fmtDay = d => d.replace(/-/g, '.') + ' ' + WD[new Date(d + 'T12:00:00').getDay()];
+const fmtDay = d => { const [y, m, dd] = d.split('-'); return `${y === today().slice(0, 4) ? '' : y + '年'}${+m}月${+dd}日（${'日月火水木金土'[new Date(d + 'T12:00:00').getDay()]}）`; };
 function openSheet() {
   if (!S.sel) return;
   closePanel('wsheet', true);
@@ -2170,7 +2231,7 @@ function openSheet() {
 let formKey = null;
 function scopeChips(box, keys, cur, onPick) {
   box.innerHTML = '';
-  const lab = document.createElement('span'); lab.textContent = '記録先'; box.appendChild(lab);
+  const lab = document.createElement('span'); lab.textContent = '場所'; box.appendChild(lab);
   keys.forEach(k => {
     const b = document.createElement('button'); b.type = 'button';
     b.className = 'sc' + (k === cur ? ' on' : '');
@@ -2181,8 +2242,17 @@ function scopeChips(box, keys, cur, onPick) {
 }
 function buildScope() {
   formKey = S.sel.key;
-  scopeChips($('#fScope'), ancestors(S.sel.key), formKey, k => { formKey = k; });
+  scopeChips($('#fScope'), ancestors(S.sel.key), formKey, k => { formKey = k; paintWhere(); });
+  $('#fWhereBox').classList.remove('open'); paintWhere();
 }
+function paintWhere() {   // 場所：稲村ガ崎四丁目 ▾ — where this memo goes (and whether it has your position)
+  const b = $('#fWhere'); if (!b || !formKey) return;
+  b.textContent = `場所：${placeName(formKey) || ''}${formLoc ? '・位置あり' : ''} ▾`;
+  b.setAttribute('aria-expanded', $('#fWhereBox').classList.contains('open') ? 'true' : 'false');
+}
+$('#fWhere').onclick = () => { $('#fWhereBox').classList.toggle('open'); paintWhere(); };
+function paintLinks() { $('#fLinksRow').hidden = !$('#fLinks').value.trim(); }
+$('#fLinksX').onclick = () => { $('#fLinks').value = ''; paintLinks(); };
 
 /* ---- tag input: chips + suggestions (used tags first, then a few starters) ---- */
 function tagInput(host, init) {
@@ -2294,7 +2364,7 @@ const IG = {
     const svc = p.svc === 'x' ? 'X' : 'Instagram';
     $('#igGo').href = p.url; $('#igGo').textContent = `${svc} で見る ↗`;
     hint.textContent = `出てこないときは、鍵をかけた${p.svc === 'x' ? 'ポスト' : '投稿'}かもしれません。鍵つきのものは ${svc} のきまりで、ここには出せません（自分のものでも）。「${svc} で見る」で開いて、見終わったら${W < 720 ? '左上の ◀ で' : 'このタブに'}戻ってください。`;
-    L.textContent = 'LOADING…';
+    L.textContent = '読みこんでいます…';
     // a new frame each time: changing an iframe's src would add a Back-button step
     const f = document.createElement('iframe');
     f.title = p.svc === 'x' ? 'X' : 'Instagram'; f.allow = 'autoplay; encrypted-media; picture-in-picture; clipboard-write'; f.allowFullscreen = true;
@@ -2527,7 +2597,7 @@ function photoHome(x) {   // the memo this photo most likely belongs to: the sam
   }
   return best;
 }
-function pickBulk() {   // must start inside a tap
+function pickBulk(onDone) {   // must start inside a tap
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = true; inp.hidden = true;
   document.body.appendChild(inp);
   inp.onchange = async () => {
@@ -2542,11 +2612,11 @@ function pickBulk() {   // must start inside a tap
     if (ph.some(x => x.ll)) toast('撮った場所を調べています…', 8000);
     for (const x of ph) if (x.ll) { try { x.k = (await townsPassed([[[x.ll[0], x.ll[1]]]]))[0] || null; } catch (e) {} }
     clearTimeout(toastT); $('#toast').classList.remove('show');
-    bulkDlg(ph, all.length - fs.length);
+    bulkDlg(ph, all.length - fs.length, onDone);
   };
   inp.click();
 }
-function bulkDlg(ph, over) {
+function bulkDlg(ph, over, onDone) {
   ph.sort((a, b) => (a.t || '9999') < (b.t || '9999') ? -1 : (a.t || '9999') > (b.t || '9999') ? 1 : 0);   // unknown times last
   const rows = [], list = el2('div', 'bulk');
   const recent = [...Store.notes.values()].sort(newestFirst).slice(0, 20);
@@ -2593,15 +2663,57 @@ function bulkDlg(ph, over) {
       }
     }
     toast(`写真 ${saved} 枚を、メモにのこしました` + (full ? `（${full} 枚は、メモがいっぱいでした。1つのメモに8枚まで）` : ''), 3600);
+    if (onDone) onDone();
   };
   routeDlg('写真を、メモへ', [
     `${ph.length} 枚。撮った時刻で、近いメモに分けました。ちがっていたら、えらびなおしてください。`,
     over ? el2('p', '', `一度に入れられるのは40枚までです（のこりの ${over} 枚は、もう一度どうぞ）。`) : null,
     list,
     el2('p', '', '写真は、この端末の中だけに置きます。写真に入っていた場所の情報は、分けるのに使ったら消します。')
-  ], [['のこす', 'btn', go], ['やめる', 'btn ghost', closeRoute]]);
+  ], [['のこす', 'btn', go], ['やめる', 'btn ghost', () => { closeRoute(); if (onDone) onDone(); }]]);
   paint();
 }
+// the towns of a day, and the ones walked for the very first time that day
+function dayTowns(d) {
+  const set = new Set(); for (const n of IX.byDate.get(d) || []) if (n.k[0] === 't') set.add(n.k);
+  const w = Store.walks.get(d); for (const k of (w && w.tw) || []) set.add(k);
+  return [...set];
+}
+function firstDays() {
+  const m = new Map(), put = (k, d) => { if (k[0] !== 't') return; const p = m.get(k); if (!p || d < p) m.set(k, d); };
+  for (const n of Store.notes.values()) put(n.k, n.d);
+  for (const [d, w] of Store.walks) for (const k of w.tw || []) put(k, d);
+  return m;
+}
+function okaeri(d) {
+  d = d || today();
+  const all = dayTowns(d), fd = firstDays(), fresh = all.filter(k => fd.get(k) === d), w = Store.walks.get(d) || {};
+  photoInfo();   // so 「ファイルにのこす」 is ready inside the tap
+  const big = el2('div', 'big2', String(all.length)); big.appendChild(el2('small', '', '町を歩きました'));
+  const body = [big];
+  if (fresh.length) body.push(el2('p', 'fresh', `はじめての町 ${fresh.length}：` + fresh.slice(0, 8).map(k => placeName(k)).join('、') + (fresh.length > 8 ? ` ほか ${fresh.length - 8}` : '')));
+  const step = (n, title, node) => { const r = el2('div', 'okstep'); r.append(el2('b', '', n), el2('span', '', title)); if (node) r.appendChild(node); return r; };
+  const ti = el2('input'); ti.type = 'text'; ti.maxLength = 80; ti.value = w.title || ''; ti.placeholder = autoTitle(d);
+  const keepTitle = () => { const v = ti.value.trim(); if (v !== ((Store.walks.get(d) || {}).title || '')) Store.putWalk(d, { title: v }); };
+  ti.onchange = keepTitle;
+  body.push(
+    step('1', '今日の写真を、まとめて入れる', mkBtn('写真をまとめて入れる', 'btn ghost', () => { keepTitle(); pickBulk(() => okaeri(d)); })),
+    step('2', 'この日に、名前をつける', ti),
+    step('3', '写真ごと、ファイルにのこす', mkBtn('ファイルにのこす', 'btn ghost', () => { keepTitle(); $('#mPics').value = 'big'; (W < 720 ? $('#mShare') : $('#mDown')).onclick(); })));
+  routeDlg('おかえりなさい', body, [['おわる', 'btn', () => { keepTitle(); closeRoute(); openWalk(d); }]]);
+  $('#routeDlg').classList.add('ok');
+  fresh.slice(0, 12).forEach((k, i) => setTimeout(() => burst(k), 600 + i * 380));   // the new towns light up, one by one
+  try { localStorage.setItem('sanpo-okaeri', d); } catch (e) {}
+  $('#okPill').hidden = true;
+}
+function okaeriPill() {   // in the evening of a day with something written: a quiet way in
+  let seen = ''; try { seen = localStorage.getItem('sanpo-okaeri') || ''; } catch (e) {}
+  const d = today(), has = (IX.byDate.get(d) || []).length || ((Store.walks.get(d) || {}).trk);
+  $('#okPill').hidden = !(has && new Date().getHours() >= 16 && seen !== d && !Rec.st && !document.body.classList.contains('first'));
+}
+$('#okPill').onclick = () => { const d = today(); openWalk(d); setTimeout(() => okaeri(d), 700); };
+document.addEventListener('visibilitychange', () => { if (!document.hidden) okaeriPill(); });
+setTimeout(okaeriPill, 2500);
 async function saveThumbs(ds) { const ids = []; for (const o of ds) { const id = Thumbs.newId(); await Thumbs.put(id, o.d || o, false, o.s); ids.push(id); } return ids; }
 function tagChips(tags) {
   const f = document.createDocumentFragment();
@@ -2623,9 +2735,8 @@ function entryNode(n, opt = {}) {
   d.querySelector('.d').textContent = (opt.timeOnly ? (n.at || '--:--') : n.d.replace(/-/g, '.') + (n.at ? '  ' + n.at : ''));
   const meta = d.querySelector('.meta');
   if (!opt.timeOnly) meta.appendChild(mkBtn('この日の散歩 ›', 'tag', () => openWalk(n.d), 'この日の散歩を見る'));
-  if (n.loc) meta.appendChild(mkBtn('◉ 位置あり', 'tag', () => showPin(n.loc, n.k), fmtLoc(n.loc) + '（押すと地図で見る）'));
+  if (n.loc) meta.appendChild(mkBtn('地図で見る', 'tag', () => showPin(n.loc, n.k), fmtLoc(n.loc) + '（押すと、書いた場所を地図で見る）'));
   if (GR.on() && GR.isShared(n)) { const sh = whoChip(GR.me()); sh.lastChild.textContent = '共有中'; sh.title = `#${GR.gtag()} でグループに共有しています`; meta.appendChild(sh); }
-  if (!n.x) { const t = document.createElement('span'); t.className = 'tag raw'; t.textContent = 'メモだけ'; t.title = 'くわしい文章は、まだ書いていません'; meta.appendChild(t); }
   const pl = d.querySelector('.pl');
   if (opt.place) { pl.appendChild(mkBtn(placeLabel(n.k) + ' ›', 'plink', () => jumpTo(n.k))); } else pl.remove();
   d.querySelector('.t').textContent = n.t || (n.x ? '' : (n.im || []).length ? '（写真だけ）' : '（メモなし）');
@@ -2667,7 +2778,7 @@ function addPhotoUI(node, n) {
       box.appendChild(inp); box.appendChild(ok); inp.focus();
     }
   });
-  const pick = mkBtn('◫ 写真を選ぶ', 'btn ghost', () => pickPhotos(8 - ((Store.notes.get(n.id) || n).im || []).length, async ds => {
+  const pick = mkBtn('写真を選ぶ', 'btn ghost', () => pickPhotos(8 - ((Store.notes.get(n.id) || n).im || []).length, async ds => {
     const ids = await saveThumbs(ds), cur = Store.notes.get(n.id) || n;
     Store.putNote({ ...cur, im: [...(cur.im || []), ...ids].slice(0, 8) });
     toast('写真をのこしました');
@@ -2713,7 +2824,7 @@ function editEntry(node, n) {
   const paintIm = () => {
     const box = q('.eI'); box.innerHTML = '';
     const st = thumbStrip({ im }, id => { im = im.filter(v => v !== id); gone.push(id); paintIm(); }); st.classList.add('edit'); box.appendChild(st);
-    if (im.length < 8) box.appendChild(mkBtn('◫ 写真を選ぶ', 'btn ghost', () => pickPhotos(8 - im.length, async ds => { im = im.concat(await saveThumbs(ds)).slice(0, 8); paintIm(); })));
+    if (im.length < 8) box.appendChild(mkBtn('写真を選ぶ', 'btn ghost', () => pickPhotos(8 - im.length, async ds => { im = im.concat(await saveThumbs(ds)).slice(0, 8); paintIm(); })));
   };
   paintIm();
   const del = q('.eDel');
@@ -2740,9 +2851,10 @@ function renderEntries() {
   tg.classList.toggle('on', isV(k));
   tg.disabled = own.length > 0;
   tg.title = own.length ? 'メモがあるので「行った」になっています' : '';
-  tg.querySelector('span').textContent = isV(k) ? '行った' : 'まだ';
+  tg.querySelector('span').textContent = '行った'; tg.querySelector('i').textContent = isV(k) ? '✓' : ''; tg.setAttribute('aria-pressed', isV(k) ? 'true' : 'false');
+  if (!own.length) tg.title = isV(k) ? '押すと「まだ」にもどります' : '歩いたことがあれば、押してください';
   const raw = own.filter(x => !x.x).length;
-  $('#sCount').textContent = `メモ ${own.length}` + (raw && W >= 720 ? ` · メモだけ ${raw}` : '');
+  $('#sCount').textContent = `メモ ${own.length}`;
   photosBtn($('#sCount'), own);
   const box = $('#sEntries'); box.innerHTML = '';
   if (!own.length) box.innerHTML = `<div class="empty">${'まだ、この' + (k[0] === 't' ? '町' : k[0] === 'p' ? '県' : '市') + 'の話はありません。'}<br>${W < 720 ? '下の欄に、ひとこと。' : '下の「新しいメモを書く」から、ひとこと。'}</div>`;
@@ -2831,7 +2943,7 @@ $('#sForm').onsubmit = ev => {
   Store.putNote({ id: nid, k, d, at, t, x, p: links, loc: formLoc, tags });
   if (ds.length) saveThumbs(ds).then(im => { const n = Store.notes.get(nid); if (n) Store.putNote({ ...n, im }); });
   spread(sp, pt);
-  $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; fTags.set([]); formThumbs = []; paintFormThumbs();
+  $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; paintLinks(); $('#fWhereBox').classList.remove('open'); fTags.set([]); formThumbs = []; paintFormThumbs();
   setFormLoc(null);
   $('#fTime').value = ''; if (!pc) { $('#fDate').value = today(); $('#fWhenRow').classList.remove('open'); } paintWhen();
   toast((d !== today() ? `${d.slice(5).replace('-', '/')}の分として、` : '') + (k === S.sel.key ? 'のこしました' : `${placeName(k)} にのこしました`) + (shareOn() ? `（#${GR.gtag()} のみんなにも）` : ''));
@@ -2854,22 +2966,15 @@ $('#fText').addEventListener('paste', e => {   // pasting a link into the memo p
   e.preventDefault();
   $('#fLinks').value = parseLinks([$('#fLinks').value, ...P.links].join(' ')).join(' ');
   if (P.text) document.execCommand('insertText', false, P.text);
-  toast('リンクは写真の欄に入れました');
+  paintLinks(); toast('リンクは、写真のリンクとして付けました');
 });
 function paintWhen() {
   const d = $('#fDate').value || today(), t = $('#fTime').value, open = $('#fWhenRow').classList.contains('open');
-  const b = $('#fWhen'); b.textContent = '◷ ' + (d === today() ? '今日' : d.slice(5).replace('-', '/')) + (t ? ' ' + t : '');
+  const b = $('#fWhen'); b.textContent = '日付：' + (d === today() ? '今日' : d.slice(5).replace('-', '/')) + (t ? ' ' + t : '');
   b.classList.toggle('on', open && (d !== today() || !!t));
 }
 $('#fWhen').onclick = () => { const r = $('#fWhenRow'); r.classList.toggle('open'); if (!$('#fDate').value) $('#fDate').value = today(); paintWhen(); if (r.classList.contains('open')) $('#fDate').focus(); };
 ['#fDate', '#fTime'].forEach(id => $(id).addEventListener('input', paintWhen));
-$('#fPaste').onclick = async () => {
-  try {
-    const l = parseLinks(await navigator.clipboard.readText());
-    if (l.length) { $('#fLinks').value = [...new Set(parseLinks($('#fLinks').value).concat(l))].join(' '); toast('リンクを貼り付けました'); }
-    else toast('コピーした内容にリンクがありません');
-  } catch (e) { $('#fLinks').focus(); toast('欄を長押しして貼り付けてください'); }
-};
 
 /* the moment of saving: a newly walked place fills with orange from where you stood (0.64s) */
 function placePoint(k, loc) {
@@ -2933,11 +3038,12 @@ function setFormLoc(l) {
   formLoc = l;
   const b = $('#fLoc');
   b.classList.toggle('on', !!l);
-  b.textContent = l ? '◉ ' + fmtLoc(l) : '◉ 位置を付ける';
+  b.textContent = l ? `位置あり ±${Math.round(l[2] || 0)}m（押すと、はずす）` : 'いまの位置も付ける';
+  paintWhere();
 }
 $('#fLoc').onclick = async () => {
   if (formLoc) return setFormLoc(null);
-  $('#fLoc').textContent = '◉ 取得中…';
+  $('#fLoc').textContent = '位置を調べています…';
   try { const p = await getPos(); setFormLoc([+p.lat.toFixed(5), +p.lng.toFixed(5), Math.round(p.acc)]); }
   catch (e) { setFormLoc(null); geoErr(e, () => $('#fLoc').onclick()); }
 };
@@ -3070,7 +3176,8 @@ async function goHere(withMemo) {
   toast('現在地を確認しています…');
   try {
     const r = await locate();
-    toast('◉ ' + D.muni[r.mc].n + ' ' + (r.key[0] === 't' ? r.name : ''));
+    started();
+    toast('いまの場所：' + D.muni[r.mc].n + ' ' + (r.key[0] === 't' ? r.name : ''));
     if (withMemo) { quickNext = r.loc; jumpTo(r.key); }
     else {
       origin = null;
@@ -3086,7 +3193,7 @@ $('#fab').onclick = () => goHere(true);
 $('#bLoc').onclick = () => goHere(false);
 
 /* ---------- drawer: LIST · WALKS · TAGS ---------- */
-let dTab = 'list', dRaw = false, dTag = null;
+let dTab = 'walks', dRaw = false, dTag = null;
 function walkDays() {
   const s = new Set([...IX.byDate.keys(), ...Store.walks.keys()]);
   return [...s].sort().reverse();
@@ -3144,7 +3251,7 @@ function renderDrawer() {
     else if (townData) rows = townData.towns.map((t, i) => ({ n: t.n, c: (IX.byPlace.get(t.k) || []).length || '', v: visK(t.k), go: () => selectTown(i, true) }));
     rows.filter(r => !q || r.n.includes(q)).slice(0, 3000).forEach(r => {
       const b = document.createElement('button'); b.className = 'li' + (r.v ? ' v' : '');
-      b.innerHTML = `<span class="n"><i></i><span></span>${r.memo ? '<em>MEMO</em>' : ''}</span><span class="c"></span>` + (r.f !== undefined ? `<span class="b"><i style="width:${Math.round(r.f * 100)}%"></i></span>` : '');
+      b.innerHTML = `<span class="n"><i></i><span></span>${r.memo ? '<em>メモ</em>' : ''}</span><span class="c"></span>` + (r.f !== undefined ? `<span class="b"><i style="width:${Math.round(r.f * 100)}%"></i></span>` : '');
       b.querySelector('.n span').textContent = r.n; b.querySelector('.c').textContent = r.c;
       b.onclick = () => { r.go(); if (W < 720) closePanel('drawer'); };
       frag.appendChild(b);
@@ -3152,7 +3259,7 @@ function renderDrawer() {
   } else if (dTab === 'walks') {
     const days = walkDays();
     if (!q) {
-      frag.appendChild(mkBtn('◫ 写真をまとめて入れる', 'btn addpics', pickBulk, 'その日の写真をまとめて選ぶと、撮った時刻で近いメモに振り分けます'));
+      frag.appendChild(mkBtn('写真をまとめて入れる', 'btn addpics', () => pickBulk(), 'その日の写真をまとめて選ぶと、撮った時刻で近いメモに振り分けます'));
       const ar = document.createElement('div'); ar.className = 'addrow';
       ar.appendChild(mkBtn('＋ 道のり（GPX）', 'btn ghost', pickGPX, 'ほかのアプリで記録した道のり（GPXファイル）を読みこむ'));
       frag.appendChild(ar);
@@ -3164,7 +3271,7 @@ function renderDrawer() {
     }
     const nraw = days.filter(d => walkStat(d).raw).length;
     const seg = document.createElement('div'); seg.className = 'seg';
-    seg.innerHTML = `<button data-r="0">すべて ${days.length}</button><button data-r="1">メモだけの日 ${nraw}</button>`;
+    seg.innerHTML = `<button data-r="0">すべて ${days.length}</button><button data-r="1">まだ書いていない日 ${nraw}</button>`;
     seg.querySelectorAll('button').forEach(b => { b.classList.toggle('on', +b.dataset.r === +dRaw); b.onclick = () => { dRaw = !!+b.dataset.r; renderDrawer(); }; });
     frag.appendChild(seg);
     let month = '';
@@ -3175,7 +3282,7 @@ function renderDrawer() {
         (IX.byDate.get(d) || []).some(n => (n.t || '').includes(q) || (n.x || '').includes(q) || placeLabel(n.k).includes(q) || (n.tags || []).some(t => t.includes(q)));
     };
     const list = days.filter(d => (!dRaw || walkStat(d).raw) && hit(d));
-    if (!list.length) empty(q ? '見つかりませんでした' : dRaw ? 'メモだけの日はありません。ぜんぶ書けています' : 'まだ散歩の記録はありません');
+    if (!list.length) empty(q ? '見つかりませんでした' : dRaw ? 'まだ書いていない日はありません。ぜんぶ書けています' : 'まだ散歩の記録はありません');
     list.forEach(d => {
       if (d.slice(0, 7) !== month) { month = d.slice(0, 7); const r = document.createElement('div'); r.className = 'rule'; r.textContent = month.replace('-', '.'); frag.appendChild(r); }
       const w = Store.walks.get(d) || {}, st = walkStat(d);
@@ -3185,14 +3292,13 @@ function renderDrawer() {
       b.querySelector('.d b').textContent = (w.km ? fmtKm(w.km) + ' · ' : '') + `メモ ${st.ns.length}` + (st.towns ? ` · 町 ${st.towns}` : '');
       const ti = b.querySelector('.ti'); ti.textContent = w.title || autoTitle(d); ti.classList.toggle('auto', !w.title);
       const tg = b.querySelector('.tags');
-      if (st.raw) { const s = document.createElement('span'); s.className = 'tag raw'; s.textContent = 'メモだけ ' + st.raw; tg.appendChild(s); }
       if (w.sum) { const s = document.createElement('span'); s.className = 'tag'; s.textContent = 'まとめ済'; tg.appendChild(s); }
       (w.tags || []).forEach(t => { const s = document.createElement('span'); s.className = 'tag'; s.textContent = '#' + t; tg.appendChild(s); });
       b.onclick = () => openWalk(d);
       frag.appendChild(b);
     });
   } else if (dTab === 'group') {
-    if (!GR.on() || !GX) empty('グループに入っていません。DATA からグループを作るか、招待リンクを開いてください。');
+    if (!GR.on() || !GX) empty('グループに入っていません。設定からグループを作るか、招待リンクを開いてください。');
     else {
       const me = GR.me();
       const all = [...[...Store.notes.values()].filter(n => GR.isShared(n)).map(n => ({ ...n, by: me })), ...GX.feed].sort(newestFirst)
@@ -3219,7 +3325,7 @@ function renderDrawer() {
   } else {
     const t = dTag;
     const head = document.createElement('div'); head.className = 'taghead';
-    head.appendChild(mkBtn('← TAGS', 'back', () => { dTag = null; if (HL && HL.kind === 'tag') setHighlight(null); renderDrawer(); }));
+    head.appendChild(mkBtn('← タグ', 'back', () => { dTag = null; if (HL && HL.kind === 'tag') setHighlight(null); renderDrawer(); }));
     const h = document.createElement('div'); h.className = 'big'; h.textContent = '#' + t; head.appendChild(h);
     const acts = document.createElement('div'); acts.className = 'acts';
     acts.appendChild(mkBtn('名前を変える', 'tag', () => {
@@ -3272,7 +3378,7 @@ function openDrawer(tab) {
 function syncTools() {
   const open = $('#drawer').classList.contains('open');
   $('#bList').classList.toggle('on', open && dTab === 'list');
-  $('#bLog').classList.toggle('on', open && dTab !== 'list');
+  $('#bLog').classList.toggle('on', open);
 }
 function closePanel(id, quiet) {
   const p = $('#' + id); p.classList.remove('open');
@@ -3307,7 +3413,7 @@ document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closePa
 ['list', 'walks', 'tags', 'group'].forEach(t => $('#t_' + t).onclick = () => { dTab = t; if (t !== 'tags') dTag = null; $('#dFilter').value = ''; renderDrawer(); syncTools(); });
 $('#dFilter').oninput = () => renderDrawer();
 $('#bList').onclick = () => openDrawer('list');
-$('#bLog').onclick = () => openDrawer('walks');
+$('#bLog').onclick = () => $('#drawer').classList.contains('open') ? closePanel('drawer') : openDrawer(dTab || 'walks');
 $('#bUp').onclick = up;
 function whereText() {
   const cnt = `メモ ${Store.notes.size} 件・散歩 ${walkDays().length} 日`;
@@ -3340,14 +3446,14 @@ function openWalk(d) {
   $('#wsheet').classList.add('open'); document.body.classList.add('wsheet-open');
   const ns = IX.byDate.get(d) || [], w = Store.walks.get(d) || {};
   const keys = uniq([...ns.map(n => n.k), ...(w.tw || [])]);   // towns passed on the route count too
-  setHighlight({ kind: 'walk', label: 'WALK ' + fmtDay(d), keys, route: ns, d, trk: !!w.trk });
+  setHighlight({ kind: 'walk', label: fmtDay(d) + 'の散歩', keys, route: ns, d, trk: !!w.trk });
   focusKeys(keys, true);
   if ($('#drawer').classList.contains('open')) renderDrawer();
 }
 function renderWalk() {
   const d = curWalk; if (!d || editing) return;
   const w = Store.walks.get(d) || {}, st = walkStat(d);
-  $('#wEyebrow').textContent = 'WALK · ' + fmtDay(d);
+  $('#wEyebrow').textContent = fmtDay(d) + 'の散歩';
   const ti = $('#wTitle'); ti.textContent = w.title || autoTitle(d); ti.classList.toggle('auto', !w.title);
   const places = uniq(st.ns.map(n => n.k[0] === 'p' ? placeName(n.k) : placeName('m' + n.k.slice(1, 6))));
   $('#wStat').textContent = [w.km ? fmtKm(w.km) + (w.t0 && w.t1 ? ` ${w.t0}〜${w.t1}` : '') : '', places.join('・'), st.towns ? `町 ${st.towns}` : '', w.tw ? `通った町 ${w.tw.length}` : '', `メモ ${st.ns.length}`, st.raw ? `メモだけ ${st.raw}` : ''].filter(Boolean).join(' · ');
@@ -3357,7 +3463,7 @@ function renderWalk() {
   const sum = document.createElement('div'); sum.className = 'wsum';
   if (w.sum) { const p = document.createElement('div'); p.className = 'dx'; p.textContent = w.sum; sum.appendChild(p); }
   const row = document.createElement('div'); row.className = 'wrow';
-  row.appendChild(mkBtn(w.title || w.sum ? 'なおす · タイトルとまとめ' : '＋ タイトルとまとめを書く', w.title || w.sum ? 'tag' : 'btn ghost', () => editWalk(sum, d)));
+  row.appendChild(mkBtn(w.title || w.sum ? 'この日のことを、なおす' : 'この日のことを書く', w.title || w.sum ? 'tag' : 'btn ghost', () => editWalk(sum, d)));
   if (Replay.items(d).length > 1 || w.trk) row.appendChild(mkBtn('▶ たどる', w.title || w.sum ? 'tag' : 'btn ghost', () => Replay.start(d), 'この日の散歩を、メモの順にたどる'));
   sum.appendChild(row);
   body.appendChild(sum);
@@ -3494,12 +3600,13 @@ function drawTrack() {
 
 /* the dialog every route step uses: one card, written in plain words */
 function routeDlg(title, body, acts) {
+  $('#routeDlg').classList.remove('ok');
   $('#rtTitle').textContent = title;
   const b = $('#rtBody'); b.innerHTML = ''; (Array.isArray(body) ? body : [body]).forEach(x => x && b.appendChild(typeof x === 'string' ? Object.assign(document.createElement('p'), { textContent: x }) : x));
   const a = $('#rtActs'); a.innerHTML = ''; acts.forEach(([t, cls, fn]) => a.appendChild(mkBtn(t, cls, fn)));
   $('#routeDlg').classList.add('open');
 }
-const closeRoute = () => $('#routeDlg').classList.remove('open');
+const closeRoute = () => $('#routeDlg').classList.remove('open', 'ok');
 $('#routeDlg').addEventListener('click', e => { if (e.target.id === 'routeDlg') closeRoute(); });
 const el2 = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 // shared last step: show the day(s), find the towns passed, ask before painting them
@@ -3619,7 +3726,7 @@ const Rec = {
     const ts = segs.flat().map(q => q[2]);
     const day = { d: st.d, segs, km: segs.reduce((s, g) => s + segKm(g), 0), t0: hmOf(Math.min(...ts)), t1: hmOf(Math.max(...ts)) };
     if (quiet) { saveRoute(day.d, day.segs, {}); this.clear(); return toast(`前のさんぽの道のり ${fmtKm(day.km)} を、のこしました`); }
-    confirmRoute([day], 'さんぽ、おつかれさまでした', (ds, visit) => { this.clear(); keepDays(ds, visit, ds[0].d === today() ? '今日の' : ''); });
+    confirmRoute([day], 'さんぽ、おつかれさまでした', (ds, visit) => { this.clear(); keepDays(ds, visit, ds[0].d === today() ? '今日の' : ''); if (ds[0].d === today()) setTimeout(() => okaeri(ds[0].d), 900); });
   }
 };
 function drawRec() {
@@ -3849,7 +3956,7 @@ setTimeout(async () => {
   let nudged = 0; try { nudged = +localStorage.getItem('sanpo-nudged') || 0; } catch (e) {}
   if (Date.now() - nudged < 14 * 864e5 || Date.now() - lastOut < 30 * 864e5 || (await Thumbs.count()) < 5) return;
   try { localStorage.setItem('sanpo-nudged', String(Date.now())); } catch (e) {}
-  toast('写真は、この端末の中だけにあります。ときどき DATA の「ファイルにする」で、のこしておくと安心です', 6000);
+  toast('写真は、この端末の中だけにあります。ときどき 設定 の「ファイルにする」で、のこしておくと安心です', 6000);
 }, 6000);
 let dragN = 0;
 addEventListener('dragenter', e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { dragN++; $('#drop').classList.add('on'); } });
