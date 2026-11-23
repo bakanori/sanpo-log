@@ -144,7 +144,7 @@ body.busy .brand i{animation:pulse .6s var(--ease) infinite}
 /* ---------- panels ---------- */
 .panel{position:fixed;top:0;bottom:0;width:380px;background:#fff;display:flex;flex-direction:column;transition:transform var(--panel);z-index:10}
 #sheet,#wsheet{right:0;width:460px;border-left:1px solid var(--hair);transform:translateX(102%)}
-#drawer{left:0;width:320px;border-right:1px solid var(--hair);transform:translateX(-102%)}
+#drawer{right:0;width:460px;border-left:1px solid var(--hair);transform:translateX(102%)}
 #sheet.open,#wsheet.open,#drawer.open{transform:none}
 .phead{padding:calc(20px + var(--safe-t)) 24px 16px;position:relative}
 .x{position:absolute;right:16px;top:calc(14px + var(--safe-t));width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font:16px/1 var(--mono);color:var(--mute);transition:background var(--ui),color var(--ui)}
@@ -389,9 +389,9 @@ body:not(.sp).wsheet-open #replay{left:calc(50vw - 230px)}
 #gLabel path.mk{fill:none;stroke:var(--ink);stroke-linecap:round}
 #gLabel path.mkr{fill:none;stroke:#fff;stroke-linecap:round}
 #tools,#top{transition:right var(--panel),padding var(--panel)}
-body:not(.sp).sheet-open #tools,body:not(.sp).wsheet-open #tools{right:482px}
-body:not(.sp).sheet-open #top,body:not(.sp).wsheet-open #top{padding-right:482px}
-body:not(.sp).drawer-open #hud{left:342px}
+body:not(.sp):is(.sheet-open,.wsheet-open,.drawer-open) #tools{right:482px}
+body:not(.sp):is(.sheet-open,.wsheet-open,.drawer-open) #top{padding-right:482px}
+body:not(.sp):is(.sheet-open,.wsheet-open,.drawer-open) #hint{opacity:0}
 #hud{transition:left var(--panel)}
 #ghWrap>summary{list-style:none;cursor:pointer}
 #ghWrap>summary::-webkit-details-marker{display:none}
@@ -461,6 +461,20 @@ body:not(.sp).drawer-open #hud{left:342px}
   transition:transform var(--t-switch) var(--ease-out),width var(--t-switch) var(--ease-out)}   /* the underline glides to the tab you chose */
 @media (hover:hover){.tabs button:not(.on):hover{color:var(--ink)}}
 #drawer .x{top:calc(16px + var(--safe-t));z-index:2}
+.panel .back{display:inline-flex;align-items:center;gap:6px;max-width:calc(100% - 48px);min-height:32px;margin:-10px 0 6px -2px;padding:0 10px 0 2px;font:13px/1 var(--sans);color:var(--ink);border-radius:8px}
+.panel .back span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panel .back[hidden]{display:none}
+@media (hover:hover){.panel .back:hover{background:#f2f2ee}}
+.panel.still{transition:none!important}
+.panel.open.turn>*,.panel.open.turn>.pbody{animation:turnIn var(--t-switch) var(--ease-out) both}
+.panel.open.turnb>*,.panel.open.turnb>.pbody{animation:turnBack var(--t-switch) var(--ease-out) both}
+@keyframes turnIn{from{opacity:0;transform:translateX(18px)}}
+@keyframes turnBack{from{opacity:0;transform:translateX(-18px)}}
+#bLoc svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.4}
+#bLoc svg .c{fill:currentColor;stroke:none}
+#bLoc span{margin-left:6px}
+#fab b{font-weight:inherit}
+#recBtn span small{font-size:inherit}
 #dBody.swap{animation:tabIn var(--t-switch) var(--ease-out) both}
 @keyframes tabIn{from{opacity:0;transform:translateY(4px)}}
 .filter{margin-top:14px;width:100%;border:0;border-bottom:1px solid var(--hair);padding:8px 0;font-size:14px;background:none;outline:none}
@@ -641,8 +655,17 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   #store{display:none!important}
   .brand{padding:11px 14px 11px 0;margin:-11px -14px -11px 0;min-width:44px;min-height:44px}
   #memoHere{min-height:34px;padding:0 13px;font-size:11px}
-  #fab{bottom:calc(94px + var(--safe-b))}
-  #fab small{font-size:11px;bottom:-19px}
+  #fab{left:0;right:0;margin:0 auto;bottom:calc(14px + var(--safe-b));width:max-content;height:52px;border-radius:26px;padding:0 22px 0 18px;gap:8px;align-items:center;font-size:26px}
+  #fab small{position:static;transform:none;font:500 14px/1 var(--sans);letter-spacing:.06em;color:#fff}
+  #recBtn{right:14px;bottom:calc(14px + var(--safe-b));height:52px;border-radius:26px;font-size:14px}
+  #recBtn span small{display:none}
+  body.sp.rec #recBtn{left:14px;right:auto}
+  body.sp.rec #fab{left:auto;right:14px;margin:0}
+  #tools{left:14px!important;right:auto!important;bottom:calc(14px + var(--safe-b))!important;justify-content:flex-start!important}
+  #bLog{min-height:52px;padding:0 20px;border-radius:26px;font-size:14px}
+  #bLoc{position:fixed;right:14px;bottom:calc(80px + var(--safe-b));width:48px;height:48px;min-height:0;padding:0;border-radius:50%;display:grid;place-items:center;box-shadow:0 4px 14px rgba(0,0,0,.08)}
+  #bLoc span{display:none}
+  .panel .back{min-height:44px;margin:-12px 0 2px -4px;font-size:14px}
   #hud{bottom:calc(74px + var(--safe-b))!important}
   #scale{font-size:11px}
   .btn{min-height:44px;font-size:12px}
@@ -715,10 +738,11 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   #sheet.open,#wsheet.open,#drawer.open{transform:none}
   /* phone: the place's head in fewer lines — title and 行った side by side, no raw coordinates */
   #sheet .phead{display:grid;grid-template-columns:minmax(0,1fr);align-items:center}
-  #sheet .phead>.eyebrow{padding-right:56px;min-height:20px;display:flex;align-items:center}
-  #sheet .phead>.big{grid-row:2;padding-right:8px}
-  #sheet .phead>.toggle{grid-row:3;justify-self:start;margin:14px 0 2px}   /* away from ×: left, one line lower */
-  #sheet .phead>.sstat{grid-row:4}
+  #sheet .phead>.back{grid-row:1;justify-self:start}
+  #sheet .phead>.eyebrow{grid-row:2;padding-right:56px;min-height:20px;display:flex;align-items:center}
+  #sheet .phead>.big{grid-row:3;padding-right:8px}
+  #sheet .phead>.toggle{grid-row:4;justify-self:start;margin:14px 0 2px}   /* away from ×: left, one line lower */
+  #sheet .phead>.sstat{grid-row:5}
   #sheet .coord{display:none}
   /* pull the head up to read more, down to go back */
   body.sp:not(.sheet-small).wsheet-open #replay{opacity:0;pointer-events:none}
@@ -755,11 +779,9 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   #fab{right:calc(16px + var(--safe-r));bottom:calc(52px + var(--safe-b));width:52px;height:52px;font-size:28px}
   #fab small{display:none}
   #recBtn{right:calc(80px + var(--safe-r));bottom:calc(56px + var(--safe-b))}
-  #sheet,#wsheet{width:min(420px,50vw);padding-right:var(--safe-r)}
-  #drawer{width:min(340px,45vw);padding-left:var(--safe-l)}
-  body.sheet-open #tools,body.wsheet-open #tools{right:calc(min(420px,50vw) + 12px)}
-  body.sheet-open #top,body.wsheet-open #top{padding-right:calc(min(420px,50vw) + 12px)}
-  body.drawer-open #hud{left:calc(min(340px,45vw) + 12px)}
+  #sheet,#wsheet,#drawer{width:min(420px,50vw);padding-right:var(--safe-r)}
+  body:is(.sheet-open,.wsheet-open,.drawer-open) #tools{right:calc(min(420px,50vw) + 12px)}
+  body:is(.sheet-open,.wsheet-open,.drawer-open) #top{padding-right:calc(min(420px,50vw) + 12px)}
   .phead{padding:12px 20px 8px}
   .x{top:6px;right:10px}
   #drawer .x{top:8px}
@@ -822,11 +844,11 @@ body.sp input,body.sp textarea{font-size:16px!important}
 </div>
 <div id="hint">押すと近づく ・ ドラッグで動かす ・ スクロールで拡大 ・ Esc でもどる</div>
 <div id="tools">
-  <button class="pill sp-only" id="bLoc" title="いまいる場所を地図に出す">いまの場所</button>
+  <button class="pill sp-only" id="bLoc" title="いまいる場所を地図に出す" aria-label="いまの場所"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.2"/><circle cx="10" cy="10" r="1.6" class="c"/><path d="M10 1.5v3.2M10 15.3v3.2M1.5 10h3.2M15.3 10h3.2"/></svg><span>いまの場所</span></button>
   <button class="pill" id="bHome" title="日本全体へ" aria-label="日本全体へ"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 6.2 6 2l4.5 4.2M3 5v5h6V5"/></svg><span>HOME</span></button>
   <button class="pill" id="bUp" title="上の階層へ (Esc)">↑ もどる</button>
   <button class="pill" id="bList">LIST</button>
-  <button class="pill" id="bLog" title="場所・散歩・タグの一覧">記録</button>
+  <button class="pill" id="bLog" title="場所・散歩・タグの一覧">ノート</button>
   <button class="pill" id="bData">設定</button>
 </div>
 <div id="toast"></div>
@@ -836,12 +858,13 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <div id="bkPill" role="status" hidden><p id="bkTxt"></p><div class="acts"><button type="button" class="btn" id="bkGo">バックアップする</button><button type="button" class="btn ghost" id="bkLater">あとで</button></div></div>
 <div id="replay" aria-live="polite"><span class="clk">--:--</span><span class="txt"></span><button type="button" aria-label="たどるのをやめる">■</button></div>
 <div id="hlbar"><span></span><button aria-label="ハイライトを消す">×</button></div>
-<button id="recBtn" type="button" aria-label="さんぽの道のりを記録する"><i></i><span>さんぽ、はじめる</span></button>
-<button id="fab" aria-label="今いる場所でメモ">＋<small>ここでメモ</small></button>
+<button id="recBtn" type="button" aria-label="さんぽの道のりを記録する"><i></i><span>さんぽ<small>、はじめる</small></span></button>
+<button id="fab" aria-label="今いる場所でメモ"><b>＋</b><small>ここでメモ</small></button>
 <div id="drop">ここに落とすと、読みこみます（JSON・GPX）</div>
 
-<aside id="sheet" class="panel" aria-label="メモ">
+<aside id="sheet" class="panel" aria-label="場所">
   <div class="phead">
+    <button class="back" type="button" hidden>‹ <span></span></button>
     <button class="x" data-close="sheet" aria-label="閉じる">×</button>
     <div class="eyebrow" id="sEyebrow"></div>
     <div class="big" id="sName"></div>
@@ -868,6 +891,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 
 <aside id="wsheet" class="panel" aria-label="散歩">
   <div class="phead">
+    <button class="back" type="button" hidden>‹ <span></span></button>
     <button class="x" data-close="wsheet" aria-label="閉じる">×</button>
     <div class="eyebrow" id="wEyebrow"></div>
     <div class="big" id="wTitle"></div>
@@ -877,8 +901,9 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <div class="pbody" id="wBody"></div>
 </aside>
 
-<aside id="drawer" class="panel" aria-label="一覧">
+<aside id="drawer" class="panel" aria-label="ノート">
   <div class="phead">
+    <button class="back" type="button" hidden>‹ <span></span></button>
     <button class="x" data-close="drawer" aria-label="閉じる">×</button>
     <div class="tabs" role="tablist"><button id="t_list" role="tab">場所</button><button id="t_walks" role="tab" class="on">散歩</button><button id="t_tags" role="tab">タグ</button><button id="t_group" role="tab" hidden>みんな</button><i class="bar" aria-hidden="true"></i></div>
     <input class="filter" id="dFilter" placeholder="名前で絞り込み" autocomplete="off">
@@ -988,7 +1013,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.8.0', VERSION_DATE = '2026.11.23';
+const VERSION = '2.9.0', VERSION_DATE = '2026.11.23';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -2164,7 +2189,7 @@ function tick(id, val, tot) {
 let TOT = { m: 0, t: 0 };
 function logBadge() {
   const n = IX.raw;
-  $('#bLog').textContent = '記録';
+  $('#bLog').textContent = 'ノート';
 }
 function counters() {
   logBadge();
@@ -2355,9 +2380,10 @@ function up() {
   if ($('#join').classList.contains('open')) return closePanel('join');
   if ($('#geo').classList.contains('open')) return closePanel('geo');
   if ($('#modal').classList.contains('open')) return closePanel('modal');
-  if ($('#sheet').classList.contains('open')) return closePanel('sheet');
-  if ($('#wsheet').classList.contains('open')) return closePanel('wsheet');
-  if ($('#drawer').classList.contains('open')) return closePanel('drawer');
+  if (Pane.open() && Pane.stack.length && !editing) return Pane.back();
+  if ($('#sheet').classList.contains('open')) { Pane.clear(); return closePanel('sheet'); }
+  if ($('#wsheet').classList.contains('open')) { Pane.clear(); return closePanel('wsheet'); }
+  if ($('#drawer').classList.contains('open')) { Pane.clear(); return closePanel('drawer'); }
   if (S.level === 'muni') go(S.pc); else if (S.level === 'pref') go('');
 }
 
@@ -2420,7 +2446,7 @@ const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 const fmtDay = d => { const [y, m, dd] = d.split('-'); return `${y === today().slice(0, 4) ? '' : y + '年'}${+m}月${+dd}日（${'日月火水木金土'[new Date(d + 'T12:00:00').getDay()]}）`; };
 function openSheet() {
   if (!S.sel) return;
-  closePanel('wsheet', true);
+  Pane.before('sheet');
   const info = selInfo();
   $('#sEyebrow').textContent = info.eyebrow;
   $('#sName').textContent = info.n;
@@ -2443,8 +2469,9 @@ function openSheet() {
   paintWbar();
   if (quickNext) setTimeout(() => $('#fText').focus(), 350);
   quickNext = null;
-  if (W < 720) closePanel('drawer', true);
   $('#sheet').classList.add('open'); document.body.classList.add('sheet-open');
+  Pane.after('sheet');
+  if (Pane.scrollTo != null) { const y = Pane.scrollTo; Pane.scrollTo = null; setTimeout(() => { $('#sheet .pbody').scrollTop = y; }, 30); }
   shopAfterOpen();
 }
 
@@ -3908,7 +3935,7 @@ function renderDrawer() {
       const b = document.createElement('button'); b.className = 'li' + (r.v ? ' v' : '');
       b.innerHTML = `<span class="n"><i></i><span></span>${r.memo ? '<em>メモ</em>' : ''}</span><span class="c"></span>` + (r.f !== undefined ? `<span class="b"><i style="width:${Math.round(r.f * 100)}%"></i></span>` : '');
       b.querySelector('.n span').textContent = r.n; b.querySelector('.c').textContent = r.c;
-      b.onclick = () => { r.go(); if (W < 720) closePanel('drawer'); };
+      b.onclick = () => { Pane.leave(); r.go(); };
       frag.appendChild(b);
     });
   } else if (dTab === 'walks') {
@@ -3969,7 +3996,7 @@ function renderDrawer() {
         b.querySelector('.p').textContent = placeLabel(n.k);
         const nph = +n.ph || (n.im || []).length || (Array.isArray(n.imd) ? n.imd.length : 0);
         b.querySelector('.t').textContent = n.t || n.x || withText(n) || (nph ? (n.by === me ? `写真 ${nph} 枚（この端末に）` : `写真 ${nph} 枚は、本人の手もとに`) : '');
-        b.onclick = () => { jumpTo(n.k); if (W < 720) closePanel('drawer'); };
+        b.onclick = () => { Pane.leave(); jumpTo(n.k); };
         frag.appendChild(b);
       });
     }
@@ -4012,7 +4039,7 @@ function renderDrawer() {
       b.querySelector('.d').textContent = n.d.replace(/-/g, '.');
       b.querySelector('.p').textContent = placeLabel(n.k);
       b.querySelector('.t').textContent = n.t || n.x || '';
-      b.onclick = () => { jumpTo(n.k); if (W < 720) closePanel('drawer'); };
+      b.onclick = () => { Pane.leave(); jumpTo(n.k); };
       frag.appendChild(b);
     });
   }
@@ -4028,10 +4055,67 @@ function openDrawer(tab) {
   if ($('#drawer').classList.contains('open') && dTab === tab) return closePanel('drawer');
   dTab = tab; $('#dFilter').value = ''; $('#dBody').classList.remove('swap');   // opening: the panel's own entrance, not the tab's
   renderDrawer();
-  if (W < 720) { closePanel('sheet'); closePanel('wsheet', true); }
-  $('#drawer').classList.add('open'); document.body.classList.add('drawer-open');
-  syncTools();
+  showDrawer();
 }
+function showDrawer() {
+  if ($('#drawer').classList.contains('open')) return syncTools();
+  Pane.before('drawer');
+  $('#drawer').classList.add('open'); document.body.classList.add('drawer-open');
+  syncTools(); Pane.after('drawer');
+}
+/* one panel at a time — ノート, a place, a day. Opening one from another remembers where you were, so ‹ takes you back as it was. */
+const PANES = ['drawer', 'sheet', 'wsheet'];
+const Pane = {
+  stack: [], soon: null, backTo: null, backT: 0, mode: '',
+  open() { return PANES.find(id => $('#' + id).classList.contains('open')) || null; },
+  snap(id) {
+    const y = $('#' + id).querySelector('.pbody').scrollTop;
+    if (id === 'drawer') return { id, tab: dTab, tag: dTag, q: $('#dFilter').value, y, label: 'ノート' };
+    if (id === 'sheet' && S.sel) return { id, key: S.sel.key, y, label: placeName(S.sel.key) || 'この場所' };
+    if (id === 'wsheet' && curWalk) return { id, d: curWalk, y, label: mdy(curWalk) };
+    return null;
+  },
+  still(id) { const p = $('#' + id); p.classList.add('still'); setTimeout(() => p.classList.remove('still'), 80); },   // a swap, not a slide
+  before(to) {   // just before a panel opens
+    const from = this.open(), going = this.backTo === to && Date.now() - this.backT < 9000;
+    if (going) { this.backTo = null; this.mode = from && from !== to ? 'back' : ''; }
+    else if (from && from !== to) {
+      const s = this.snap(from), top = this.stack[this.stack.length - 1];
+      if (s && !(top && top.id === s.id && top.key === s.key && top.d === s.d)) this.stack.push(s);
+      if (this.stack.length > 8) this.stack.shift();
+      this.mode = 'swap';
+    } else if (!from) { this.stack = this.soon && Date.now() - this.soon.t < 9000 ? [this.soon.s] : []; this.mode = ''; }
+    this.soon = null;
+    if (from && from !== to) { this.still(from); this.still(to); closePanel(from, true); }
+  },
+  after(to) {   // just after: ‹ says where it goes, and the page turns
+    const p = $('#' + to), b = p.querySelector('.back'), top = this.stack[this.stack.length - 1];
+    b.hidden = !top;
+    if (top) { b.lastChild.textContent = top.label; b.setAttribute('aria-label', `${top.label} にもどる`); }
+    if (this.mode) {
+      p.classList.remove('turn', 'turnb'); void p.offsetWidth;
+      const c = this.mode === 'back' ? 'turnb' : 'turn'; p.classList.add(c); setTimeout(() => p.classList.remove(c), 420);
+    }
+    this.mode = '';
+  },
+  leave() {   // a row in ノート: on a phone the map has to be seen, so ノート steps aside now and waits behind ‹
+    const f = this.open(); if (!f || W >= 720) return;
+    const s = this.snap(f); if (s) this.soon = { s, t: Date.now() };
+    closePanel(f, true);
+  },
+  back() {
+    const s = this.stack.pop(); if (!s) return;
+    this.backTo = s.id; this.backT = Date.now();
+    if (s.id === 'drawer') { dTab = s.tab; dTag = s.tag; $('#dFilter').value = s.q || ''; renderDrawer(); showDrawer(); $('#dBody').scrollTop = s.y; }
+    else if (s.id === 'wsheet') { openWalk(s.d); $('#wBody').scrollTop = s.y; }
+    else if (s.id === 'sheet') {   // the map goes there first, then the page comes back
+      if (W < 720) { const f = this.open(); if (f) closePanel(f, true); }
+      jumpTo(s.key); this.scrollTo = s.y;
+    }
+  },
+  clear() { this.stack = []; this.soon = null; this.backTo = null; }
+};
+document.querySelectorAll('.panel .back').forEach(b => b.onclick = e => { e.stopPropagation(); Pane.back(); });
 function syncTools() {
   const open = $('#drawer').classList.contains('open');
   $('#bList').classList.toggle('on', open && dTab === 'list');
@@ -4050,7 +4134,7 @@ function closePanel(id, quiet) {
     setTimeout(() => { if (!p.classList.contains('open')) p.classList.remove('small'); }, 320);
   }
 }
-document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closePanel(b.dataset.close));
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => { if (PANES.includes(b.dataset.close)) Pane.clear(); closePanel(b.dataset.close); });
 /* phones: a sheet opens to 80%. Pull its head down to 45% (to see the map), down again to close; up to come back.
    It follows the finger, then settles by where and how fast you let go — fast, with a long soft ending. */
 const SETTLE = 'transform var(--t-move) var(--ease-out)';
@@ -4126,7 +4210,7 @@ function tabBar() {
 addEventListener('resize', () => { const b = document.querySelector('#drawer .tabs .bar'); if (b) { b.style.width = ''; tabBar(); } });
 $('#dFilter').oninput = () => renderDrawer();
 $('#bList').onclick = () => openDrawer('list');
-$('#bLog').onclick = () => $('#drawer').classList.contains('open') ? closePanel('drawer') : openDrawer(dTab || 'walks');
+$('#bLog').onclick = () => { if ($('#drawer').classList.contains('open')) { Pane.clear(); closePanel('drawer'); } else openDrawer(dTab || 'walks'); };
 $('#bUp').onclick = up;
 function whereText() {
   const cnt = `メモ ${Store.notes.size} 件・散歩 ${walkDays().length} 日`;
@@ -4152,11 +4236,12 @@ $('#bHome').onclick = home; $('#brand').onclick = home;
 let curWalk = null;
 function openWalk(d) {
   Replay.stop();
+  Pane.before('wsheet');
+  if (S.sel) { select(null); }
   curWalk = d; editing = null;
-  closePanel('sheet');
-  if (W < 720) closePanel('drawer');
   renderWalk();
   $('#wsheet').classList.add('open'); document.body.classList.add('wsheet-open');
+  Pane.after('wsheet');
   const ns = IX.byDate.get(d) || [], w = Store.walks.get(d) || {};
   const keys = uniq([...ns.map(n => n.k), ...(w.tw || [])]);   // towns passed on the route count too
   setHighlight({ kind: 'walk', label: fmtDay(d) + 'の散歩', keys, route: ns, d, trk: !!w.trk });
@@ -4212,8 +4297,7 @@ function openTag(t) {
   for (const n of Store.notes.values()) if ((n.tags || []).includes(t)) keys.push(n.k);
   for (const w of Store.walks.values()) if ((w.tags || []).includes(t)) for (const n of (IX.byDate.get(w.d) || [])) keys.push(n.k);
   setHighlight({ kind: 'tag', label: '#' + t, keys: uniq(keys) });
-  if (!$('#drawer').classList.contains('open')) { if (W < 720) { closePanel('sheet'); closePanel('wsheet', true); } $('#drawer').classList.add('open'); document.body.classList.add('drawer-open'); }
-  renderDrawer(); syncTools();
+  renderDrawer(); showDrawer();
   focusKeys(uniq(keys), false);
 }
 
@@ -4409,7 +4493,7 @@ const Rec = {
   paint() {
     const b = $('#recBtn'), on = !!this.st;
     b.classList.toggle('on', on); document.body.classList.toggle('rec', on);
-    b.querySelector('span').innerHTML = on ? 'さんぽ中 <b></b>' : 'さんぽ、はじめる';
+    b.querySelector('span').innerHTML = on ? 'さんぽ中 <b></b>' : 'さんぽ<small>、はじめる</small>';
     if (on) b.querySelector('b').textContent = `${fmtKm(this.km())} · ${fmtDur(Math.round(this.mins()))}`;
     b.setAttribute('aria-label', on ? 'さんぽを、おわりにする' : 'さんぽの道のりを記録する');
   },
