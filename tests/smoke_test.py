@@ -168,6 +168,16 @@ async def together(b, base):   # a group: わたしも行った on someone's mem
     ok = await m.evaluate("() => townNodes[30].style.fill === hexRgb(GR.color('u2')) && [...document.querySelectorAll('#dBody .log.dayrow')].some(b => b.textContent.includes('ニトリ、サイゼリア'))")
     await m.evaluate("() => document.querySelector('#dBody .log.dayrow').click()"); await m.wait_for_timeout(1200)
     check('group: a shared day shows its towns, and opens to read (no line)', ok and await m.evaluate("() => $('#wTitle').textContent === 'ニトリ、サイゼリア' && !$('#track').getAttribute('d') && $('#wBody').innerText.includes('通った町 2')"))
+    # a second group: the switch, and 共有 when writing goes only where chosen
+    await m.evaluate("() => closePanel('wsheet')"); await m.wait_for_timeout(300)
+    await m.evaluate("async () => { await GR.create('家族'); }"); await m.wait_for_timeout(1500)
+    check('group: two groups at once, each in the switch', await m.evaluate("() => [...document.querySelectorAll('#grp .gseg button')].map(b => b.textContent).join('/') === '自分/散歩部/家族'"))
+    await m.evaluate("() => { localStorage.removeItem('sanpo-share'); selectTown(5, false); }"); await m.wait_for_timeout(900)
+    await m.evaluate("() => { if ($('#sForm').classList.contains('collapsed')) $('#fOpen').click(); [...document.querySelectorAll('#fShare .shc')].find(b => b.textContent === '家族').click(); }"); await m.wait_for_timeout(200)
+    await m.fill('#fText', '家族だけ'); await m.click('#fSave'); await m.wait_for_timeout(2500)
+    r = await m.evaluate("""() => { const n = [...Store.notes.values()].find(x => x.t === '家族だけ'), M = window.__FBMOCK.__store, [a, b] = GR.gids();
+      return [M.has('groups/' + a + '/notes/u1_' + n.id), M.has('groups/' + b + '/notes/u1_' + n.id)]; }""")
+    check('group: 共有 sends a memo only to the group chosen', r == [False, True], r)
     check('group: no errors on the page', not errs, errs)
     await ctx.close()
 
