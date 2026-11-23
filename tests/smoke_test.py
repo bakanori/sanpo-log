@@ -181,7 +181,18 @@ async def together(b, base):   # a group: わたしも行った on someone's mem
     check('group: no errors on the page', not errs, errs)
     await ctx.close()
 
+def parts():   # v2.12.0~: the page is index.html + its parts (css/, js/), each named by its content (?v=)
+    import re, hashlib
+    html = open(os.path.join(SITE, 'index.html'), encoding='utf-8').read()
+    got = re.findall(r'(?:href|src)="((?:css|js)/[\w-]+\.(?:css|js))\?v=([0-9a-f]+)"', html)
+    def same(f, v):
+        p = os.path.join(SITE, f)
+        return os.path.exists(p) and len(v) >= 8 and hashlib.sha256(open(p, 'rb').read()).hexdigest().startswith(v)
+    bad = [f for f, v in got if not same(f, v)]
+    check('files: every part of the page is there, and its ?v= matches what is in it', len(got) >= 9 and not bad, bad or got)
+
 async def main():
+    parts()
     srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(PORT), '--bind', '127.0.0.1'], cwd=SITE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(1)
     try:
