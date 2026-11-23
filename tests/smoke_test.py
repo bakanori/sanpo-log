@@ -59,12 +59,23 @@ async def app(b, phone, base):
     # a shop: the address finds the town
     r = await m.evaluate("async () => { const p = parseShop('喫茶テスト\\n日本、〒248-0006 神奈川県鎌倉市小町２丁目１０−１１\\nhttps://maps.app.goo.gl/test'); const k = await addrKey(p.a); return [p.n, p.u, k && placeName(k.key)]; }")
     check(f'{tag}: a copied shop finds its town', r == ['喫茶テスト', 'https://maps.app.goo.gl/test', '小町二丁目'], r)
-    # 記録 (the drawer): its tabs, and × with a real tap
+    # ノート: its tabs; a place from it opens in the same panel with ‹ ノート, and ‹ brings ノート back as it was; × closes
     await m.evaluate("() => closePanel('sheet')"); await m.wait_for_timeout(400)
-    await m.evaluate("() => openDrawer('walks')"); await m.wait_for_timeout(600)
+    await m.click('#bLog'); await m.wait_for_timeout(600)
     await m.click('#t_list'); await m.wait_for_timeout(300)
+    await m.fill('#dFilter', '小町'); await m.wait_for_timeout(300)
+    await m.evaluate("() => [...document.querySelectorAll('#dBody .li')].find(b => b.textContent.includes('小町二丁目')).click()"); await m.wait_for_timeout(1800)
+    r = await m.evaluate("() => [['drawer', 'sheet', 'wsheet'].filter(id => $('#' + id).classList.contains('open')).join(), $('#sheet .back').hidden ? '' : $('#sheet .back').textContent.trim()]")
+    check(f'{tag}: a place from ノート opens in the one panel, with ‹ ノート', r == ['sheet', '‹ ノート'], r)
+    await m.click('#sheet .back'); await m.wait_for_timeout(600)
+    check(f'{tag}: ‹ brings ノート back as it was', await m.evaluate("() => $('#drawer').classList.contains('open') && !$('#sheet').classList.contains('open') && dTab === 'list' && $('#dFilter').value === '小町'"))
+    if not phone:
+        check('pc: ノート is on the right, where the pages open', await m.evaluate("() => { const r = $('#drawer').getBoundingClientRect(); return Math.round(r.right) === innerWidth && r.left > innerWidth / 2; }"))
     await m.click('#drawer [data-close=drawer]'); await m.wait_for_timeout(500)
-    check(f'{tag}: 記録 switches tabs and closes', await m.evaluate("() => dTab === 'list' && !$('#drawer').classList.contains('open')"))
+    check(f'{tag}: ノート closes with ×', await m.evaluate("() => !$('#drawer').classList.contains('open') && $('#bLog').textContent === 'ノート'"))
+    if phone:
+        r = await m.evaluate("""() => ['#bLog', '#fab', '#recBtn'].map(s => { const r = document.querySelector(s).getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right), Math.round(r.bottom)]; })""")
+        check('phone: one row at the bottom — ノート · ＋ ここでメモ · さんぽ', r[0][1] < r[1][0] and r[1][1] < r[2][0] and r[2][1] <= 393 and abs(r[0][2] - r[1][2]) <= 1 and abs(r[1][2] - r[2][2]) <= 1, r)
     # backup: words in 設定, the card when photos wait
     await m.evaluate("() => $('#bData').onclick()"); await m.wait_for_timeout(600)
     w = await m.evaluate("() => [$('#mBackup h4').textContent, $('#mDown').textContent]")
