@@ -959,7 +959,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <p>写真は、この端末の中だけにあります。バックアップしておけば、スマホをなくしたり、機種を変えたりしても、そこから元どおりに戻せます。</p>
     <p id="mPhotos"></p>
     <div class="rule">バックアップする</div>
-    <select id="mPics" aria-label="写真をファイルに入れるか"><option value="big">写真もいっしょに</option><option value="small">写真は小さくして</option><option value="none">写真なし（メモだけ）</option></select>
+    <select id="mPics" aria-label="写真をバックアップに入れるか"><option value="big">写真もいっしょに</option><option value="small">写真は小さくして</option><option value="none">写真なし（メモだけ）</option></select>
     <div class="acts"><button class="btn sp-only" id="mShare">送る（AirDrop・LINEなど）</button><button class="btn" id="mDown">バックアップする</button><button class="btn ghost" id="mCopy">コピー</button></div>
     <div class="rule">バックアップから戻す</div>
     <p>バックアップのファイルを選んでください。PCではこの画面にファイルをドラッグしてもOK。今ある記録に合流します（消えません）。</p>
@@ -978,7 +978,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.7.0', VERSION_DATE = '2026.11.23';
+const VERSION = '2.7.1', VERSION_DATE = '2026.11.23';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -2855,7 +2855,7 @@ function firstDays() {
 function okaeri(d, nm) {
   d = d || today();
   const all = dayTowns(d), fd = firstDays(), fresh = all.filter(k => fd.get(k) === d), w = Store.walks.get(d) || {};
-  photoInfo();   // so 「ファイルにのこす」 is ready inside the tap
+  photoInfo();   // so 「バックアップする」 is ready inside the tap
   const big = el2('div', 'big2', String(all.length)); big.appendChild(el2('small', '', '町を歩きました'));
   const body = [big];
   if (fresh.length) body.push(el2('p', 'fresh', `はじめての町 ${fresh.length}：` + fresh.slice(0, 8).map(k => placeName(k)).join('、') + (fresh.length > 8 ? ` ほか ${fresh.length - 8}` : '')));
@@ -2873,7 +2873,7 @@ function okaeri(d, nm) {
     step('1', '今日の写真を、まとめて入れる', mkBtn('写真をまとめて入れる', 'btn ghost', () => { keepTitle(); pickBulk(() => okaeri(d)); })),
     step('2', '寄ったお店を、あとから足す', sw),
     step('3', 'この日に、名前をつける', ti),
-    step('4', '写真ごと、ファイルにのこす', mkBtn('ファイルにのこす', 'btn ghost', () => { keepTitle(); $('#mPics').value = 'big'; (W < 720 ? $('#mShare') : $('#mDown')).onclick(); })));
+    step('4', '写真ごと、バックアップする', mkBtn('バックアップする', 'btn ghost', () => { keepTitle(); $('#mPics').value = 'big'; (W < 720 && navigator.canShare ? $('#mShare') : $('#mDown')).onclick(); })));
   routeDlg('おかえりなさい', body, [['おわる', 'btn', () => { keepTitle(); closeRoute(); openWalk(d); }]]);
   $('#routeDlg').classList.add('ok');
   fresh.slice(0, 12).forEach((k, i) => setTimeout(() => burst(k), 600 + i * 380));   // the new towns light up, one by one
@@ -4051,7 +4051,7 @@ function whereText() {
   const cnt = `メモ ${Store.notes.size} 件・散歩 ${walkDays().length} 日`;
   $('#mWhere').textContent = FB.user ? `記録はこの端末と、Googleアカウントのクラウドに保存されています（${cnt}）。スマホとPCで自動で同じになります。写真だけは、クラウドに送らず、この端末の中に置いています。`
     : FB.enabled() ? `記録は今、このブラウザの中だけに保存されています（${cnt}）。「Googleでログイン」をすると、クラウドにも保存されて、スマホとPCで同じになります（写真だけは、ログインしてもこの端末の中です）。`
-    : `記録はこのブラウザの中に保存されています（${cnt}）。ブラウザのデータを消すと記録も消えるので、時々「ファイルに保存」でバックアップしてください。スマホ→PCへ移すときも、書き出し→読み込みでOKです。`;
+    : `記録はこのブラウザの中に保存されています（${cnt}）。ブラウザのデータを消すと記録も消えるので、時々「バックアップする」を押してください。スマホ→PCへ移すときも、バックアップ→「バックアップから戻す」でOKです。`;
 }
 function a2hsText() {
   const ua = navigator.userAgent, standalone = matchMedia('(display-mode: standalone)').matches || navigator.standalone;
@@ -4638,7 +4638,7 @@ $('#mShare').onclick = async () => {
     const file = new File([exportJSON()], `sanpo-log-${today()}.json`, { type: 'application/json' });
     if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'SANPO LOG' }); toast('バックアップしました'); exported(); }
     else $('#mDown').click();
-  } catch (e) { if (e && e.name !== 'AbortError') toast('送れませんでした。「ファイルに保存」を使ってください'); }
+  } catch (e) { if (e && e.name !== 'AbortError') toast('送れませんでした。「この端末にダウンロード」を使ってください'); }
 };
 let dragN = 0;
 addEventListener('dragenter', e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { dragN++; $('#drop').classList.add('on'); } });
