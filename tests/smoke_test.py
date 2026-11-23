@@ -21,6 +21,7 @@ def check(name, ok, got=None):
     print(('  ok   ' if ok else '  FAIL ') + name + ('' if ok else f'   got: {got!r}'))
 
 INIT = """try { localStorage.setItem('sanpo-started', '1'); } catch (e) {}
+window.hexRgb = h => { const v = parseInt(h.slice(1), 16); return `rgb(${v >> 16}, ${v >> 8 & 255}, ${v & 255})`; };
 window.__opened = []; window.open = u => { window.__opened.push(u); return null; };
 window.__clip = ''; Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { readText: async () => window.__clip, writeText: async () => {} } });"""
 NO_FIREBASE = 'var firebaseConfig = null;'   # the checks never talk to the real cloud
@@ -110,6 +111,39 @@ async def offline(b, base):
     check('offline: no errors on the page', not errs, errs)
     await ctx.close()
 
+FSMOCK = open(os.path.join(ROOT, 'tests', 'fsmock.js'), encoding='utf-8').read()   # an in-memory stand-in for Firebase (no real cloud)
+
+async def together(b, base):   # a group: わたしも行った on someone's memo
+    ctx = await b.new_context(viewport={'width': 393, 'height': 852}, is_mobile=True, has_touch=True)
+    await ctx.route('**/firebase-config.js', lambda r: r.fulfill(status=200, content_type='text/javascript', body='var firebaseConfig = { apiKey: "test", projectId: "demo" };'))
+    await ctx.add_init_script(INIT + "\nwindow.__MOCKUSER = { uid: 'u1', displayName: 'たろう' }; try { localStorage.setItem('sanpo-fb', '1'); } catch (e) {}\n" + FSMOCK)
+    m = await ctx.new_page(); errs = []; m.on('pageerror', lambda e: errs.append(said(e)))
+    await m.goto(base + '/index.html#14204'); await m.wait_for_timeout(3000)
+    await m.evaluate("async () => { await GR.create('散歩部'); }"); await m.wait_for_timeout(2000)
+    await m.evaluate("""() => { const M = window.__FBMOCK, gid = GR.gid, g = JSON.parse(JSON.stringify(M.__store.get('groups/' + gid)));
+      g.members.u2 = { name: 'はなこ', c: 1, joined: Date.now() }; M.__write('groups/' + gid, g);
+      const id = (Date.now() - 3 * 864e5).toString(36) + 'hhhh';
+      M.__write(`groups/${gid}/notes/u2_${id}`, { id, k: D.towns['14204'][22].k, d: '2026-11-10', t: 'はなこのメモ', tags: ['散歩部'], u: Date.now(), by: 'u2' }); }""")
+    await m.wait_for_timeout(1200)
+    await m.evaluate("selectTown(22, false)"); await m.wait_for_timeout(1000)
+    btn = '#sEntries .entry.other .also .pgo'
+    check('group: a member\'s memo has わたしも行った', await m.evaluate(f"() => [...document.querySelectorAll('{btn}')].map(b => b.textContent).join() === 'わたしも行った'"))
+    await m.click(btn); await m.wait_for_timeout(400)
+    await m.click('#rtActs button:first-child'); await m.wait_for_timeout(1600)
+    r = await m.evaluate("""() => { const n = [...Store.notes.values()].find(x => x.w && x.w.u === 'u2'), doc = n && window.__FBMOCK.__store.get('groups/' + GR.gid + '/notes/u1_' + n.id);
+      return [!!n && n.d === '2026-11-10' && n.w.y === 1, !!doc && !!doc.w, townNodes[22].style.fill === hexRgb(deep(GR.color('u2'))), $('#sStat').textContent.includes('あなた')]; }""")
+    check('group: いっしょ is kept as my memo, and shared', r[0] and r[1], r)
+    check('group: the town keeps the first one\'s colour, deeper for two', r[2] and r[3], r)
+    await m.click(btn); await m.wait_for_timeout(400)
+    await m.evaluate("() => [...document.querySelectorAll('#rtActs button')].find(b => b.textContent === '取り消す').click()"); await m.wait_for_timeout(1200)
+    check('group: 取り消す takes it back', await m.evaluate("() => ![...Store.notes.values()].some(x => x.w) && townNodes[22].style.fill === hexRgb(GR.color('u2'))"))
+    await m.click(btn); await m.wait_for_timeout(400)
+    await m.evaluate("() => [...document.querySelectorAll('#rtActs button')].find(b => b.textContent === '別の日に行った').click()"); await m.wait_for_timeout(300)
+    await m.evaluate("() => { document.querySelector('#rtBody input[type=date]').value = '2025-05-01'; [...document.querySelectorAll('#rtActs button')].find(b => b.textContent === 'のこす').click(); }"); await m.wait_for_timeout(1500)
+    check('group: another, earlier day makes the town mine', await m.evaluate("() => townNodes[22].style.fill === hexRgb(deep(GR.color('u1'))) && $('#sStat').textContent.indexOf('あなた') < $('#sStat').textContent.indexOf('はなこ')"))
+    check('group: no errors on the page', not errs, errs)
+    await ctx.close()
+
 async def main():
     srv = subprocess.Popen([sys.executable, '-m', 'http.server', str(PORT), '--bind', '127.0.0.1'], cwd=SITE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     time.sleep(1)
@@ -121,6 +155,7 @@ async def main():
             base = f'http://127.0.0.1:{PORT}'
             for phone in (True, False):
                 await app(b, phone, base)
+            await together(b, base)
             await offline(b, f'http://localhost:{PORT}')   # the offline copy needs a secure address (localhost counts)
             await b.close()
     finally:
