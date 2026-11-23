@@ -448,7 +448,15 @@ body:not(.sp):is(.sheet-open,.wsheet-open,.drawer-open) #hint{opacity:0}
 .btn[disabled]{opacity:.35;pointer-events:none}
 .btn.ghost{background:none;color:var(--ink);border:1px solid var(--ink)}
 .btn.ghost:hover{background:var(--ink);color:#fff}
-.share{display:inline-flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;border:1px dashed #c9c9c3;border-radius:999px;padding:7px 13px 6px 9px;color:#777;background:#fff;transition:background var(--ui),color var(--ui),border-color var(--ui)}
+#fShare,.eShare,.dayshare{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:8px}
+#fShare[hidden],.eShare[hidden],.dayshare[hidden]{display:none}
+#fShare .lab,.eShare .lab,.dayshare .lab{font:10px/1 var(--mono);color:var(--mute);letter-spacing:.12em;margin-right:2px}
+.shc{min-height:32px;padding:0 12px;border:1px solid var(--hair);border-radius:999px;font-size:12px;color:#555;background:#fff;white-space:nowrap;max-width:14em;overflow:hidden;text-overflow:ellipsis;transition:background var(--ui),color var(--ui),border-color var(--ui)}
+.shc.on{border-color:var(--ink);color:var(--ink)}
+.shc.g.on{background:var(--gc);border-color:var(--gc);color:#fff}
+.shc.g.on.lt{color:var(--ink)}
+@media (max-width:720px){.shc{min-height:40px;font-size:13px}}
+.legacyshare{display:inline-flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;border:1px dashed #c9c9c3;border-radius:999px;padding:7px 13px 6px 9px;color:#777;background:#fff;transition:background var(--ui),color var(--ui),border-color var(--ui)}
 .share i{flex:none;width:11px;height:11px;border-radius:50%;border:1.5px solid currentColor;transition:background var(--ui)}
 .share.on{border-style:solid;color:#fff}
 .share.on i{background:currentColor}
@@ -862,7 +870,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <div><span id="lM">市区町村</span><b id="cM">0</b></div>
     <div><span id="lT">町</span><b id="cT">0</b></div>
     <div id="store"><i></i><span>この端末に保存</span></div>
-    <div id="grp" hidden><span class="gseg"><button id="gvMe" title="自分の記録だけ">自分</button><button id="gvAll" title="グループみんなの地図">みんな</button></span><span id="gLegend"></span></div>
+    <div id="grp" hidden><span class="gseg"><button id="gvMe" title="自分の記録だけ">自分</button></span><span id="gLegend"></span></div>
   </div>
 </header>
 
@@ -914,7 +922,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <div id="fTags" class="pc-only"></div>
     <div class="row links" id="fLinksRow" hidden><input id="fLinks" type="hidden"></div>
     <div class="thumbs edit" id="fThumbs"></div>
-    <button type="button" class="share" id="fShare" hidden><i></i><span></span></button>
+    <div class="share" id="fShare" hidden></div>
   </form>
 </aside>
 
@@ -972,7 +980,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <h3 id="joinTitle">グループに招待されています</h3>
     <p id="joinText"></p>
     <div class="acts"><button class="btn" id="joinOk">参加する</button><button class="btn ghost" id="joinNo">やめる</button></div>
-    <small>参加しても、あなたのメモは「自分だけ」のままです。グループ名のタグを付けたメモだけが、グループの人に見えます（正確な位置はのぞく）。抜けるのはいつでも 設定 からできます。</small>
+    <small>参加しても、あなたのメモは「自分だけ」のままです。書くときの「共有」でこのグループを選んだメモと、日のページで共有した日だけが、グループの人に見えます（正確な位置と道の線はのぞく）。抜けるのはいつでも 設定 からできます。</small>
   </div>
 </div>
 <div id="ig" role="dialog" aria-modal="true" aria-label="写真">
@@ -1009,12 +1017,13 @@ body.sp input,body.sp textarea{font-size:16px!important}
     <div id="grBox" hidden>
       <div class="rule">グループ（みんなで1枚の地図）</div>
       <p id="grState"></p>
+      <div id="grTabs" class="pick" hidden></div>
       <div id="grNew"><input id="grName" maxlength="24" autocomplete="off" placeholder="グループ名（例：散歩部）"><div class="acts"><button class="btn" id="grMake">グループを作る</button></div></div>
       <div id="grIn">
         <div id="grNameRow"><label class="lbl" for="grGName">グループ名（タグの名前にもなります）</label><input id="grGName" maxlength="24" autocomplete="off"></div>
         <div id="grMembers"></div>
         <label class="lbl" for="grMyName">あなたの表示名</label><input id="grMyName" maxlength="20" autocomplete="off">
-        <div class="acts"><button class="btn" id="grInvite">招待リンクを送る</button><button class="btn ghost" id="grLeave">グループを抜ける</button></div>
+        <div class="acts"><button class="btn" id="grInvite">招待リンクを送る</button><button class="btn ghost" id="grLeave">このグループを抜ける</button></div>
         <small id="grWhat"></small>
       </div>
     </div>
@@ -1042,7 +1051,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.10.0', VERSION_DATE = '2026.11.23';
+const VERSION = '2.11.0', VERSION_DATE = '2026.11.23';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -1260,7 +1269,7 @@ const Store = {
     return { app: 'sanpo-log', v: FORMAT, places: sorted(this.places), notes: sorted(this.notes), walks: sorted(this.walks), deleted: sorted(this.deleted) };
   },
   save() { try { localStorage.setItem(LS, JSON.stringify(this.dump())); } catch (e) { toast('保存できませんでした（ブラウザの容量がいっぱいかもしれません）'); } },
-  commit() { this.save(); reindex(); changed(); if (GR.on()) GR.refresh(); Sync.soon(); FB.soon(); GR.soon(); },
+  commit() { this.save(); reindex(); changed(); if (GR.anyOn()) GR.refresh(); Sync.soon(); FB.soon(); GR.soon(); },
   /* import / migrate — v1 {r:{key:{n,l,ll,v,e:[]}}}, v2/v3 {places,notes,walks,deleted}; the newer copy of each item wins.
      A record from a newer app (v > FORMAT) is still read: unknown fields are dropped, nothing is lost that this version knows. */
   absorb(o) {
@@ -1353,7 +1362,7 @@ function ancestors(k) {
 const STARTER = ['神社', '寺', '公園', '坂', '川', '商店街', 'カフェ', '路地', '紅葉', '桜', '海', '夜景'];
 function tagSuggestions(q) {
   const used = [...IX.tagN.entries()].sort((a, b) => b[1] - a[1]).map(e => e[0]);
-  const all = uniq([GR.on() ? GR.gtag() : '', ...used, ...STARTER.filter(s => !IX.tagN.has(s))]);   // the group tag first
+  const all = uniq([...GR.live().map(G => G.gtag()), ...used, ...STARTER.filter(s => !IX.tagN.has(s))]);   // the group tags first
   return q ? all.filter(t => t.includes(q)) : all;
 }
 
@@ -1519,8 +1528,8 @@ const FB = {
     // which group am I in? (a small pointer in my own space, so every device knows)
     let firstPtr = true;
     this.unsubs.push(s.onSnapshot(s.doc(this.db, 'users', u.uid, 'meta', 'group'), snap => {
-      const gid = snap.exists() ? String(snap.data().gid || '') : '';
-      gid ? GR.start(gid) : GR.stop();
+      const d = snap.exists() ? snap.data() : {};
+      GR.setGroups(Array.isArray(d.gids) ? d.gids : d.gid ? [d.gid] : []);
       if (firstPtr) { firstPtr = false; GR.joinPending(); }
     }, () => { if (firstPtr) { firstPtr = false; GR.joinPending(); } }));
     ['places', 'notes', 'walks', 'deleted'].forEach(c => {
@@ -1583,103 +1592,174 @@ const GCOL = ['#1f3bff', '#ee1c25', '#00a651', '#ffc400', '#e5007e', '#00a3e0', 
 const isLight = h => { const [r, g, b] = hexRGB(h); return .299 * r + .587 * g + .114 * b > 170; };
 const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const dayOf = u => u ? new Date(u - new Date(u).getTimezoneOffset() * 6e4).toISOString().slice(0, 10) : '9999-99-99';
+/* groups: you can be in a few at once (up to GMAX). Each keeps its own members, colours and shared copies. */
+const GMAX = 5;
+function makeGroup(gid) {
+  return {
+    gid, g: null, unsubs: [], ready: false, busy: false, again: false, t: null,
+    docs: { notes: new Map(), places: new Map(), walks: new Map() },
+    on() { const me = GR.me(); return !!(me && this.g && this.g.members && this.g.members[me]); },
+    members() { return this.g ? Object.entries(this.g.members).map(([uid, m]) => ({ uid, ...m })).sort((a, b) => (a.joined || 0) - (b.joined || 0)) : []; },
+    color(uid) {   // a member who has not picked a colour yet gets the first free one (same on every screen)
+      const m = this.g && this.g.members[uid]; if (!m) return GCOL[7];
+      if (m.c >= 0) return GCOL[m.c % (GCOL.length - 1)];
+      const used = new Set(Object.values(this.g.members).filter(x => x.c >= 0).map(x => x.c));
+      for (const x of this.members()) { if (x.c >= 0) continue; let c = 0; while (used.has(c) && c < GCOL.length - 1) c++; used.add(c); if (x.uid === uid) return GCOL[c]; }
+      return GCOL[7];
+    },
+    name(uid) { const m = this.g && this.g.members[uid]; return (m && m.name) || '…'; },
+    link() { return location.origin + location.pathname + '?g=' + this.gid; },
+    gtag() { return this.g ? normTag(this.g.name) : ''; },
+    gtags() { return this.g ? uniq([normTag(this.g.name), ...(Array.isArray(this.g.tags) ? this.g.tags.map(normTag) : [])]) : []; },   // current name + earlier names
+    isShared(n) {   // private by default: only memos chosen for this group (its tag), or on a day shared with it
+      const ts = this.gtags(); if (!ts.length) return false;
+      if ((n.tags || []).some(t => ts.includes(t))) return true;
+      const w = Store.walks.get(n.d); return !!(w && (w.tags || []).some(t => ts.includes(t)));
+    },
+    syncTagName() {   // the group was renamed: follow it in my own tags (old names keep working anyway)
+      const cur = this.gtag(); if (!cur) return;
+      const olds = this.gtags().filter(t => t !== cur && IX.tagN.has(t));
+      if (olds.length) olds.forEach(o => Store.renameTag(o, cur));
+    },
+    renameGroup(name) {
+      const s = FB.sdk, nm = name.trim().slice(0, 24);
+      return s.updateDoc(s.doc(FB.db, 'groups', this.gid), { name: nm, tags: uniq([...this.gtags(), normTag(nm)]) });
+    },
+    rename(name) { const s = FB.sdk; return s.updateDoc(s.doc(FB.db, 'groups', this.gid), { ['members.' + GR.me() + '.name']: name.slice(0, 20) }); },
+    start() {
+      const s = FB.sdk, db = FB.db, first = new Set(), gid = this.gid;
+      this.unsubs.push(s.onSnapshot(s.doc(db, 'groups', gid), snap => {
+        if (!snap.exists()) return GR.lost(this, 'グループが見つかりませんでした（解散したのかもしれません）');
+        this.g = snap.data();
+        if (!this.g.members || !this.g.members[GR.me()]) return GR.lost(this, 'グループから外れました');
+        this.fixColour();
+        this.syncTagName();
+        GR.refresh();
+      }, err => GR.lost(this, err && err.code === 'permission-denied' ? 'グループに参加していません' : null)));
+      ['notes', 'places', 'walks'].forEach(c => this.unsubs.push(s.onSnapshot(s.collection(db, 'groups', gid, c), snap => {
+        snap.docChanges().forEach(ch => { if (ch.type === 'removed') this.docs[c].delete(ch.doc.id); else this.docs[c].set(ch.doc.id, ch.doc.data()); });
+        if (!first.has(c)) { first.add(c); if (first.size === 3) { this.ready = true; this.soon(300); } }
+        GR.refresh();
+      }, () => {})));
+    },
+    stop() {
+      this.unsubs.forEach(f => f()); this.unsubs = [];
+      this.g = null; this.ready = false; clearTimeout(this.t);
+      Object.values(this.docs).forEach(m => m.clear());
+    },
+    fixColour() {   // a new member picks the first colour nobody uses yet
+      const me = GR.me(), mine = this.g.members[me];
+      const used = Object.entries(this.g.members).filter(([u]) => u !== me).map(([, m]) => m.c);
+      if (mine.c >= 0 && !used.includes(mine.c)) return;
+      let c = 0; while (used.includes(c) && c < GCOL.length - 1) c++;
+      const s = FB.sdk; s.updateDoc(s.doc(FB.db, 'groups', this.gid), { ['members.' + me + '.c']: c }).catch(() => {});
+    },
+    /* my shared records -> this group (copies without GPS); everything else stays mine only */
+    want() {
+      const me = GR.me(), ts = this.gtags(), out = { notes: new Map(), places: new Map(), walks: new Map() };
+      for (const n of Store.notes.values()) if (this.isShared(n)) {
+        const { loc, im, imd, ...r } = n;
+        if (im && im.length) r.ph = im.length;   // only how many: the photos themselves stay on your device
+        out.notes.set(me + '_' + n.id, { ...r, by: me });
+      }
+      for (const w of Store.walks.values()) if ((w.tags || []).some(t => ts.includes(t))) { const { trk, ...r } = w; out.walks.set(me + '_' + w.d, { ...r, by: me }); }   // the towns passed go too; the line itself stays here
+      return out;
+    },
+    soon(ms) { if (!this.on() || !this.ready) return; clearTimeout(this.t); this.t = setTimeout(() => this.push(), ms == null ? 1500 : ms); },
+    async push() {
+      if (!this.on() || !this.ready) return;
+      if (this.busy) { this.again = true; return; }
+      this.busy = true;
+      try {
+        const s = FB.sdk, me = GR.me(), gid = this.gid, want = this.want(), ops = [];
+        for (const c of ['notes', 'places', 'walks']) {
+          for (const [id, x] of want[c]) { const r = this.docs[c].get(id); if (!r || (+x.u || 0) > (+r.u || 0) || r.imd) ops.push(['set', c, id, JSON.parse(JSON.stringify(x))]); }   // r.imd: photos copied by 2.3.1 or older are taken back out
+          for (const [id, r] of this.docs[c]) if (r.by === me && !want[c].has(id)) ops.push(['del', c, id]);
+        }
+        for (let i = 0; i < ops.length; i += 400) {
+          const b = s.writeBatch(FB.db);
+          for (const [op, c, id, data] of ops.slice(i, i + 400)) { const ref = s.doc(FB.db, 'groups', gid, c, id); op === 'set' ? b.set(ref, data) : b.delete(ref); }
+          await b.commit();
+        }
+        if (this.unsubs.length) for (const [op, c, id, data] of ops) op === 'set' ? this.docs[c].set(id, data) : this.docs[c].delete(id);
+      } catch (e) { this.soon(60000); }
+      finally { this.busy = false; if (this.again) { this.again = false; this.soon(300); } }
+    },
+    async remove(uid) {   // owner only
+      const s = FB.sdk, gid = this.gid, ids = [];
+      for (const c of ['notes', 'places', 'walks']) for (const [id, x] of this.docs[c]) if (x.by === uid) ids.push([c, id]);
+      await s.updateDoc(s.doc(FB.db, 'groups', gid), { ['members.' + uid]: s.deleteField() });
+      for (let i = 0; i < ids.length; i += 400) {
+        const b = s.writeBatch(FB.db);
+        ids.slice(i, i + 400).forEach(([c, id]) => b.delete(s.doc(FB.db, 'groups', gid, c, id)));
+        await b.commit();
+      }
+    }
+  };
+}
+const NO_DOCS = { notes: new Map(), places: new Map(), walks: new Map() };
 const GR = {
-  gid: null, g: null, unsubs: [], ready: false, busy: false, again: false, t: null, rt: null, msg: '', joining: false,
-  docs: { notes: new Map(), places: new Map(), walks: new Map() },
-  view: (() => { try { return localStorage.getItem('sanpo-gview') || 'group'; } catch (e) { return 'group'; } })(),
+  list: new Map(), rt: null, msg: '', joining: false, box: null,
+  view: (() => { try { return localStorage.getItem('sanpo-gview') || 'group'; } catch (e) { return 'group'; } })(),   // 'me', a group id (or 'group' from 2.10: the first group)
   me() { return FB.user ? FB.user.uid : null; },
-  on() { const me = this.me(); return !!(me && this.g && this.g.members && this.g.members[me]); },
-  showing() { return this.on() && this.view === 'group' && !!GX; },
-  members() { return this.g ? Object.entries(this.g.members).map(([uid, m]) => ({ uid, ...m })).sort((a, b) => (a.joined || 0) - (b.joined || 0)) : []; },
-  color(uid) {   // a member who has not picked a colour yet gets the first free one (same on every screen)
-    const m = this.g && this.g.members[uid]; if (!m) return GCOL[7];
-    if (m.c >= 0) return GCOL[m.c % (GCOL.length - 1)];
-    const used = new Set(Object.values(this.g.members).filter(x => x.c >= 0).map(x => x.c));
-    for (const x of this.members()) { if (x.c >= 0) continue; let c = 0; while (used.has(c) && c < GCOL.length - 1) c++; used.add(c); if (x.uid === uid) return GCOL[c]; }
-    return GCOL[7];
-  },
-  name(uid) { const m = this.g && this.g.members[uid]; return (m && m.name) || '…'; },
   myName() { const u = FB.user; return ((u && (u.displayName || (u.email || '').split('@')[0])) || 'わたし').slice(0, 20); },
-  link() { return location.origin + location.pathname + '?g=' + this.gid; },
-  gtag() { return this.g ? normTag(this.g.name) : ''; },
-  gtags() { return this.g ? uniq([normTag(this.g.name), ...(Array.isArray(this.g.tags) ? this.g.tags.map(normTag) : [])]) : []; },   // current name + earlier names
-  isShared(n) {   // private by default: only memos with the group tag (or on a walk day with the group tag) go to the group
-    const ts = this.gtags(); if (!ts.length) return false;
-    if ((n.tags || []).some(t => ts.includes(t))) return true;
-    const w = Store.walks.get(n.d); return !!(w && (w.tags || []).some(t => ts.includes(t)));
+  groups() { return [...this.list.values()]; },
+  live() { return this.groups().filter(G => G.on()); },
+  gids() { return [...this.list.keys()]; },
+  cur() {   // the group the map and ノート → みんな show (when 自分 is chosen: the first one, for the lists)
+    const v = this.view !== 'me' && this.list.get(this.view);
+    return v || this.live()[0] || this.groups()[0] || null;
   },
-  syncTagName() {   // the group was renamed: follow it in my own tags (old names keep working anyway)
-    const cur = this.gtag(); if (!cur) return;
-    const olds = this.gtags().filter(t => t !== cur && IX.tagN.has(t));
-    if (olds.length) olds.forEach(o => Store.renameTag(o, cur));
+  get gid() { const c = this.cur(); return c ? c.gid : null; },
+  get g() { const c = this.cur(); return c ? c.g : null; },
+  get docs() { const c = this.cur(); return c ? c.docs : NO_DOCS; },
+  on() { const c = this.cur(); return !!(c && c.on()); },
+  anyOn() { return this.live().length > 0; },
+  showing() { return this.view !== 'me' && this.on() && !!GX; },
+  members() { const c = this.cur(); return c ? c.members() : []; },
+  color(uid) { const c = this.cur(); return c ? c.color(uid) : GCOL[7]; },
+  name(uid) { const c = this.cur(); return c ? c.name(uid) : '…'; },
+  link() { const c = this.cur(); return c ? c.link() : ''; },
+  gtag() { const c = this.cur(); return c ? c.gtag() : ''; },
+  gtags() { const c = this.cur(); return c ? c.gtags() : []; },
+  isShared(n) { const c = this.cur(); return !!c && c.isShared(n); },
+  sharedTo(n) { return this.live().filter(G => G.isShared(n)); },
+  allTags() { return uniq(this.live().flatMap(G => G.gtags())); },
+  setGroups(gids) {   // from my pointer (any device): start the new groups, let go of the old
+    gids = uniq(gids.map(String).filter(Boolean)).slice(0, GMAX);
+    for (const [gid, G] of this.list) if (!gids.includes(gid)) { G.stop(); this.list.delete(gid); }
+    for (const gid of gids) if (!this.list.has(gid)) { const G = makeGroup(gid); this.list.set(gid, G); G.start(); }
+    if (this.view !== 'me' && !this.list.has(this.view)) this.view = gids[0] || 'group';
+    this.refresh();
   },
-  renameGroup(name) {
-    const s = FB.sdk, nm = name.trim().slice(0, 24);
-    return s.updateDoc(s.doc(FB.db, 'groups', this.gid), { name: nm, tags: uniq([...this.gtags(), normTag(nm)]) });
-  },
-  start(gid) {
-    if (this.gid === gid && this.unsubs.length) return;
-    this.stop(true);
-    this.gid = gid; this.msg = '';
-    const s = FB.sdk, db = FB.db, first = new Set();
-    this.unsubs.push(s.onSnapshot(s.doc(db, 'groups', gid), snap => {
-      if (!snap.exists()) return this.lost('グループが見つかりませんでした（解散したのかもしれません）');
-      this.g = snap.data();
-      if (!this.g.members || !this.g.members[this.me()]) return this.lost('グループから外れました');
-      this.fixColour();
-      this.syncTagName();
-      this.refresh();
-    }, err => this.lost(err && err.code === 'permission-denied' ? 'グループに参加していません' : null)));
-    ['notes', 'places', 'walks'].forEach(c => this.unsubs.push(s.onSnapshot(s.collection(db, 'groups', gid, c), snap => {
-      snap.docChanges().forEach(ch => { if (ch.type === 'removed') this.docs[c].delete(ch.doc.id); else this.docs[c].set(ch.doc.id, ch.doc.data()); });
-      if (!first.has(c)) { first.add(c); if (first.size === 3) { this.ready = true; this.soon(300); } }
-      this.refresh();
-    }, () => {})));
-  },
-  stop(keepMsg) {
-    this.unsubs.forEach(f => f()); this.unsubs = [];
-    const was = !!this.g;
-    this.gid = null; this.g = null; this.ready = false; clearTimeout(this.t);
-    Object.values(this.docs).forEach(m => m.clear());
-    if (!keepMsg) this.msg = '';
-    if (was) this.refresh();
-  },
-  lost(msg) {   // removed, deleted or no access: forget the group on every device
-    const me = this.me();
-    this.stop(true);
-    if (msg) { this.msg = msg; if (me) this.setPointer('').catch(() => {}); }
+  stop() { for (const G of this.list.values()) G.stop(); this.list.clear(); this.refresh(); },
+  lost(G, msg) {   // removed, deleted or no access: forget that group on every device
+    G.stop(); this.list.delete(G.gid);
+    if (msg) { this.msg = msg; if (this.me()) this.setPointer(this.gids()).catch(() => {}); }
     this.refresh();
   },
   refresh() { clearTimeout(this.rt); this.rt = setTimeout(() => { groupIndex(); paintGroup(); changed(); }, 40); },
-  setPointer(gid) { const s = FB.sdk; return s.setDoc(s.doc(FB.db, 'users', this.me(), 'meta', 'group'), { gid: gid || '', u: Date.now() }); },
-  fixColour() {   // a new member picks the first colour nobody uses yet
-    const me = this.me(), mine = this.g.members[me];
-    const used = Object.entries(this.g.members).filter(([u]) => u !== me).map(([, m]) => m.c);
-    if (mine.c >= 0 && !used.includes(mine.c)) return;
-    let c = 0; while (used.includes(c) && c < GCOL.length - 1) c++;
-    const s = FB.sdk; s.updateDoc(s.doc(FB.db, 'groups', this.gid), { ['members.' + me + '.c']: c }).catch(() => {});
-  },
+  setPointer(gids) { const s = FB.sdk; return s.setDoc(s.doc(FB.db, 'users', this.me(), 'meta', 'group'), { gid: gids[0] || '', gids, u: Date.now() }); },   // gid: for 2.10 and older
   async create(name) {
+    if (this.list.size >= GMAX) throw { code: 'too-many' };
     const s = FB.sdk, me = this.me(), now = Date.now();
-    if (this.gid) await this.leave(true);
     const ref = s.doc(s.collection(FB.db, 'groups'));
     await s.setDoc(ref, { name: name.slice(0, 24), tags: [normTag(name)], owner: me, created: now, members: { [me]: { name: this.myName(), c: 0, joined: now } } });
-    await this.setPointer(ref.id);
-    this.view = 'group'; this.saveView();
+    await this.setPointer(uniq([...this.gids(), ref.id]));
+    this.view = ref.id; this.box = ref.id; this.saveView();
   },
   async join(gid) {
     const s = FB.sdk, me = this.me();
-    if (this.gid && this.gid !== gid) await this.leave(true);
     await s.updateDoc(s.doc(FB.db, 'groups', gid), { ['members.' + me]: { name: this.myName(), c: -1, joined: Date.now() } });
-    await this.setPointer(gid);
-    this.view = 'group'; this.saveView();
+    await this.setPointer(uniq([...this.gids(), gid]));
+    this.view = gid; this.box = gid; this.saveView();
   },
-  async leave(quiet) {
-    const s = FB.sdk, me = this.me(), gid = this.gid, g = this.g;
+  async leave(G, quiet) {
+    const s = FB.sdk, me = this.me(), gid = G && G.gid, g = G && G.g;
     if (!gid || !g) return;
     const mine = [];
-    for (const c of ['notes', 'places', 'walks']) for (const [id, x] of this.docs[c]) if (x.by === me) mine.push([c, id]);
-    this.stop(true);
+    for (const c of ['notes', 'places', 'walks']) for (const [id, x] of G.docs[c]) if (x.by === me) mine.push([c, id]);
+    G.stop(); this.list.delete(gid); this.refresh();
     for (let i = 0; i < mine.length; i += 400) {
       const b = s.writeBatch(FB.db);
       mine.slice(i, i + 400).forEach(([c, id]) => b.delete(s.doc(FB.db, 'groups', gid, c, id)));
@@ -1692,63 +1772,25 @@ const GR = {
       if (g.owner === me) up.owner = others[0];   // hand the group to the next member
       await s.updateDoc(s.doc(FB.db, 'groups', gid), up);
     }
-    await this.setPointer('');
-    if (!quiet) toast('グループから抜けました（自分の記録はそのまま残っています）');
+    await this.setPointer(this.gids());
+    if (!quiet) toast(`「${g.name}」から抜けました（自分の記録はそのまま残っています）`);
   },
-  async remove(uid) {   // owner only
-    const s = FB.sdk, gid = this.gid, ids = [];
-    for (const c of ['notes', 'places', 'walks']) for (const [id, x] of this.docs[c]) if (x.by === uid) ids.push([c, id]);
-    await s.updateDoc(s.doc(FB.db, 'groups', gid), { ['members.' + uid]: s.deleteField() });
-    for (let i = 0; i < ids.length; i += 400) {
-      const b = s.writeBatch(FB.db);
-      ids.slice(i, i + 400).forEach(([c, id]) => b.delete(s.doc(FB.db, 'groups', gid, c, id)));
-      await b.commit();
-    }
-  },
-  rename(name) { const s = FB.sdk; return s.updateDoc(s.doc(FB.db, 'groups', this.gid), { ['members.' + this.me() + '.name']: name.slice(0, 20) }); },
+  boxG() { const gs = this.groups(); return this.list.get(this.box) || (this.box === 'new' ? null : this.cur() || gs[0] || null); },   // the group shown in 設定 → みんなで
+  want() { const c = this.cur(); return c ? c.want() : { notes: new Map(), places: new Map(), walks: new Map() }; },   // what the group being looked at gets (tests, older callers)
   saveView() { try { localStorage.setItem('sanpo-gview', this.view); } catch (e) {} },
-  /* my shared records -> group (copies without GPS); everything else stays mine only */
-  want() {
-    const me = this.me(), ts = this.gtags(), out = { notes: new Map(), places: new Map(), walks: new Map() };
-    for (const n of Store.notes.values()) if (this.isShared(n)) {
-      const { loc, im, imd, ...r } = n;
-      if (im && im.length) r.ph = im.length;   // only how many: the photos themselves stay on your device
-      out.notes.set(me + '_' + n.id, { ...r, by: me });
-    }
-    for (const w of Store.walks.values()) if ((w.tags || []).some(t => ts.includes(t))) { const { trk, ...r } = w; out.walks.set(me + '_' + w.d, { ...r, by: me }); }   // the towns passed go too; the line itself stays here
-    return out;
-  },
-  soon(ms) { if (!this.on() || !this.ready) return; clearTimeout(this.t); this.t = setTimeout(() => this.push(), ms == null ? 1500 : ms); },
-  async push() {
-    if (!this.on() || !this.ready) return;
-    if (this.busy) { this.again = true; return; }
-    this.busy = true;
-    try {
-      const s = FB.sdk, me = this.me(), gid = this.gid, want = this.want(), ops = [];
-      for (const c of ['notes', 'places', 'walks']) {
-        for (const [id, x] of want[c]) { const r = this.docs[c].get(id); if (!r || (+x.u || 0) > (+r.u || 0) || r.imd) ops.push(['set', c, id, JSON.parse(JSON.stringify(x))]); }   // r.imd: photos copied by 2.3.1 or older are taken back out
-        for (const [id, r] of this.docs[c]) if (r.by === me && !want[c].has(id)) ops.push(['del', c, id]);
-      }
-      for (let i = 0; i < ops.length; i += 400) {
-        const b = s.writeBatch(FB.db);
-        for (const [op, c, id, data] of ops.slice(i, i + 400)) { const ref = s.doc(FB.db, 'groups', gid, c, id); op === 'set' ? b.set(ref, data) : b.delete(ref); }
-        await b.commit();
-      }
-      if (gid === this.gid) for (const [op, c, id, data] of ops) op === 'set' ? this.docs[c].set(id, data) : this.docs[c].delete(id);
-    } catch (e) { this.soon(60000); }
-    finally { this.busy = false; if (this.again) { this.again = false; this.soon(300); } }
-  },
+  soon(ms) { for (const G of this.list.values()) G.soon(ms); },
   /* invite links: ?g=<group id> */
   pending() { try { return localStorage.getItem('sanpo-join') || ''; } catch (e) { return ''; } },
   clearPending() { try { localStorage.removeItem('sanpo-join'); localStorage.removeItem('sanpo-join-ok'); } catch (e) {} },
   joinPending() {
     const gid = this.pending();
     if (!gid || !FB.enabled() || !FB.known || this.joining) return;
-    if (this.gid === gid) { this.clearPending(); closePanel('join'); toast('このグループに参加しています'); return; }
+    if (this.list.has(gid)) { this.clearPending(); closePanel('join'); this.view = gid; this.saveView(); this.refresh(); toast('このグループに参加しています'); return; }
+    if (this.list.size >= GMAX) { this.clearPending(); closePanel('join'); toast(`グループは${GMAX}つまでです。設定の「みんなで」から、どれかを抜けてから開いてください`, 4600); return; }
     let ok = false; try { ok = localStorage.getItem('sanpo-join-ok') === '1'; } catch (e) {}
     if (FB.user && ok) return this.doJoin(gid);
     $('#joinText').textContent = (FB.user ? '' : '参加するには、Googleでログインしてください（スマホとPCの同期と同じログインです）。') +
-      (this.on() ? `今のグループ「${this.g.name}」からは抜けて、こちらに参加します。` : 'みんなの歩いた町が、1枚の地図に色分けで重なります。');
+      (this.list.size ? '今入っているグループは、そのままです。もう1つ参加します。' : 'みんなの歩いた町が、1枚の地図に色分けで重なります。');
     $('#joinOk').textContent = FB.user ? '参加する' : 'Googleでログインして参加';
     $('#join').classList.add('open');
   },
@@ -1823,7 +1865,7 @@ function alsoWent(n) {   // someone's memo: I was there too — that day with th
   const make = (d, y) => {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(d || '')) return toast('日付を選んでください');
     if (d > today()) return toast('まだ来ていない日です。今日までの日付を選んでください');
-    const tag = GR.gtag();
+    const tag = GR.gtag();   // the group you are looking at
     Store.putNote({ id: newId(), k: n.k, d, ...(y && n.at ? { at: n.at } : {}), t: '', w: { u: n.by, i: n.id, n: who, ...(y ? { y: 1 } : {}) }, tags: tag ? [tag] : [] });
     closeRoute();
     toast(y ? `${who}さんと、いっしょに行ったことにしました` : `${mdy(d)} に、わたしも行ったことにしました`);
@@ -1846,15 +1888,20 @@ function whoChip(uid) {
 }
 function paintGroup() {
   const on = GR.on();
-  $('#grp').hidden = !on;
-  $('#t_group').hidden = !on;
+  $('#grp').hidden = !GR.anyOn();
+  $('#t_group').hidden = !GR.anyOn();
   if (!on && dTab === 'group') dTab = 'walks';
   if (on) {
-    $('#gvMe').classList.toggle('on', GR.view !== 'group');
-    $('#gvAll').classList.toggle('on', GR.view === 'group');
-    $('#gvAll').textContent = GR.g.name || 'みんな';
+    const seg = $('#grp .gseg'); seg.querySelectorAll('.gv').forEach(b => b.remove());
+    $('#gvMe').classList.toggle('on', !GR.showing());
+    GR.live().forEach((G, i) => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'gv' + (GR.showing() && GR.cur() === G ? ' on' : ''); b.textContent = G.g.name || 'みんな'; b.title = `「${G.g.name}」のみんなの地図`;
+      if (i === 0) b.id = 'gvAll';
+      b.onclick = () => { GR.view = G.gid; GR.saveView(); groupIndex(); paintGroup(); changed(); };
+      seg.appendChild(b);
+    });
     const lg = $('#gLegend'); lg.innerHTML = '';
-    if (GR.view === 'group' && GX) {
+    if (GR.showing()) {
       const me = GR.me(), memos = new Map();
       for (const n of GX.feed) memos.set(n.by, (memos.get(n.by) || 0) + 1);
       for (const n of Store.notes.values()) if (GR.isShared(n)) memos.set(me, (memos.get(me) || 0) + 1);
@@ -1872,35 +1919,41 @@ function paintGroup() {
 function grPaintBox() {
   const box = $('#grBox'); if (!box) return;
   box.hidden = !FB.enabled();
-  const st = $('#grState');
-  $('#grNew').hidden = !FB.user || GR.on();
-  $('#grIn').hidden = !GR.on();
-  if (!FB.user) { st.textContent = 'Googleでログインすると、グループを作ったり、招待されたグループに参加したりできます。'; return; }
-  if (!GR.on()) { st.textContent = (GR.msg ? GR.msg + '　' : '') + (GR.gid ? '読み込んでいます…' : 'グループを作って招待リンクを送ると、みんなの歩いた町が1枚の地図に色分けで重なります。招待されたときは、そのリンクを開いてください。'); return; }
-  const me = GR.me(), owner = GR.g.owner === me, ms = GR.members();
-  st.textContent = `「${GR.g.name}」に参加中（${ms.length}人）`;
+  const st = $('#grState'), tabs = $('#grTabs'), gs = GR.groups();
+  if (!FB.user) { st.textContent = 'Googleでログインすると、グループを作ったり、招待されたグループに参加したりできます。'; tabs.hidden = true; $('#grNew').hidden = true; $('#grIn').hidden = true; return; }
+  const bx = !gs.length ? 'new' : GR.box === 'new' || GR.list.has(GR.box) ? GR.box : (GR.cur() || gs[0]).gid;   // which one is shown (a group still loading falls back to the current one)
+  tabs.hidden = !gs.length; tabs.innerHTML = '';
+  gs.forEach(G => tabs.appendChild(mkBtn(G.g ? G.g.name : '…', 'sc' + (bx === G.gid ? ' on' : ''), () => { GR.box = G.gid; grPaintBox(); })));
+  if (gs.length && gs.length < GMAX) tabs.appendChild(mkBtn('＋ 新しく作る', 'sc' + (bx === 'new' ? ' on' : ''), () => { GR.box = 'new'; grPaintBox(); setTimeout(() => $('#grName').focus(), 50); }));
+  const G = GR.list.get(bx);
+  $('#grNew').hidden = bx !== 'new' || gs.length >= GMAX;
+  $('#grIn').hidden = !G || !G.on();
+  st.textContent = gs.length ? '参加中：' + gs.map(x => x.g ? `「${x.g.name}」${Object.keys(x.g.members || {}).length}人` : '読み込んでいます…').join('　') : (GR.msg ? GR.msg + '　' : '') + 'グループを作って招待リンクを送ると、みんなの歩いた町が1枚の地図に色分けで重なります。招待されたときは、そのリンクを開いてください。';
+  if (!G || !G.on()) return;
+  const me = GR.me(), owner = G.g.owner === me, ms = G.members();
   const list = $('#grMembers'); list.innerHTML = '';
   ms.forEach(m => {
     const row = document.createElement('div'); row.className = 'mem';
-    const i = document.createElement('i'); i.style.background = GR.color(m.uid);
+    const i = document.createElement('i'); i.style.background = G.color(m.uid);
     const n = document.createElement('span'); n.textContent = m.name || '…';
     row.append(i, n);
     if (m.uid === me) row.append(Object.assign(document.createElement('small'), { textContent: '自分' }));
-    if (m.uid === GR.g.owner) row.append(Object.assign(document.createElement('small'), { textContent: '作成者' }));
-    row.append(Object.assign(document.createElement('em'), { textContent: GX ? `町 ${GX.towns.get(m.uid) || 0}` : '' }));
+    if (m.uid === G.g.owner) row.append(Object.assign(document.createElement('small'), { textContent: '作成者' }));
+    row.append(Object.assign(document.createElement('em'), { textContent: GX && GR.cur() === G ? `町 ${GX.towns.get(m.uid) || 0}` : '' }));
     if (owner && m.uid !== me) {
       const b = mkBtn('外す', '', () => {
         if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = '本当に？'; setTimeout(() => { b.classList.remove('arm'); b.textContent = '外す'; }, 2500); return; }
-        GR.remove(m.uid).then(() => toast(`${m.name} さんをグループから外しました`)).catch(() => toast('外せませんでした'));
+        G.remove(m.uid).then(() => toast(`${m.name} さんを「${G.g.name}」から外しました`)).catch(() => toast('外せませんでした'));
       }, 'この人をグループから外す（その人の記録はその人の手元に残ります）');
       row.append(b);
     }
     list.appendChild(row);
   });
-  const inp = $('#grMyName'); if (document.activeElement !== inp) inp.value = GR.name(me);
-  const gn = $('#grGName'); $('#grNameRow').hidden = !owner; if (document.activeElement !== gn) gn.value = GR.g.name || '';
-  $('#grWhat').textContent = `メモは基本「自分だけ」です。グループに見えるのは、#${GR.gtag()} を付けたメモと、#${GR.gtag()} を付けた日の散歩（その日のメモ全部）だけ。地図のグループ表示も、共有したメモの町だけが塗られます。メモの正確な位置（GPS）と写真は共有しません（写真は、それぞれの端末の中だけ）。`;
+  const inp = $('#grMyName'); if (document.activeElement !== inp) inp.value = G.name(me);
+  const gn = $('#grGName'); $('#grNameRow').hidden = !owner; if (document.activeElement !== gn) gn.value = G.g.name || '';
+  $('#grWhat').textContent = `メモは基本「自分だけ」です。「${G.g.name}」に見えるのは、書くときの「共有」で「${G.g.name}」を選んだメモと、日のページの「この日を共有」で選んだ日（その日のメモと通った町）だけ。正確な位置と道の線は出ません。`;
 }
+
 let confirmPublic = false;
 const confirm2 = () => confirmPublic;
 
@@ -3012,7 +3065,7 @@ setTimeout(okaeriPill, 2500);
 async function saveThumbs(ds) { const ids = []; for (const o of ds) { const id = Thumbs.newId(); await Thumbs.put(id, o.d || o, false, o.s); ids.push(id); } return ids; }
 function tagChips(tags) {
   const f = document.createDocumentFragment();
-  const gt = GR.on() ? GR.gtags() : [], gc = GR.on() ? GR.color(GR.me()) : null;
+  const gt = GR.allTags(), gc = GR.anyOn() ? (GR.cur() || GR.live()[0]).color(GR.me()) : null;
   (tags || []).forEach(t => {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'htag'; b.textContent = '#' + t; b.onclick = () => openTag(t);
     if (gt.includes(t)) { b.classList.add('shared'); b.title = 'グループに共有中'; }
@@ -3031,7 +3084,8 @@ function entryNode(n, opt = {}) {
   const meta = d.querySelector('.meta');
   if (!opt.timeOnly) meta.appendChild(mkBtn('この日の散歩 ›', 'tag', () => openWalk(n.d), 'この日の散歩を見る'));
   if (n.loc) meta.appendChild(mkBtn('地図で見る', 'tag', () => showPin(n.loc, n.k), fmtLoc(n.loc) + '（押すと、書いた場所を地図で見る）'));
-  if (GR.on() && GR.isShared(n)) { const sh = whoChip(GR.me()); sh.lastChild.textContent = '共有中'; sh.title = `#${GR.gtag()} でグループに共有しています`; meta.appendChild(sh); }
+  const sg = GR.sharedTo(n);
+  if (sg.length) { const sh = whoChip(GR.me()); sh.firstChild.style.background = sg[0].color(GR.me()); sh.lastChild.textContent = '共有中'; sh.title = `「${sg.map(G => G.g.name).join('」「')}」に共有しています`; meta.appendChild(sh); }
   const pl = d.querySelector('.pl');
   if (opt.place) { pl.appendChild(mkBtn(placeLabel(n.k) + ' ›', 'plink', () => jumpTo(n.k))); } else pl.remove();
   d.querySelector('.t').textContent = n.t || (n.x ? '' : n.w ? withText(n) : (n.im || []).length ? '（写真だけ）' : '（メモなし）');
@@ -3135,6 +3189,7 @@ function editEntry(node, n) {   // なおす: the same order and words as writin
     <label>ひとこと</label><textarea class="eT" rows="2"></textarea>
     <label>くわしく</label><textarea class="eX big" placeholder="道順、見つけたもの、天気、寄ったお店、気づいたこと…"></textarea>
     <label>タグ</label><div class="eG"></div>
+    <div class="eShare" hidden></div>
     <div class="row"><button class="btn eS" type="button">保存</button><button class="btn ghost eC" type="button">キャンセル</button><button class="eDel" type="button">このメモをけす</button></div></div>`;
   const q = c => node.querySelector(c);
   let k = n.k, links = (n.p || []).slice(), im = (n.im || []).slice(), gone = [];
@@ -3156,6 +3211,18 @@ function editEntry(node, n) {   // なおす: the same order and words as writin
   q('.eD').value = n.d; q('.eA').value = n.at || ''; q('.eT').value = n.t || ''; q('.eX').value = n.x || '';
   ['.eD', '.eA'].forEach(c => q(c).addEventListener('input', paintChips));
   const tg = tagInput(q('.eG'), n.tags);
+  const paintES = () => {   // 共有 here sets or clears the group's tag; a day shared with a group shares its memos too
+    const wd = Store.walks.get(q('.eD').value || n.d), dayTo = G => !!(wd && (wd.tags || []).some(t => G.gtags().includes(t)));
+    shareChips(q('.eShare'), '共有', G => tg.get().some(t => G.gtags().includes(t)) || dayTo(G), G => {
+      const now = tg.get();
+      if (!G) tg.set(now.filter(t => !GR.allTags().includes(t)));
+      else if (now.some(t => G.gtags().includes(t))) tg.set(now.filter(t => !G.gtags().includes(t)));
+      else if (!dayTo(G)) tg.set(uniq([...now, G.gtag()]));
+      else toast(`この日ごと「${G.g.name}」に共有しています（日のページで変えられます）`, 3600);
+      paintES();
+    });
+  };
+  paintES(); q('.eG').addEventListener('click', () => setTimeout(paintES, 0)); q('.eG').addEventListener('keyup', () => setTimeout(paintES, 0));
   const addLinks = txt => {   // the same as writing: Instagram・X → a photo; a map link → the shop
     const ls = parseLinks(txt); if (!ls.length) return false;
     if (ls.every(mapUrl)) { sf.take(txt); openBox('eWhere'); return true; }
@@ -3290,29 +3357,44 @@ function unfoldForm() {
 function foldForm() { if (!hasMemosHere()) return; $('#sForm').classList.add('collapsed'); paintWbar(); document.activeElement && document.activeElement.blur && document.activeElement.blur(); }
 $('#fOpen').onclick = unfoldForm;
 $('#fFold').onclick = foldForm;
-const shareOn = () => { try { return GR.on() && localStorage.getItem('sanpo-share-day') === today(); } catch (e) { return false; } };
+function shareGids() {   // 書く: which groups see what you write today (back to 自分だけ tomorrow)
+  if (!GR.anyOn()) return [];
+  let o = null; try { o = JSON.parse(localStorage.getItem('sanpo-share') || 'null'); } catch (e) {}
+  let gids = o && o.d === today() && Array.isArray(o.gids) ? o.gids : [];
+  if (!o) { try { if (localStorage.getItem('sanpo-share-day') === today() && GR.live()[0]) gids = [GR.live()[0].gid]; } catch (e) {} }   // the one-group switch of 2.10
+  return gids.filter(g => GR.list.has(g) && GR.list.get(g).on());
+}
+function setShareGids(gids) { try { localStorage.setItem('sanpo-share', JSON.stringify({ d: today(), gids })); localStorage.removeItem('sanpo-share-day'); } catch (e) {} }
+const shareOn = () => shareGids().length > 0;
+function shareChips(host, label, sel, onPick) {   // 共有：自分だけ / group / group — the same row when writing, fixing and on a day
+  const gs = GR.live(); host.innerHTML = ''; host.hidden = !gs.length; if (!gs.length) return;
+  const me = GR.me(), any = gs.some(G => sel(G));
+  host.appendChild(el2('span', 'lab', label));
+  const own = mkBtn('自分だけ', 'shc' + (any ? '' : ' on'), () => onPick(null)); own.setAttribute('aria-pressed', any ? 'false' : 'true'); host.appendChild(own);
+  gs.forEach(G => {
+    const on = sel(G), c = mkBtn(G.g.name, 'shc g' + (on ? ' on' : ''), () => onPick(G)), col = G.color(me);
+    c.style.setProperty('--gc', col); if (on && isLight(col)) c.classList.add('lt'); c.setAttribute('aria-pressed', on ? 'true' : 'false');
+    c.title = on ? `「${G.g.name}」のみんなにも見えます` : `押すと「${G.g.name}」にも見えます`;
+    host.appendChild(c);
+  });
+}
 function paintShare() {
   const b = $('#fShare'); if (!b) return;
-  b.hidden = !GR.on();
-  if (!GR.on()) return;
-  const on = shareOn(), c = GR.color(GR.me());
-  b.classList.toggle('on', on); b.classList.toggle('lt', on && isLight(c));
-  b.style.background = on ? c : ''; b.style.borderColor = on ? c : '';
-  b.querySelector('span').textContent = on ? `#${GR.gtag()} のみんなにも見える` : `いまは自分だけ／押すと #${GR.gtag()} にも`;
-  b.title = on ? '今日はこの設定のまま。明日になると「自分だけ」に戻ります' : '';
+  const on = shareGids();
+  shareChips(b, '共有', G => on.includes(G.gid), G => { setShareGids(!G ? [] : on.includes(G.gid) ? on.filter(x => x !== G.gid) : [...on, G.gid]); paintShare(); });
+  b.title = on.length ? '今日はこの選び方のまま。明日になると「自分だけ」に戻ります' : '';
   paintSave();
 }
-function paintSave() {   // when what you write will also reach the group, the button says so
-  const f = $('#sForm'), gt = GR.on() ? GR.gtags() : [];
-  const txt = $('#fText').value + ' ' + $('#fDetail').value;
+function paintSave() {   // when what you write will also reach a group, the button says so
+  const f = $('#sForm'), txt = $('#fText').value + ' ' + $('#fDetail').value;
   let ft = []; try { ft = fTags.get(); } catch (e) {}
-  const share = GR.on() && (shareOn() || ft.some(t => gt.includes(t)) || hashtags(txt).some(t => gt.includes(t)));
-  $('#fSave').textContent = share ? 'のこす（みんなにも）' : 'のこす';
-  f.classList.toggle('sharing', share);
-  if (share) f.style.setProperty('--gc', GR.color(GR.me())); else f.style.removeProperty('--gc');
+  const tags = [...ft, ...hashtags(txt)], on = shareGids();
+  const to = GR.live().filter(G => on.includes(G.gid) || tags.some(t => G.gtags().includes(t)));
+  $('#fSave').textContent = to.length ? 'のこす（みんなにも）' : 'のこす';
+  f.classList.toggle('sharing', !!to.length);
+  if (to.length) f.style.setProperty('--gc', to[0].color(GR.me())); else f.style.removeProperty('--gc');
 }
-['#fText', '#fDetail'].forEach(id => $(id).addEventListener('input', () => { if (GR.on()) paintSave(); }));
-$('#fShare').onclick = () => { try { shareOn() ? localStorage.removeItem('sanpo-share-day') : localStorage.setItem('sanpo-share-day', today()); } catch (e) {} paintShare(); };
+['#fText', '#fDetail'].forEach(id => $(id).addEventListener('input', () => { if (GR.anyOn()) paintSave(); }));
 $('#sForm').onsubmit = ev => {
   ev.preventDefault();
   if (!S.sel) return;
@@ -3322,7 +3404,8 @@ $('#sForm').onsubmit = ev => {
   const all = parseLinks([$('#fLinks').value, ...T.links, ...X.links].join(' ')), links = all.filter(u => !mapUrl(u)), ml = all.find(mapUrl);
   const shop = formShop ? shopOut(formShop) : ml ? shopOut({ u: ml, n: urlName(ml) || firstLine(T.text) }) : undefined;   // a map link written in the memo is its shop
   const t = T.text || (shop && shop.n) || '', x = X.text;
-  const tags = uniq([...(pc ? fTags.get() : []), ...hashtags(t + ' ' + x), ...(shareOn() ? [GR.gtag()] : [])]);
+  const shareTo = GR.live().filter(G => shareGids().includes(G.gid));
+  const tags = uniq([...(pc ? fTags.get() : []), ...hashtags(t + ' ' + x), ...shareTo.map(G => G.gtag())]);
   if (!t && !x && !links.length && !formThumbs.length && !shop) { $('#fText').focus(); toast('メモを書いてください'); return; }
   const custom = pc || $('#fWhenRow').classList.contains('open');   // phone: only when ◷ was opened
   const d = custom ? ($('#fDate').value || today()) : today();
@@ -3336,7 +3419,7 @@ $('#sForm').onsubmit = ev => {
   $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; $('#fWhereBox').classList.remove('open'); $('#fPhotoBox').classList.remove('open'); fTags.set([]); formThumbs = []; paintFormThumbs(); paintLinks(); paintSave();
   setFormLoc(null); setFormShop(null); fShop.clear(); shopDone();
   $('#fTime').value = ''; if (!pc) { $('#fDate').value = today(); $('#fWhenRow').classList.remove('open'); } paintWhen();
-  toast((d !== today() ? `${d.slice(5).replace('-', '/')}の分として、` : '') + (k === S.sel.key ? 'のこしました' : `${placeName(k)} にのこしました`) + (shareOn() ? `（#${GR.gtag()} のみんなにも）` : ''));
+  toast((d !== today() ? `${d.slice(5).replace('-', '/')}の分として、` : '') + (k === S.sel.key ? 'のこしました' : `${placeName(k)} にのこしました`) + (shareTo.length ? `（${shareTo.map(G => G.g.name).join('・')} のみんなにも）` : ''));
   burst(k, pt);
   $('#sForm').classList.add('canfold', 'collapsed'); paintWbar();   // just saved one here: back to reading
   if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
@@ -4060,12 +4143,17 @@ function renderDrawer() {
   } else if (dTab === 'group') {
     if (!GR.on() || !GX) empty('グループに入っていません。設定からグループを作るか、招待リンクを開いてください。');
     else {
+      if (GR.live().length > 1) {   // several groups: choose whose notes (the map follows)
+        const pk = el2('div', 'pick gpick');
+        GR.live().forEach(G => pk.appendChild(mkBtn(G.g.name, 'sc' + (GR.cur() === G ? ' on' : ''), () => { GR.view = G.gid; GR.saveView(); groupIndex(); paintGroup(); changed(); renderDrawer(); })));
+        frag.appendChild(pk);
+      }
       const me = GR.me();
       const dayRows = GX.days.map(w => ({ ...w, day: true })).filter(w => !q || w.title.includes(q) || w.sum.includes(q) || GR.name(w.by).includes(q));
       const all = [...[...Store.notes.values()].filter(n => GR.isShared(n)).map(n => ({ ...n, by: me })), ...GX.feed]
         .filter(n => !q || (n.t || '').includes(q) || (n.x || '').includes(q) || placeLabel(n.k).includes(q) || GR.name(n.by).includes(q)).sort(newestFirst).slice(0, 200);
       for (const w of dayRows) { const i = all.findIndex(n => n.d <= w.d); all.splice(i < 0 ? all.length : i, 0, w); }   // a day sits above its memos
-      if (!all.length) empty(q ? '見つかりませんでした' : `まだ共有されたメモはありません。メモに #${GR.gtag()} を付けると、ここに出ます。`);
+      if (!all.length) empty(q ? '見つかりませんでした' : `まだ「${GR.g.name}」に共有されたメモはありません。書くときの「共有」で「${GR.g.name}」を選ぶと、ここに出ます。`);
       let month = '';
       all.forEach(n => {
         if (n.d.slice(0, 7) !== month) { month = n.d.slice(0, 7); const r = document.createElement('div'); r.className = 'rule'; r.textContent = month.replace('-', '.'); frag.appendChild(r); }
@@ -4369,7 +4457,16 @@ function renderWalk() {
   if (Replay.items(d).length > 1 || w.trk) row.appendChild(mkBtn('▶ たどる', w.title || w.sum ? 'tag' : 'btn ghost', () => Replay.start(d), 'この日の散歩を、メモの順にたどる'));
   sum.appendChild(row);
   body.appendChild(sum);
-  if (GR.on() && (w.tags || []).some(t => GR.gtags().includes(t))) sum.appendChild(el2('p', 'shnote', `#${GR.gtag()} で共有中：名前・この日のこと・通った町が、みんなにも見えます（道の線は出ません）`));
+  if (GR.anyOn()) {   // この日を共有: the day, its memos and the towns passed (never the line)
+    const row = el2('div', 'dayshare'), wt = w.tags || [], sel = G => G.gtags().some(t => wt.includes(t));
+    shareChips(row, 'この日を共有', sel, G => {
+      const cur = (Store.walks.get(d) || {}).tags || [];
+      Store.putWalk(d, { tags: !G ? cur.filter(t => !GR.allTags().includes(t)) : sel(G) ? cur.filter(t => !G.gtags().includes(t)) : uniq([...cur, G.gtag()]) });
+    });
+    sum.appendChild(row);
+    const to = GR.live().filter(sel);
+    if (to.length) sum.appendChild(el2('p', 'shnote', `「${to.map(G => G.g.name).join('」「')}」のみんなにも見えます：名前・この日のこと・この日のメモ・通った町（道の線は出ません）`));
+  }
   const add = el2('div', 'addday');   // この日に足す: what used to sit on top of ノート, now where the day is already chosen
   add.appendChild(el2('span', 'lab', 'この日に足す'));
   add.append(mkBtn('＋ 写真をまとめて', 'pgo', () => pickBulk(() => openWalk(d)), 'この日の写真をまとめて選ぶと、撮った時刻で近いメモに振り分けます'),
@@ -4948,28 +5045,28 @@ $('#grMake').onclick = async () => {
   if (!name) { $('#grName').focus(); toast('グループ名を入れてください'); return; }
   $('#grMake').disabled = true;
   try { await GR.create(name); $('#grName').value = ''; toast(`グループ「${name}」を作りました。招待リンクを送りましょう`, 3600); }
-  catch (e) { toast('作れませんでした（' + (e && e.code || 'error') + '）'); }
+  catch (e) { toast(e && e.code === 'too-many' ? `グループは${GMAX}つまでです` : '作れませんでした（' + (e && e.code || 'error') + '）'); }
   finally { $('#grMake').disabled = false; }
 };
 $('#grInvite').onclick = async () => {
-  const url = GR.link(), text = `散歩の地図「${GR.g.name}」に招待します。開いて「参加する」を押してください。`;
+  const G = GR.boxG(); if (!G || !G.on()) return;
+  const url = G.link(), text = `散歩の地図「${G.g.name}」に招待します。開いて「参加する」を押してください。`;
   if (navigator.share && (W < 720 || H < 520)) { try { await navigator.share({ title: 'SANPO LOG', text, url }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
   try { await navigator.clipboard.writeText(text + '\n' + url); toast('招待リンクをコピーしました。LINEやメールに貼って送ってください', 3600); }
   catch (e) { $('#mText').value = text + '\n' + url; $('#mText').select(); toast('下の欄の招待リンクをコピーして送ってください', 3600); }
 };
 $('#grLeave').onclick = () => {
   const b = $('#grLeave');
-  if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = '本当に抜ける？'; setTimeout(() => { b.classList.remove('arm'); b.textContent = 'グループを抜ける'; }, 3000); return; }
-  b.classList.remove('arm'); b.textContent = 'グループを抜ける';
-  GR.leave().catch(() => toast('抜けられませんでした。少しあとで試してください'));
+  if (!b.classList.contains('arm')) { b.classList.add('arm'); b.textContent = '本当に抜ける？'; setTimeout(() => { b.classList.remove('arm'); b.textContent = 'このグループを抜ける'; }, 3000); return; }
+  b.classList.remove('arm'); b.textContent = 'このグループを抜ける';
+  GR.leave(GR.boxG()).catch(() => toast('抜けられませんでした。少しあとで試してください'));
 };
 $('#grGName').onchange = () => {
-  const v = $('#grGName').value.trim(); if (!v || !GR.on() || v === GR.g.name) return;
-  GR.renameGroup(v).then(() => toast(`グループ名を「${v}」にしました（タグも #${normTag(v)} になります）`, 3600)).catch(() => toast('変えられませんでした'));
+  const G = GR.boxG(), v = $('#grGName').value.trim(); if (!v || !G || !G.on() || v === G.g.name) return;
+  G.renameGroup(v).then(() => toast(`グループ名を「${v}」にしました（タグも #${normTag(v)} になります）`, 3600)).catch(() => toast('変えられませんでした'));
 };
-$('#grMyName').onchange = () => { const v = $('#grMyName').value.trim(); if (v && GR.on()) GR.rename(v).then(() => toast('表示名を変えました')).catch(() => toast('変えられませんでした')); };
+$('#grMyName').onchange = () => { const G = GR.boxG(), v = $('#grMyName').value.trim(); if (v && G && G.on()) G.rename(v).then(() => toast('表示名を変えました')).catch(() => toast('変えられませんでした')); };
 $('#gvMe').onclick = () => { GR.view = 'me'; GR.saveView(); groupIndex(); paintGroup(); changed(); };
-$('#gvAll').onclick = () => { GR.view = 'group'; GR.saveView(); groupIndex(); paintGroup(); changed(); };
 $('#joinOk').onclick = () => {
   const gid = GR.pending(); if (!gid) return closePanel('join');
   if (FB.user) return GR.doJoin(gid);
