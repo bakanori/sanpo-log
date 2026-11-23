@@ -238,7 +238,7 @@ for name, b64 in json.load(open(os.path.join(ROOT, 'tools', 'icons.json'))).item
     if not name.startswith('_'):
         with open(os.path.join(SITE, 'icons', name), 'wb') as f: f.write(base64.b64decode(b64))
 
-for name in ['index.html', 'README.md', 'firebase-config.js', 'manifest.webmanifest']:
+for name in ['index.html', 'README.md', 'firebase-config.js', 'manifest.webmanifest', 'sw.js']:
     if os.path.exists(os.path.join(ROOT, name)):
         shutil.copy(os.path.join(ROOT, name), os.path.join(SITE, name))
 open(os.path.join(SITE, '.nojekyll'), 'w').close()
