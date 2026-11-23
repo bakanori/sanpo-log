@@ -66,6 +66,7 @@ body.ptr #xh,body.ptr #yh{opacity:1}
 body.sp #bHome span{display:none}
 body.sp #bHome{padding-left:10px;padding-right:10px}
 .brand i{width:6px;height:6px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse 2.4s var(--ease) infinite}
+@keyframes sheetIn{from{opacity:0;transform:translateY(12px)}}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(.4)}}
 #crumb{margin-top:14px;font:10px/1.2 var(--mono);color:var(--mute);letter-spacing:.06em;display:flex;flex-wrap:wrap;gap:6px;min-height:12px}
 #crumb button{color:var(--mute);padding:2px 0;border-bottom:1px solid transparent;transition:color var(--ui),border-color var(--ui)}
@@ -114,7 +115,7 @@ body.first #first{display:flex;animation:fade .8s .9s both}
 #firstMap{min-height:44px;padding:0 14px;font-size:13px;color:var(--mute);text-decoration:underline;text-underline-offset:4px}
 body.first #tools>*:not(#bData),body.first #fab,body.first #recBtn,body.first #hud,body.first #okPill{display:none!important}
 body.first #stats>div{visibility:hidden}
-#okPill{position:fixed;left:14px;bottom:calc(150px + var(--safe-b));z-index:5;min-height:44px;padding:0 18px;border-radius:22px;background:var(--ink);color:#fff;font-size:13px;letter-spacing:.04em;box-shadow:0 8px 22px rgba(0,0,0,.14);animation:fade .5s both}
+#okPill{position:fixed;left:14px;bottom:calc(172px + var(--safe-b));z-index:5;min-height:44px;padding:0 18px;border-radius:22px;background:var(--ink);color:#fff;font-size:13px;letter-spacing:.04em;box-shadow:0 8px 22px rgba(0,0,0,.14);animation:fade .5s both}
 body:not(.sp) #okPill{left:auto;right:calc(22px + var(--safe-r));bottom:calc(72px + var(--safe-b))}
 body.sheet-open #okPill,body.wsheet-open #okPill,body.drawer-open #okPill,body.rec #okPill{display:none}   /* going up: the path at the top (日本 / 神奈川県 / …) */
 body.sp.rec #bLog{display:none}   /* on a walk: where am I, and ＋ */
@@ -413,7 +414,7 @@ body:not(.sp).drawer-open #hud{left:342px}
 #map #trackGap{fill:none;stroke:var(--accent);opacity:.35;vector-effect:none;pointer-events:none}
 body.replaying #track,body.replaying #trackGap,body.replaying #trackHalo{opacity:.16}
 #replayPath{stroke:var(--ink)!important}
-#recBtn{display:none;position:fixed;right:92px;bottom:calc(88px + var(--safe-b));height:44px;border-radius:22px;padding:0 16px 0 13px;align-items:center;gap:9px;background:rgba(255,255,255,.94);border:1px solid var(--hair);font:12px/1 var(--sans);letter-spacing:.04em;color:var(--ink);z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.07);transition:transform var(--panel),background var(--ui),color var(--ui)}
+#recBtn{display:none;position:fixed;right:92px;bottom:calc(104px + var(--safe-b));height:44px;border-radius:22px;padding:0 16px 0 13px;align-items:center;gap:9px;background:rgba(255,255,255,.94);border:1px solid var(--hair);font:12px/1 var(--sans);letter-spacing:.04em;color:var(--ink);z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.07);transition:transform var(--panel),background var(--ui),color var(--ui)}
 #recBtn i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--accent);flex:none}
 #recBtn b{font:300 13px/1 var(--mono);letter-spacing:.02em}
 #recBtn.on{background:var(--ink);border-color:var(--ink);color:#fff}
@@ -553,7 +554,7 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   #store{display:none!important}
   .brand{padding:11px 14px 11px 0;margin:-11px -14px -11px 0;min-width:44px;min-height:44px}
   #memoHere{min-height:34px;padding:0 13px;font-size:11px}
-  #fab{bottom:calc(78px + var(--safe-b))}
+  #fab{bottom:calc(94px + var(--safe-b))}
   #fab small{font-size:11px;bottom:-19px}
   #hud{bottom:calc(74px + var(--safe-b))!important}
   #scale{font-size:11px}
@@ -602,25 +603,34 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   #hud{left:14px;bottom:calc(64px + var(--safe-b))}
   #tools{left:14px;right:14px;bottom:calc(14px + var(--safe-b));justify-content:flex-end}
   #hint{display:none}
-  #toast{top:auto;bottom:calc(150px + var(--safe-b));max-width:calc(100vw - 40px);white-space:normal;text-align:center;line-height:1.5}
+  #toast{top:auto;bottom:calc(172px + var(--safe-b));max-width:calc(100vw - 40px);white-space:normal;text-align:center;line-height:1.5}
   body.sheet-open #toast,body.wsheet-open #toast,body.drawer-open #toast{top:calc(14px + var(--safe-t));bottom:auto}
-  #sheet,#wsheet,#drawer{left:0;right:0;width:100%;top:auto;max-height:70vh;max-height:70dvh;border:0;border-top:1px solid var(--hair);border-radius:16px 16px 0 0;transform:translateY(102%);box-shadow:0 -10px 40px rgba(0,0,0,.06)}
-  #drawer,#wsheet{height:66vh;height:66dvh}
+  #sheet,#wsheet,#drawer{left:0;right:0;width:100%;top:auto;height:80vh;height:80dvh;max-height:none;border:0;border-top:1px solid var(--hair);border-radius:18px 18px 0 0;transform:translateY(102%);box-shadow:0 -12px 44px rgba(0,0,0,.08);
+    transition:transform .3s cubic-bezier(.55,0,.8,.2)}   /* leaving: quick, out of the way */
+  #sheet.open,#wsheet.open,#drawer.open{transition:transform .56s cubic-bezier(.22,1,.36,1)}   /* arriving: fast, then a long soft settle */
+  #sheet.small,#wsheet.small,#drawer.small{height:45vh;height:45dvh}
+  #sheet:after,#wsheet:after,#drawer:after{content:"";position:absolute;left:0;right:0;top:100%;height:60vh;background:#fff}   /* no gap below while it glides */
+  .panel.open .pbody{animation:sheetIn .5s .08s cubic-bezier(.22,1,.36,1) both}
+  /* a sheet up: the header keeps its first line only, so the map shows between it and the sheet */
+  body.sp:not(.sheet-small):is(.sheet-open,.wsheet-open,.drawer-open) #title,body.sp:not(.sheet-small):is(.sheet-open,.wsheet-open,.drawer-open) #intro,body.sp:not(.sheet-small):is(.sheet-open,.wsheet-open,.drawer-open) #grp{display:none!important}
+  body.sp:is(.sheet-open,.wsheet-open,.drawer-open) #top{padding-bottom:10px}
+  body.sp:not(.sheet-small):is(.sheet-open,.wsheet-open,.drawer-open) #hlbar{opacity:0;pointer-events:none}   /* the sheet already says which day; keep the little map band clear */
+  #title,#grp{animation:fade .45s .12s both}   /* coming back when the sheet steps down: a soft return, not a pop */
   #sheet.open,#wsheet.open,#drawer.open{transform:none}
   /* phone: the place's head in fewer lines — title and 行った side by side, no raw coordinates */
-  #sheet .phead{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;align-items:center}
-  #sheet .phead>.eyebrow,#sheet .phead>.sstat{grid-column:1/-1}
-  #sheet .phead>.eyebrow{padding-right:52px}
-  #sheet .phead>.big{grid-column:1;grid-row:2}
-  #sheet .phead>.toggle{grid-column:2;grid-row:2;margin:8px 0 0}
+  #sheet .phead{display:grid;grid-template-columns:minmax(0,1fr);align-items:center}
+  #sheet .phead>.eyebrow{padding-right:56px;min-height:20px;display:flex;align-items:center}
+  #sheet .phead>.big{grid-row:2;padding-right:8px}
+  #sheet .phead>.toggle{grid-row:3;justify-self:start;margin:14px 0 2px}   /* away from ×: left, one line lower */
+  #sheet .phead>.sstat{grid-row:4}
   #sheet .coord{display:none}
   /* pull the head up to read more, down to go back */
-  #sheet.tall,#wsheet.tall,#drawer.tall{max-height:92dvh;height:92dvh}
-  body.sheet-tall #hlbar,body.sheet-tall #replay{opacity:0;pointer-events:none}
+  body.sp:not(.sheet-small).wsheet-open #replay{opacity:0;pointer-events:none}
   #sheet:before,#wsheet:before,#drawer:before{content:"";position:absolute;top:6px;left:50%;width:36px;height:4px;margin-left:-18px;border-radius:2px;background:#dcdcd5;z-index:2}
-  #replay{top:auto;bottom:calc(66dvh + 54px)}
-  #hlbar{left:14px;transform:none;bottom:calc(150px + var(--safe-b))}
-  body.sp.sheet-open #hlbar,body.sp.wsheet-open #hlbar,body.sp.drawer-open #hlbar{bottom:calc(66vh + 12px);bottom:calc(66dvh + 12px)}
+  #replay{top:auto;bottom:calc(45dvh + 14px)}
+  #hlbar{left:14px;transform:none;bottom:calc(172px + var(--safe-b))}
+  body.sp.sheet-open #hlbar,body.sp.wsheet-open #hlbar,body.sp.drawer-open #hlbar{bottom:calc(80dvh + 10px)}
+  body.sp.sheet-small #hlbar{bottom:calc(45dvh + 10px)}
   .phead{padding:16px 20px 10px}
   .pbody{padding:0 20px 18px;min-height:64px}
   .form{padding:12px 20px calc(14px + var(--safe-b))}
@@ -876,7 +886,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.5.1', VERSION_DATE = '2026.11.23';
+const VERSION = '2.5.2', VERSION_DATE = '2026.11.23';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -1012,6 +1022,14 @@ function labelPoint(r, b) {
 const D = { P: [], pref: {}, prefInfo: {}, muni: {}, towns: {} };
 const S = { level: 'japan', pc: null, mc: null, sel: null };
 const V = { cx: 0, cy: 0, s: 1 };
+const SHEET = { small: {} };
+function liftPx(id) {   // phone: how far above the middle of the screen a place should sit to be seen above the sheet
+  if (W >= 720) return 0;
+  id = id || ['sheet', 'wsheet', 'drawer'].find(x => $('#' + x).classList.contains('open')) || 'sheet';
+  const b2 = document.getElementById('bData2'), top = Math.max(60, (b2 ? b2.getBoundingClientRect().bottom : 50) + 12);
+  const bottom = H * (1 - (SHEET.small[id] ? .45 : .8)) - 8;
+  return Math.max(0, H / 2 - (top + Math.max(top + 40, bottom)) / 2);
+}
 let W = innerWidth, H = innerHeight;
 let origin = null;           // screen point of last dive click (ripple source)
 let JAPAN_BB;
@@ -1740,7 +1758,7 @@ function flyTo(T, dur = 900) {
   $('#gLabel').style.opacity = 0;
   return new Promise(res => {
     const step = now => {
-      const t = Math.min(1, (now - t0) / dur), e = ease(t);
+      const t = Math.min(1, Math.max(0, now - t0) / dur), e = ease(t);
       V.cx = F.cx + (T.cx - F.cx) * e; V.cy = F.cy + (T.cy - F.cy) * e;
       V.s = Math.exp(ls0 + (ls1 - ls0) * e + bump * Math.sin(Math.PI * t));
       applyView();
@@ -1973,7 +1991,7 @@ function tick(id, val, tot) {
   const t0 = performance.now();
   const totS = tot == null ? '' : '/' + tot.toLocaleString('en');
   const step = now => {
-    const t = Math.min(1, (now - t0) / 700), e = 1 - Math.pow(1 - t, 3);
+    const t = Math.min(1, Math.max(0, now - t0) / 700), e = 1 - Math.pow(1 - t, 3);
     node.innerHTML = Math.round(from + (val - from) * e).toLocaleString('en') + (totS ? '<em>' + totS + '</em>' : '');
     if (t < 1) requestAnimationFrame(step);
   };
@@ -2186,14 +2204,14 @@ function selectTown(i, fly) {
   $('#selp').setAttribute('d', townNodes[i].getAttribute('d'));
   openSheet();
   if (!fly && W < 720) {
-    const [x, y] = t.pts[0], [, sy] = toScreen(x, y);
-    if (sy > H * .3) flyTo({ cx: x, cy: y + H * .22 * V.s, s: V.s }, 600);
+    const [x, y] = t.pts[0], [, sy] = toScreen(x, y), band = H * (1 - (SHEET.small.sheet ? .45 : .8));
+    if (sy > band - 20 || sy < 70) flyTo({ cx: x, cy: y + liftPx('sheet') * V.s, s: V.s }, 620);
   }
   if (fly) {
     const b = t.bb, cur = V.s;
     const T = fitView([b[0] - (b[2] - b[0]), b[1] - (b[3] - b[1]), b[2] + (b[2] - b[0]), b[3] + (b[3] - b[1])]);
     if (T.s > cur) T.s = cur;
-    if (W >= 720) T.cx += 210 * T.s; else T.cy = (b[1] + b[3]) / 2 + H * .22 * T.s;
+    if (W >= 720) T.cx += 210 * T.s; else T.cy = (b[1] + b[3]) / 2 + liftPx('sheet') * T.s;
     flyTo(T, 700);
   }
 }
@@ -2778,7 +2796,7 @@ function showNote(n) {
   if (n.loc) return showPin(n.loc, n.k);
   const p = placePoint(n.k); if (!p) return;
   const s = Math.max(V.s * .9, Math.min(V.s, .02));
-  flyTo({ cx: p[0] + (W >= 720 ? 230 * s : 0), cy: p[1] + (W < 720 ? H * .22 * s : 0), s }, 700);
+  flyTo({ cx: p[0] + (W >= 720 ? 230 * s : 0), cy: p[1] + (W < 720 ? liftPx() * s : 0), s }, 700);
   setTimeout(() => burst(n.k, p), 420);
 }
 /* ＋写真 on a memo: paste a link, or pick photos from the phone */
@@ -3065,7 +3083,7 @@ function spread(sp, p) {
   node.parentNode.appendChild(g);
   const R = Math.max(...[[box.x, box.y], [box.x + box.width, box.y], [box.x, box.y + box.height], [box.x + box.width, box.y + box.height]].map(q => Math.hypot(q[0] - p[0], q[1] - p[1])));
   const t0 = performance.now();
-  const step = now => { const t = Math.min(1, (now - t0) / 640), e = 1 - Math.pow(1 - t, 3); c.setAttribute('r', R * e); if (t < 1) requestAnimationFrame(step); else g.remove(); };
+  const step = now => { const t = Math.min(1, Math.max(0, now - t0) / 640), e = 1 - Math.pow(1 - t, 3); c.setAttribute('r', R * e); if (t < 1) requestAnimationFrame(step); else g.remove(); };
   requestAnimationFrame(step);
 }
 /* small burst at the place that was just recorded */
@@ -3224,7 +3242,7 @@ function showPin(loc, key) {
   const d = `M${x} ${y}h0`;
   $('#pin').setAttribute('d', d); $('#pinRing').setAttribute('d', d);
   const s = Math.min(V.s, .012);
-  flyTo({ cx: x + (W >= 720 ? 230 * s : 0), cy: y + (W < 720 ? H * .22 * s : 0), s }, 700);
+  flyTo({ cx: x + (W >= 720 ? 230 * s : 0), cy: y + (W < 720 ? liftPx() * s : 0), s }, 700);
 }
 let locBusy = false;
 async function goHere(withMemo) {
@@ -3459,26 +3477,64 @@ function closePanel(id, quiet) {
   if (id === 'wsheet') { curWalk = null; editing = null; Replay.stop(); }
   if (id === 'drawer') syncTools();
   if (id === 'ig') IG.clear();
-  if (['sheet', 'wsheet', 'drawer'].includes(id)) { $('#' + id).classList.remove('tall'); if (!document.querySelector('.panel.tall')) document.body.classList.remove('sheet-tall'); }
+  if (['sheet', 'wsheet', 'drawer'].includes(id) && SHEET.small[id]) {   // next time it opens at 80% again (after it has slid away)
+    SHEET.small[id] = false; sheetBody();
+    setTimeout(() => { if (!p.classList.contains('open')) p.classList.remove('small'); }, 320);
+  }
 }
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closePanel(b.dataset.close));
-/* phones: pull a sheet down by its head to close it */
+/* phones: a sheet opens to 80%. Pull its head down to 45% (to see the map), down again to close; up to come back.
+   It follows the finger, then settles by where and how fast you let go — fast, with a long soft ending. */
+const SETTLE = 'transform .48s cubic-bezier(.22,1,.36,1)';
+function settleSheet(panel) {
+  panel.style.transition = SETTLE; panel.style.transform = 'translateY(0)';
+  const done = () => { panel.style.transition = ''; panel.style.transform = ''; panel.removeEventListener('transitionend', done); };
+  panel.addEventListener('transitionend', done); setTimeout(done, 600);
+}
+function sheetTo(id, small) {   // 80% ⇄ 45% without a jump: swap the height, then glide from where it is now
+  const panel = $('#' + id); if (!panel.classList.contains('open') || W >= 720) return;
+  const was = !!SHEET.small[id]; if (was === small && !panel.style.transform) return;
+  const liftBefore = liftPx();
+  const top0 = panel.getBoundingClientRect().top;
+  panel.style.transition = 'none'; panel.style.transform = '';
+  SHEET.small[id] = small; panel.classList.toggle('small', small); sheetBody();
+  const top1 = panel.getBoundingClientRect().top;
+  panel.style.transform = `translateY(${top0 - top1}px)`;
+  void panel.offsetHeight;
+  settleSheet(panel);
+  const d = liftPx() - liftBefore;   // the map moves with it, so the place stays in the open part
+  if (Math.abs(d) > 4) flyTo({ cx: V.cx, cy: V.cy + d * V.s, s: V.s }, 480);
+}
+function sheetBody() { document.body.classList.toggle('sheet-small', ['sheet', 'wsheet', 'drawer'].some(x => SHEET.small[x] && $('#' + x).classList.contains('open'))); }
 ['sheet', 'wsheet', 'drawer'].forEach(id => {
   const panel = $('#' + id), head = panel.querySelector('.phead'); if (!head) return;
-  let y0 = null, dy = 0, t0 = 0;
-  head.addEventListener('touchstart', e => { if (W >= 720 || e.touches.length !== 1) return; y0 = e.touches[0].clientY; dy = 0; t0 = performance.now(); }, { passive: true });
+  let y0 = null, dy = 0, lastY = 0, lastT = 0, vy = 0, moved = false;
+  head.addEventListener('touchstart', e => {
+    if (W >= 720 || e.touches.length !== 1 || e.target.closest('input,textarea')) return;
+    y0 = lastY = e.touches[0].clientY; lastT = performance.now(); dy = 0; vy = 0; moved = false;
+  }, { passive: true });
   head.addEventListener('touchmove', e => {
     if (y0 == null) return;
-    dy = e.touches[0].clientY - y0;
-    if (dy > 6) { panel.style.transition = 'none'; panel.style.transform = `translateY(${dy}px)`; }
+    const y = e.touches[0].clientY, now = performance.now();
+    vy = vy * .4 + .6 * (y - lastY) / Math.max(1, now - lastT); lastY = y; lastT = now;   // px/ms, smoothed
+    dy = y - y0;
+    if (!moved && Math.abs(dy) < 6) return;
+    moved = true;
+    const small = !!SHEET.small[id];
+    const t = dy >= 0 ? dy : small ? Math.max(dy, -H * .35 - 30) + (dy < -H * .35 - 30 ? (dy + H * .35 + 30) * .2 : 0) : dy * .22;   // up: from 45% it follows to 80%; at 80% it only gives a little
+    panel.style.transition = 'none'; panel.style.transform = `translateY(${t}px)`;
   }, { passive: true });
   const end = () => {
     if (y0 == null) return; y0 = null;
-    panel.style.transition = ''; panel.style.transform = '';
-    const v = dy / Math.max(1, performance.now() - t0), tall = panel.classList.contains('tall');
-    if (dy < -40) { panel.classList.add('tall'); document.body.classList.add('sheet-tall'); }
-    else if (dy > 90 || (dy > 28 && v > .5)) { if (tall) { panel.classList.remove('tall'); document.body.classList.remove('sheet-tall'); } else closePanel(id); }
-    dy = 0;
+    if (!moved) return;
+    const small = !!SHEET.small[id], v = vy;
+    let to;
+    if (!small) to = dy > H * .5 || (dy > 160 && v > 1.2) ? 'close' : dy > H * .12 || (dy > 24 && v > .45) ? 'small' : 'stay';
+    else to = dy > H * .14 || (dy > 24 && v > .45) ? 'close' : dy < -H * .08 || (dy < -24 && v < -.45) ? 'big' : 'stay';
+    if (to === 'close') { panel.style.transition = ''; panel.style.transform = ''; closePanel(id); }
+    else if (to === 'small') sheetTo(id, true);
+    else if (to === 'big') sheetTo(id, false);
+    else settleSheet(panel);
   };
   head.addEventListener('touchend', end); head.addEventListener('touchcancel', end);
 });
@@ -3841,6 +3897,7 @@ const Replay = {
     return out;
   },
   start(d) {
+    if (W < 720) sheetTo('wsheet', true);
     const its = this.items(d), w = Store.walks.get(d) || {};
     if (w.trk) return this.startTrack(d, w, its);
     if (its.length < 2) return toast('たどるには、場所の分かるメモが2つ以上いります');
@@ -3864,7 +3921,7 @@ const Replay = {
     };
     const step = now => {
       if (!this.on) return;
-      const el_ = now - t0, per = leg + rest;
+      const el_ = Math.max(0, now - t0), per = leg + rest;   // a frame's time can be a hair before t0
       const i = Math.min(segs, Math.floor(el_ / per)), inLeg = Math.max(0, el_ - i * per - rest);
       const f = i >= segs ? 1 : Math.min(1, inLeg / leg), e = ease(f);
       // course so far: every finished leg + part of this one
@@ -3899,7 +3956,7 @@ const Replay = {
     let shown = 0; const t0 = performance.now();
     const step = now => {
       if (!this.on) return;
-      const f = Math.min(1, (now - t0) / dur), want = f * L;
+      const f = Math.min(1, Math.max(0, now - t0) / dur), want = f * L;
       let k = 0; while (k < cum.length - 1 && cum[k + 1] <= want) k++;
       let dpath = '', cur = -1;
       for (let i = 0; i <= k; i++) { const q = flat[i]; dpath += (q[2] !== cur ? 'M' : 'L') + f3(q[0]) + ' ' + f3(q[1]); cur = q[2]; }
@@ -3954,7 +4011,7 @@ function focusKeys(keys, fitRoute) {
       const bb = [Math.min(...pts.map(p => p[0])), Math.min(...pts.map(p => p[1])), Math.max(...pts.map(p => p[0])), Math.max(...pts.map(p => p[1]))];
       const m = Math.max(bb[2] - bb[0], bb[3] - bb[1]) * .35 + .3;
       const T = fitView([bb[0] - m, bb[1] - m, bb[2] + m, bb[3] + m]);
-      if (W >= 720) T.cx += 230 * T.s; else T.cy += H * .2 * T.s;
+      if (W >= 720) T.cx += 230 * T.s; else T.cy += liftPx('wsheet') * T.s;
       pendingFly = T;
     }
   }
