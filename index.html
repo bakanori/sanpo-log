@@ -410,6 +410,16 @@ body:not(.sp).drawer-open #hud{left:342px}
 #gLegend i,.who i,.mem i{flex:none;width:7px;height:7px;border-radius:50%;display:inline-block}
 .who{font:10px/1 var(--mono);letter-spacing:.04em;color:#555}
 .entry.other .acts{display:none}
+.entry .also{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin-top:2px}
+.entry .also .pgo{min-height:32px;font-size:12px}
+.pgo.on{background:var(--ink);color:#fff}
+.wl{font:10px/1 var(--mono);letter-spacing:.06em;color:var(--mute)}
+.wline{grid-column:1/-1;font-size:12px;color:#555}
+#sStat .who{margin-left:10px}
+#sStat .wd{color:var(--mute);margin-left:2px}
+#sStat:has(.who){font-size:11px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 0}
+#gLegend .deep i{background:#555}
+#stats #gLegend b{font:400 10px/1 var(--mono);letter-spacing:.04em;color:var(--ink)}
 .entry.other .t{color:#333}
 .mem{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #f0f0eb;font-size:13px}
 .mem small{font:10px/1 var(--mono);color:var(--mute);margin:0}
@@ -642,7 +652,7 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   .ftools .tl{min-height:44px;font-size:13px}
   .loc{min-height:44px;font-size:11px}
   .shopf .shn{font-size:16px;min-height:44px;padding:0 14px}
-  .pgo{min-height:44px;font-size:13px}
+  .pgo,.entry .also .pgo{min-height:44px;font-size:13px}
   #fPhotoBox .phint{font-size:12px}
   #fPhotoBox .phint button{display:inline-flex;align-items:center;min-height:44px;padding:0 4px}
   #fLinksRow .lkx{min-width:44px;min-height:44px}
@@ -978,7 +988,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.7.1', VERSION_DATE = '2026.11.23';
+const VERSION = '2.8.0', VERSION_DATE = '2026.11.23';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -1159,6 +1169,10 @@ function cleanNote(x) {
     const sn = String(x.s.n || '').slice(0, 80), sa = String(x.s.a || '').slice(0, 160), su = String(x.s.u || '').slice(0, 800);
     if (sn || mapUrl(su)) o.s = { ...(sn ? { n: sn } : {}), ...(sa ? { a: sa } : {}), ...(mapUrl(su) ? { u: su } : {}) };
   }
+  if (x.w && typeof x.w === 'object' && x.w.u && x.w.i) {   // わたしも行った: whose memo, and whether it was the same outing
+    const wn = String(x.w.n || '').slice(0, 20);
+    o.w = { u: String(x.w.u).slice(0, 64), i: String(x.w.i).slice(0, 40), ...(wn ? { n: wn } : {}), ...(x.w.y ? { y: 1 } : {}) };
+  }
   o.u = +x.u || Date.now();
   return o;
 }
@@ -1192,7 +1206,7 @@ const Store = {
     return { app: 'sanpo-log', v: FORMAT, places: sorted(this.places), notes: sorted(this.notes), walks: sorted(this.walks), deleted: sorted(this.deleted) };
   },
   save() { try { localStorage.setItem(LS, JSON.stringify(this.dump())); } catch (e) { toast('保存できませんでした（ブラウザの容量がいっぱいかもしれません）'); } },
-  commit() { this.save(); reindex(); changed(); Sync.soon(); FB.soon(); GR.soon(); },
+  commit() { this.save(); reindex(); changed(); if (GR.on()) GR.refresh(); Sync.soon(); FB.soon(); GR.soon(); },
   /* import / migrate — v1 {r:{key:{n,l,ll,v,e:[]}}}, v2/v3 {places,notes,walks,deleted}; the newer copy of each item wins.
      A record from a newer app (v > FORMAT) is still read: unknown fields are dropped, nothing is lost that this version knows. */
   absorb(o) {
@@ -1695,20 +1709,70 @@ const GR = {
 let GX = null;
 function groupIndex() {
   if (!GR.on()) { GX = null; return; }
-  const me = GR.me(), M = GR.g.members, first = new Map(), others = new Map(), feed = [], towns = new Map();
-  const add = (k, uid, d) => { let m = first.get(k); if (!m) first.set(k, m = new Map()); const p = m.get(uid); if (!p || d < p) m.set(uid, d); };
-  for (const n of Store.notes.values()) if (GR.isShared(n)) add(n.k, me, n.d);   // the group map shows only what was shared
-  for (const x of GR.docs.notes.values()) if (x.by !== me && M[x.by] && okKey(String(x.k))) { add(x.k, x.by, x.d); const a = others.get(x.k); a ? a.push(x) : others.set(x.k, [x]); feed.push(x); }
+  const me = GR.me(), M = GR.g.members, first = new Map(), others = new Map(), feed = [], towns = new Map(), together = new Map(), mine = new Map();
+  const add = (k, uid, d, ct) => { let m = first.get(k); if (!m) first.set(k, m = new Map()); const p = m.get(uid); if (!p || d < p[0] || (d === p[0] && ct < p[1])) m.set(uid, [d, ct]); };
+  const ct = x => x.w && x.w.y ? Infinity : idTime(x.id);   // "いっしょ" never takes the colour from the memo it answers
+  const link = (x, uid) => {   // わたしも行った: remember whose memo it answers
+    if (!x.w || !x.w.u || !x.w.i) return;
+    const key = x.w.u + '_' + x.w.i;
+    if (uid === me) mine.set(key, x.id);
+    if (x.w.y) { let a = together.get(key); if (!a) together.set(key, a = []); if (!a.includes(uid)) a.push(uid); }
+  };
+  for (const n of Store.notes.values()) if (GR.isShared(n)) { add(n.k, me, n.d, ct(n)); link(n, me); }   // the group map shows only what was shared
+  for (const x of GR.docs.notes.values()) if (x.by !== me && M[x.by] && okKey(String(x.k))) { add(x.k, x.by, x.d, ct(x)); link(x, x.by); const a = others.get(x.k); a ? a.push(x) : others.set(x.k, [x]); feed.push(x); }
   const order = uid => (M[uid] && M[uid].joined) || 0;
   const own = new Map();
-  for (const [k, m] of first) {
+  let multi = 0;
+  for (const [k, m] of first) {   // the colour: who went first; on the same day, who wrote it first
     let best = null;
-    for (const [uid, d] of m) if (!best || d < best[1] || (d === best[1] && order(uid) < order(best[0]))) best = [uid, d];
-    own.set(k, best[0]);
-    if (k[0] === 't') for (const uid of m.keys()) towns.set(uid, (towns.get(uid) || 0) + 1);
+    for (const [uid, [d, ct]] of m) if (!best || d < best.d || (d === best.d && (ct < best.ct || (ct === best.ct && order(uid) < order(best.uid))))) best = { uid, d, ct };
+    own.set(k, best.uid);
+    if (k[0] === 't') { for (const uid of m.keys()) towns.set(uid, (towns.get(uid) || 0) + 1); if (m.size > 1) multi++; }
   }
   for (const a of others.values()) a.sort(newestFirst);
-  GX = { first, own, others, feed, towns, visited: new Set(first.keys()) };
+  GX = { first, own, others, feed, towns, together, mine, multi, visited: new Set(first.keys()) };
+}
+const idTime = id => { const m = /^[0-9a-z]{8}/.exec(String(id || '')), t = m ? parseInt(m[0], 36) : NaN; return t > 1.5e12 && t < Date.now() + 864e5 ? t : Infinity; };   // when a memo was first written (its id)
+const deep = hex => { const v = parseInt(String(hex).slice(1), 16), f = c => Math.round(c * .6).toString(16).padStart(2, '0'); return '#' + f(v >> 16) + f(v >> 8 & 255) + f(v & 255); };
+function townFill(k) {   // group map: the first one's colour; deeper where two or more went
+  const u = GX.own.get(k); if (!u) return null;
+  const c = GR.color(u), m = GX.first.get(k);
+  return m && m.size > 1 ? deep(c) : c;
+}
+const withName = w => w.u === GR.me() ? 'あなた' : (GR.g && GR.g.members && GR.g.members[w.u] && GR.g.members[w.u].name) || w.n || '…';
+const withText = n => !n.w ? '' : n.w.y ? (withName(n.w) === 'あなた' ? 'あなたと、いっしょに' : `${withName(n.w)}さんと、いっしょに`) : 'わたしも行った';
+const mdy = d => { const [y, m, dd] = d.split('-'); return `${y === today().slice(0, 4) ? '' : y + '年'}${+m}月${+dd}日`; };
+function withRow(n, by) {   // under a memo: who came along (いっしょ), and for others' memos: わたしも行った
+  const row = el2('div', 'also');
+  const ws = GR.showing() && GX.together.get(by + '_' + n.id);
+  if (ws && ws.length) { row.appendChild(el2('span', 'wl', 'いっしょ')); ws.forEach(u => { const c = whoChip(u); if (u === GR.me()) c.lastChild.textContent = 'あなた'; row.appendChild(c); }); }
+  if (by !== GR.me() && !n.w && GR.showing() && n.id) {
+    const have = GX.mine.get(by + '_' + n.id), b = mkBtn(have ? 'わたしも行った ✓' : 'わたしも行った', 'pgo' + (have ? ' on' : ''), () => alsoWent(n));
+    b.setAttribute('aria-pressed', have ? 'true' : 'false'); row.appendChild(b);
+  }
+  return row.childNodes.length ? row : null;
+}
+function alsoWent(n) {   // someone's memo: I was there too — that day with them, or another day
+  const key = n.by + '_' + n.id, have = GX && GX.mine.get(key), mn = have && Store.notes.get(have), who = GR.name(n.by), place = placeName(n.k);
+  const head = el2('p', '', `${who}さんの ${mdy(n.d)} のメモ（${place}）`);
+  if (mn) return routeDlg('わたしも行った', [head, el2('p', '', mn.w && mn.w.y ? `${mdy(mn.d)}、${who}さんと、いっしょに行ったことになっています。` : `${mdy(mn.d)} に、わたしも行ったことになっています。`)],
+    [['取り消す', 'btn ghost', () => { Store.delNote(have); closeRoute(); toast('取り消しました'); }], ['とじる', 'btn', closeRoute]]);
+  const make = (d, y) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d || '')) return toast('日付を選んでください');
+    if (d > today()) return toast('まだ来ていない日です。今日までの日付を選んでください');
+    const tag = GR.gtag();
+    Store.putNote({ id: newId(), k: n.k, d, ...(y && n.at ? { at: n.at } : {}), t: '', w: { u: n.by, i: n.id, n: who, ...(y ? { y: 1 } : {}) }, tags: tag ? [tag] : [] });
+    closeRoute();
+    toast(y ? `${who}さんと、いっしょに行ったことにしました` : `${mdy(d)} に、わたしも行ったことにしました`);
+    if (townData && n.k[0] === 't' && townData.towns.some(t => t.k === n.k)) setTimeout(() => burst(n.k), 250);
+  };
+  const other = () => {
+    const di = el2('input'); di.type = 'date'; di.max = today(); di.value = today(); di.setAttribute('aria-label', '行った日');
+    const r = el2('div', 'rday'); r.append(el2('b', '', '行った日'), di);
+    routeDlg('別の日に行った', [head, el2('p', '', 'いつ行きましたか？（だいたいでOK）'), r], [['のこす', 'btn', () => make(di.value, false)], ['もどる', 'btn ghost', () => alsoWent(n)]]);
+  };
+  routeDlg('わたしも行った', [head, el2('p', 'note', 'あなたの記録として、グループにも出ます。あとから取り消せます。')],
+    [[`${mdy(n.d)}に、いっしょに行った`, 'btn', () => make(n.d, true)], ['別の日に行った', 'btn ghost', other], ['やめる', 'btn ghost', closeRoute]]);
 }
 const visK = k => GR.showing() ? GX.visited.has(k) : isV(k);
 function whoChip(uid) {
@@ -1737,6 +1801,7 @@ function paintGroup() {
         sp.title = `${m.name || ''}：歩いた町 ${GX.towns.get(m.uid) || 0}、共有したメモ ${memos.get(m.uid) || 0}`;
         sp.append(i, document.createTextNode(m.name || '…'), b); lg.appendChild(sp);
       });
+      if (GX.multi) { const sp = el2('span', 'deep'); sp.title = '2人以上が歩いた町は、最初に行った人の色を濃くしています'; sp.append(el2('i'), document.createTextNode('濃い色＝2人以上')); lg.appendChild(sp); }
     }
   }
   grPaintBox(); paintShare();
@@ -2036,7 +2101,7 @@ function paint() {
     n.style.fill = ctx ? (t ? mix(CTX, t * .45, to) : 'var(--ctx)') : (t ? mix(WHITE, t, to) : '');
   }
   const grp = GR.showing();
-  if (townData) townData.towns.forEach((t, i) => { townNodes[i].style.fill = grp ? (GX.own.has(t.k) ? GR.color(GX.own.get(t.k)) : 'var(--land)') : isV(t.k) ? 'var(--accent)' : 'var(--land)'; townNodes[i].classList.toggle('hl', !!HL && HL.keys.has(t.k)); });
+  if (townData) townData.towns.forEach((t, i) => { townNodes[i].style.fill = grp ? (townFill(t.k) || 'var(--land)') : isV(t.k) ? 'var(--accent)' : 'var(--land)'; townNodes[i].classList.toggle('hl', !!HL && HL.keys.has(t.k)); });
   for (const [pc, n] of prefNodes) n.classList.toggle('hl', !!HL && HL.P.has(pc) && !(lv !== 'japan' && pc === S.pc));
   for (const [mc, n] of muniNodes) n.classList.toggle('hl', !!HL && HL.M.has(mc) && !(lv === 'muni' && mc === S.mc));
   $('#gMuni').style.display = lv === 'japan' ? 'none' : '';
@@ -2333,8 +2398,9 @@ function selInfo() {
   const pc = s.key.slice(1, 3);
   if (s.lv === 't') {
     const f = GR.showing() && GX.first.get(s.key);
-    const stat = f ? 'ここを歩いた人　' + [...f.entries()].sort((a, b) => a[1] < b[1] ? -1 : 1).map(([u, d]) => `${GR.name(u)} ${d.slice(5).replace('-', '.')}`).join('　') : '';
-    return { eyebrow: `${D.prefInfo[pc].n} ${D.muni[s.mc].n}`, ...info, stat };
+    const who = f ? [...f.entries()].sort((a, b) => a[1][0] < b[1][0] ? -1 : a[1][0] > b[1][0] ? 1 : a[1][1] - b[1][1]).map(([u, [d]]) => [u, d]) : null;
+    const stat = who ? 'ここを歩いた人　' + who.map(([u, d]) => `${GR.name(u)} ${mdy(d)}`).join('　') : '';
+    return { eyebrow: `${D.prefInfo[pc].n} ${D.muni[s.mc].n}`, ...info, stat, who };
   }
   if (s.lv === 'm') {
     const mc = s.key.slice(1), a = AG.muni.get(mc), T = (D.pref[pc] && D.pref[pc].T[mc]) || 0;
@@ -2342,6 +2408,12 @@ function selInfo() {
   }
   const a = AG.pref.get(pc), P = D.prefInfo[pc];
   return { eyebrow: '日本', ...info, stat: `歩いた市区町村 ${a ? a.munis.size : 0} / ${P.m}　町 ${a ? a.towns : 0} / ${P.t.toLocaleString('en')}` };
+}
+function paintStat(info) {
+  const el = $('#sStat'); el.textContent = '';
+  if (!info.who) { el.textContent = info.stat; return; }
+  el.appendChild(el2('span', 'wl', 'ここを歩いた人'));
+  for (const [u, d] of info.who) { const c = whoChip(u); if (u === GR.me()) c.lastChild.textContent = 'あなた'; c.appendChild(el2('span', 'wd', mdy(d))); el.appendChild(c); }
 }
 const fmtLL = ll => `${Math.abs(ll[1]).toFixed(4)}°${ll[1] >= 0 ? 'N' : 'S'}  ${ll[0].toFixed(4)}°E`;
 const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -2353,7 +2425,7 @@ function openSheet() {
   $('#sEyebrow').textContent = info.eyebrow;
   $('#sName').textContent = info.n;
   $('#sCoord').textContent = fmtLL(info.ll);
-  $('#sStat').textContent = info.stat;
+  paintStat(info);
   editing = null;
   renderEntries();
   buildScope();
@@ -2913,12 +2985,14 @@ function entryNode(n, opt = {}) {
   if (GR.on() && GR.isShared(n)) { const sh = whoChip(GR.me()); sh.lastChild.textContent = '共有中'; sh.title = `#${GR.gtag()} でグループに共有しています`; meta.appendChild(sh); }
   const pl = d.querySelector('.pl');
   if (opt.place) { pl.appendChild(mkBtn(placeLabel(n.k) + ' ›', 'plink', () => jumpTo(n.k))); } else pl.remove();
-  d.querySelector('.t').textContent = n.t || (n.x ? '' : (n.im || []).length ? '（写真だけ）' : '（メモなし）');
+  d.querySelector('.t').textContent = n.t || (n.x ? '' : n.w ? withText(n) : (n.im || []).length ? '（写真だけ）' : '（メモなし）');
+  if (n.w && n.t) d.querySelector('.t').before(el2('div', 'wline', withText(n)));
   d.querySelector('.dx').textContent = n.x || '';
   if (n.s) d.querySelector('.shr').appendChild(shopChip(n.s, n.k)); else d.querySelector('.shr').remove();
   d.querySelector('.ph').appendChild(chips(n.p, n));
   d.insertBefore(thumbStrip(n), d.querySelector('.ph'));
   d.querySelector('.tg').appendChild(tagChips(n.tags));
+  const wr = GR.on() && withRow(n, GR.me()); if (wr) d.appendChild(wr);
   d.querySelector('.ed').onclick = e => { e.stopPropagation(); editEntry(d, n); };
   d.querySelector('.ad').onclick = e => { e.stopPropagation(); addPhotoUI(d, n); };
   d.onclick = e => {   // anywhere on the card: show it on the map
@@ -2970,7 +3044,8 @@ function otherEntry(n, opt) {   // someone else's memo in the group: read only, 
   const dt = document.createElement('span'); dt.className = 'd'; dt.textContent = fmtDay(n.d) + (n.at ? '  ' + n.at : ''); meta.appendChild(dt);
   const pl = d.querySelector('.pl');
   if (opt.place) pl.appendChild(mkBtn(placeLabel(n.k) + ' ›', 'plink', () => jumpTo(n.k))); else pl.remove();
-  d.querySelector('.t').textContent = n.t || '';
+  d.querySelector('.t').textContent = n.t || (n.x ? '' : withText(n));
+  if (n.w && n.t) d.querySelector('.t').before(el2('div', 'wline', withText(n)));
   d.querySelector('.dx').textContent = n.x || '';
   d.querySelector('.dx').style.borderLeftColor = GR.color(n.by);
   if (n.s && typeof n.s === 'object') d.querySelector('.shr').appendChild(shopChip({ n: String(n.s.n || '').slice(0, 80), u: mapUrl(n.s.u) ? n.s.u : '', a: String(n.s.a || '').slice(0, 160) }, n.k)); else d.querySelector('.shr').remove();
@@ -2978,6 +3053,7 @@ function otherEntry(n, opt) {   // someone else's memo in the group: read only, 
   if (nph) d.querySelector('.ph').appendChild(el2('span', 'phnote', `写真 ${nph} 枚は、本人の手もとに`));
   d.querySelector('.ph').appendChild(chips(noteLinks(n), n));
   d.querySelector('.tg').appendChild(tagChips(Array.isArray(n.tags) ? n.tags : []));
+  const wr = withRow(n, n.by); if (wr) d.appendChild(wr);
   return d;
 }
 let editing = null;
@@ -3076,16 +3152,16 @@ function renderEntries() {
   $('#sCount').textContent = `メモ ${own.length}`;
   photosBtn($('#sCount'), own);
   const box = $('#sEntries'); box.innerHTML = '';
-  const grp = GR.showing(), theirs = grp && GX.others.has(k) ? GX.others.get(k) : [];
+  const grp = GR.showing(), theirs = grp && GX.others.has(k) ? GX.others.get(k).filter(n => !bareWith(n, k)) : [];
   const hereW = k[0] === 't' ? '町' : k[0] === 'p' ? '県' : '市', writeW = W < 720 ? '下の欄に、ひとこと。' : '下の「ここに、ひとこと」から。';
   if (!own.length && theirs.length) {   // nothing of yours yet: the group's memos come first
     $('#sCount').textContent = `みんなのメモ ${theirs.length}`; photosBtn($('#sCount'), theirs);
     theirs.forEach(n => box.appendChild(entryNode(n, { other: true })));
-    const e = el2('div', 'empty mine'); e.innerHTML = `あなたのメモは、まだありません。<br>${writeW}`; box.appendChild(e);
+    const e = el2('div', 'empty mine'); e.innerHTML = `あなたのメモは、まだありません。<br>行ったことがあれば「わたしも行った」、書くなら${writeW}`; box.appendChild(e);
   } else if (!own.length) box.innerHTML = `<div class="empty">まだ、この${hereW}の話はありません。<br>${writeW}</div>`;
   own.forEach(n => box.appendChild(entryNode(n)));
   if (own.length && theirs.length) {
-    const os = GX.others.get(k);
+    const os = theirs;
     const r = document.createElement('div'); r.className = 'rule'; r.textContent = `みんなのメモ ${os.length}`; photosBtn(r, os); box.appendChild(r);
     os.forEach(n => box.appendChild(entryNode(n, { other: true })));
   }
@@ -3103,7 +3179,7 @@ function renderEntries() {
         b.querySelector('.d').textContent = n.d.slice(5).replace('-', '.');
         if (grp) { const w = whoChip(n.by || GR.me()); w.lastChild.remove(); b.querySelector('.d').prepend(w); }
         b.querySelector('.p').textContent = placeName(n.k);
-        b.querySelector('.t').textContent = n.t || n.x || '';
+        b.querySelector('.t').textContent = n.t || n.x || withText(n);
         b.onclick = () => jumpTo(n.k);
         box.appendChild(b);
       });
@@ -3123,6 +3199,11 @@ $('#sToggle').onclick = () => {
 };
 $('#memoHere').onclick = currentAreaSel;
 /* reading and writing take turns: memos first; the form unfolds only when you mean to write */
+function bareWith(n, k) {   // only "いっしょ", no words or photos, and the memo it answers is shown here
+  if (!n.w || !n.w.y || n.t || n.x || +n.ph || (n.p && n.p.length) || n.s) return false;
+  const o = n.w.u === GR.me() ? Store.notes.get(n.w.i) : GR.docs.notes.get(n.w.u + '_' + n.w.i);
+  return !!o && o.k === k;
+}
 const hasMemosHere = () => !!S.sel && ((IX.byPlace.get(S.sel.key) || []).length > 0 || (GR.showing() && GX.others && GX.others.has(S.sel.key)));
 function paintWbar() {
   const t = $('#fText').value.trim(), b = $('#fOpen');
@@ -3887,7 +3968,7 @@ function renderDrawer() {
         b.querySelector('.d').append(whoChip(n.by), document.createTextNode(fmtDay(n.d) + (n.at ? '  ' + n.at : '')));
         b.querySelector('.p').textContent = placeLabel(n.k);
         const nph = +n.ph || (n.im || []).length || (Array.isArray(n.imd) ? n.imd.length : 0);
-        b.querySelector('.t').textContent = n.t || n.x || (nph ? (n.by === me ? `写真 ${nph} 枚（この端末に）` : `写真 ${nph} 枚は、本人の手もとに`) : '');
+        b.querySelector('.t').textContent = n.t || n.x || withText(n) || (nph ? (n.by === me ? `写真 ${nph} 枚（この端末に）` : `写真 ${nph} 枚は、本人の手もとに`) : '');
         b.onclick = () => { jumpTo(n.k); if (W < 720) closePanel('drawer'); };
         frag.appendChild(b);
       });
@@ -4845,7 +4926,7 @@ function changed() {
 }
 
 function refreshPanels() {
-  if (S.sel && $('#sheet').classList.contains('open')) { renderEntries(); $('#sStat').textContent = selInfo().stat; fTags.refresh(); }
+  if (S.sel && $('#sheet').classList.contains('open')) { renderEntries(); paintStat(selInfo()); fTags.refresh(); }
   if (curWalk && $('#wsheet').classList.contains('open')) renderWalk();
   if ($('#drawer').classList.contains('open')) { const f = document.activeElement === $('#dFilter'); renderDrawer(); if (f) $('#dFilter').focus(); }
 }
@@ -4867,7 +4948,7 @@ function attachLink(u) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'cand' + (i === 0 && when && Math.abs(noteTime(n) - when) < 36e5 * 36 ? ' best' : '');
     b.innerHTML = '<b></b><span></span>';
     b.querySelector('b').textContent = n.d.replace(/-/g, '.') + (n.at ? ' ' + n.at : '') + ' · ' + (placeName(n.k) || '');
-    b.querySelector('span').textContent = n.t || n.x || '（メモなし）';
+    b.querySelector('span').textContent = n.t || n.x || withText(n) || '（メモなし）';
     b.onclick = () => {
       Store.putNote({ ...n, p: parseLinks([...(n.p || []), url].join(' ')) });
       closePanel('attach'); toast('写真のリンクを付けました'); openWalk(n.d);
