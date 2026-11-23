@@ -19,8 +19,12 @@
   --accent:#ff4f00;
   --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,"Roboto Mono",monospace;
   --sans:"Helvetica Neue",Helvetica,Arial,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI","Yu Gothic",Meiryo,sans-serif;
-  --ease:cubic-bezier(.77,0,.18,1);
-  --ui:.24s; --panel:.36s var(--ease);   /* buttons & colour: 0.24s / panels: 0.36s / map: 0.7–0.9s */
+  /* motion — four lengths, two curves. Things arrive fast and settle slowly; things leave quickly, in 6/10 of the time.
+     react 0.12s (a press) · switch 0.24s (a box, a tab, a note) · move 0.48s (a sheet, a panel) · story 0.9–1.6s (painted, lit, traced) */
+  --t-react:.12s; --t-switch:.24s; --t-move:.48s; --t-leave:.29s;
+  --ease-out:cubic-bezier(.22,1,.36,1); --ease-in:cubic-bezier(.55,0,.8,.2);
+  --ease:var(--ease-out);
+  --ui:var(--t-switch); --panel:var(--t-move) var(--ease-out);
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px); --safe-l:env(safe-area-inset-left,0px); --safe-r:env(safe-area-inset-right,0px);
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -117,7 +121,13 @@ body.first #tools>*:not(#bData),body.first #fab,body.first #recBtn,body.first #h
 body.first #stats>div{visibility:hidden}
 #okPill{position:fixed;left:14px;bottom:calc(172px + var(--safe-b));z-index:5;min-height:44px;padding:0 18px;border-radius:22px;background:var(--ink);color:#fff;font-size:13px;letter-spacing:.04em;box-shadow:0 8px 22px rgba(0,0,0,.14);animation:fade .5s both}
 body:not(.sp) #okPill{left:auto;right:calc(22px + var(--safe-r));bottom:calc(72px + var(--safe-b))}
-body.sheet-open #okPill,body.wsheet-open #okPill,body.drawer-open #okPill,body.rec #okPill{display:none}   /* going up: the path at the top (日本 / 神奈川県 / …) */
+body.sheet-open #okPill,body.wsheet-open #okPill,body.drawer-open #okPill,body.rec #okPill{display:none}
+#bkPill{position:fixed;left:14px;right:14px;bottom:calc(172px + var(--safe-b));z-index:5;padding:14px 16px 12px;border-radius:14px;background:#fff;border:1px solid var(--hair);box-shadow:0 10px 30px rgba(0,0,0,.12);animation:rise var(--t-move) var(--ease-out) both}
+body:not(.sp) #bkPill{left:auto;right:calc(22px + var(--safe-r));bottom:calc(72px + var(--safe-b));width:360px}
+#bkPill p{font-size:14px;line-height:1.6;color:var(--ink);margin:0 0 10px}
+#bkPill .acts{display:flex;gap:8px;flex-wrap:wrap}
+#bkPill .btn{min-height:44px;font-size:13px}
+body.first #bkPill,body.sheet-open #bkPill,body.wsheet-open #bkPill,body.drawer-open #bkPill,body.rec #bkPill{display:none}   /* going up: the path at the top (日本 / 神奈川県 / …) */
 body.sp.rec #bLog{display:none}   /* on a walk: where am I, and ＋ */
 #crumb button{font-size:12px}
 .pill{font:10px/1 var(--mono);letter-spacing:.12em;padding:8px 11px 7px;border:1px solid var(--hair);background:rgba(255,255,255,.75);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:999px;transition:border-color var(--ui),background var(--ui),color var(--ui)}
@@ -195,12 +205,12 @@ body.sp #fWhenRow.open{display:flex}
 .ftools .tl.on,.ftools .tl[aria-expanded=true]{border-color:var(--ink);color:var(--ink)}
 .ftools .where{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 #fWhereBox,#fPhotoBox{display:none;margin:0 0 8px;padding:10px 12px;border:1px solid var(--hair);border-radius:12px;background:#fafaf7}
-#fWhereBox.open,#fPhotoBox.open{display:block;animation:boxIn .22s cubic-bezier(.22,1,.36,1) both}   /* the same small box for 写真 and 場所 */
+#fWhereBox.open,#fPhotoBox.open{display:block;animation:boxIn var(--t-switch) var(--ease-out) both}   /* the same small box for 写真 and 場所 */
 @keyframes boxIn{from{opacity:0;transform:translateY(-4px)}}
 #fPhotoBox .lab{display:block;font:9px/1 var(--mono);color:var(--mute);letter-spacing:.12em;margin-bottom:8px}
 #fPhotoBox .pbtns{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.pgo{font-size:12px;border:1px solid var(--ink);border-radius:999px;padding:0 14px;min-height:34px;color:var(--ink);background:#fff;white-space:nowrap;transition:background .3s,color .3s,box-shadow .3s}
-.pgo.ready{background:var(--ink);color:#fff;box-shadow:0 8px 22px rgba(0,0,0,.14);animation:shopIn .52s cubic-bezier(.22,1,.36,1) both}
+.pgo{font-size:12px;border:1px solid var(--ink);border-radius:999px;padding:0 14px;min-height:34px;color:var(--ink);background:#fff;white-space:nowrap;transition:background var(--t-switch),color var(--t-switch),box-shadow var(--t-switch)}
+.pgo.ready{background:var(--ink);color:#fff;box-shadow:0 8px 22px rgba(0,0,0,.14);animation:shopIn var(--t-move) var(--ease-out) both}
 @media (hover:hover){.pgo:not(.ready):hover{background:var(--ink);color:#fff}}
 #fPhotoBox .shin{display:flex;margin-top:8px}
 #fPhotoBox .shin[hidden]{display:none}
@@ -210,7 +220,7 @@ body.sp #fWhenRow.open{display:flex}
 #fLinksRow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 #fLinksRow[hidden]{display:none}
 #fLinksRow .lkc{display:inline-flex;align-items:center;gap:0}
-#fLinksRow .lkc.new{animation:shopPop .5s cubic-bezier(.22,1,.36,1) both}
+#fLinksRow .lkc.new{animation:shopPop var(--t-move) var(--ease-out) both}
 #fLinksRow .lkx{font:12px/1 var(--mono);color:var(--mute);min-width:32px;min-height:32px}
 #fWhereBox .scope{margin-bottom:0}
 #fWhereBox .loc{margin-top:8px}
@@ -222,9 +232,9 @@ body.sp #fWhenRow.open{display:flex}
 .shopf .shn:focus{border-color:var(--ink);outline:none}
 .shopf .shgo{flex:none;font-size:12px;border:1px solid var(--ink);border-radius:999px;padding:0 13px;min-height:34px;color:var(--ink);background:#fff;white-space:nowrap;transition:background var(--ui),color var(--ui)}
 
-.shopf .shpaste{font-size:12px;border:1px dashed #c9c9c2;border-radius:999px;padding:0 14px;min-height:34px;color:#555;background:#fff;transition:background .3s,color .3s,border-color .3s,box-shadow .3s}
+.shopf .shpaste{font-size:12px;border:1px dashed #c9c9c2;border-radius:999px;padding:0 14px;min-height:34px;color:#555;background:#fff;transition:background var(--t-switch),color var(--t-switch),border-color var(--t-switch),box-shadow var(--t-switch)}
 
-.shopf .shpaste.ready{border:1px solid var(--ink);background:var(--ink);color:#fff;box-shadow:0 8px 22px rgba(0,0,0,.14);animation:shopIn .52s cubic-bezier(.22,1,.36,1) both}
+.shopf .shpaste.ready{border:1px solid var(--ink);background:var(--ink);color:#fff;box-shadow:0 8px 22px rgba(0,0,0,.14);animation:shopIn var(--t-move) var(--ease-out) both}
 @keyframes shopIn{from{opacity:0;transform:translateY(14px)}}
 .shopf .shin{display:flex;width:100%}
 .shopf .shin[hidden]{display:none}
@@ -246,7 +256,7 @@ body.sp #fWhenRow.open{display:flex}
   .shop:hover{background:var(--ink);color:#fff}
   .shop:hover small{color:#ccc}
 }
-.shop.new{animation:shopPop .5s cubic-bezier(.22,1,.36,1) both}
+.shop.new{animation:shopPop var(--t-move) var(--ease-out) both}
 @keyframes shopPop{from{opacity:0;transform:scale(.94)}}
 .entry .shr{margin-top:8px}
 .edit .shopf{margin:0 0 4px;padding-top:0;border-top:0}
@@ -438,10 +448,10 @@ body:not(.sp).drawer-open #hud{left:342px}
 .tabs button{font:12px/1 var(--sans);letter-spacing:.06em;color:#76766f;min-height:36px;min-width:48px;padding:0 8px;transition:color var(--ui)}
 .tabs button.on{color:var(--ink)}
 .tabs .bar{position:absolute;left:0;bottom:0;width:0;height:2px;border-radius:1px;background:var(--ink);pointer-events:none;
-  transition:transform .32s cubic-bezier(.22,1,.36,1),width .32s cubic-bezier(.22,1,.36,1)}   /* the underline glides to the tab you chose */
+  transition:transform var(--t-switch) var(--ease-out),width var(--t-switch) var(--ease-out)}   /* the underline glides to the tab you chose */
 @media (hover:hover){.tabs button:not(.on):hover{color:var(--ink)}}
 #drawer .x{top:calc(16px + var(--safe-t));z-index:2}
-#dBody.swap{animation:tabIn .24s cubic-bezier(.22,1,.36,1) both}
+#dBody.swap{animation:tabIn var(--t-switch) var(--ease-out) both}
 @keyframes tabIn{from{opacity:0;transform:translateY(4px)}}
 .filter{margin-top:14px;width:100%;border:0;border-bottom:1px solid var(--hair);padding:8px 0;font-size:14px;background:none;outline:none}
 .filter:focus{border-color:var(--ink)}
@@ -682,11 +692,11 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   #toast{top:auto;bottom:calc(172px + var(--safe-b));max-width:calc(100vw - 40px);white-space:normal;text-align:center;line-height:1.5}
   body.sheet-open #toast,body.wsheet-open #toast,body.drawer-open #toast{top:calc(14px + var(--safe-t));bottom:auto}
   #sheet,#wsheet,#drawer{left:0;right:0;width:100%;top:auto;height:80vh;height:80dvh;max-height:none;border:0;border-top:1px solid var(--hair);border-radius:18px 18px 0 0;transform:translateY(102%);box-shadow:0 -12px 44px rgba(0,0,0,.08);
-    transition:transform .3s cubic-bezier(.55,0,.8,.2)}   /* leaving: quick, out of the way */
-  #sheet.open,#wsheet.open,#drawer.open{transition:transform .56s cubic-bezier(.22,1,.36,1)}   /* arriving: fast, then a long soft settle */
+    transition:transform var(--t-leave) var(--ease-in)}   /* leaving: quick, out of the way */
+  #sheet.open,#wsheet.open,#drawer.open{transition:transform var(--t-move) var(--ease-out)}   /* arriving: fast, then a long soft settle */
   #sheet.small,#wsheet.small,#drawer.small{height:45vh;height:45dvh}
   #sheet:after,#wsheet:after,#drawer:after{content:"";position:absolute;left:0;right:0;top:100%;height:60vh;background:#fff}   /* no gap below while it glides */
-  .panel.open .pbody{animation:sheetIn .5s .08s cubic-bezier(.22,1,.36,1) both}
+  .panel.open .pbody{animation:sheetIn var(--t-move) .08s var(--ease-out) both}
   /* a sheet up: the header keeps its first line only, so the map shows between it and the sheet */
   body.sp:not(.sheet-small):is(.sheet-open,.wsheet-open,.drawer-open) #title,body.sp:not(.sheet-small):is(.sheet-open,.wsheet-open,.drawer-open) #intro,body.sp:not(.sheet-small):is(.sheet-open,.wsheet-open,.drawer-open) #grp{display:none!important}
   body.sp:is(.sheet-open,.wsheet-open,.drawer-open) #top{padding-bottom:10px}
@@ -766,7 +776,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
   <g id="gTown" clip-path="url(#clipMuni)"><g id="gCells"></g><path id="tBorder"/></g>
   <path id="muniEdge"/>
   <path id="tDots" class="dot"/>
-  <path id="selp"/>
+  <path id="selp" clip-path="url(#clipMuni)"/>
   <path id="loadEdge" pathLength="1"/>
   <path id="trackGap"/><path id="trackHalo"/><path id="track"/><path id="recHalo"/><path id="recLine"/>
   <path id="route"/><path id="replayPath"/><path id="routeRing" class="dot"/><path id="routeDots" class="dot"/>
@@ -813,6 +823,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <div id="editBar" hidden><span>なおしています</span><button type="button" class="btn ghost" id="ebCancel">キャンセル</button><button type="button" class="btn" id="ebSave">保存</button></div>
 <div id="first"><button type="button" id="firstGo">いまいる町を、ぬる</button><button type="button" id="firstMap">地図から、えらぶ</button></div>
 <button type="button" id="okPill" hidden>おかえりなさい。今日をふりかえる ›</button>
+<div id="bkPill" role="status" hidden><p id="bkTxt"></p><div class="acts"><button type="button" class="btn" id="bkGo">バックアップする</button><button type="button" class="btn ghost" id="bkLater">あとで</button></div></div>
 <div id="replay" aria-live="polite"><span class="clk">--:--</span><span class="txt"></span><button type="button" aria-label="たどるのをやめる">■</button></div>
 <div id="hlbar"><span></span><button aria-label="ハイライトを消す">×</button></div>
 <button id="recBtn" type="button" aria-label="さんぽの道のりを記録する"><i></i><span>さんぽ、はじめる</span></button>
@@ -944,15 +955,15 @@ body.sp input,body.sp textarea{font-size:16px!important}
       </div>
     </div>
     </section>
-    <section class="mbox"><h4>もしものとき</h4>
-    <p>記録をファイルにしておけば、スマホをなくしても、ブラウザのデータを消しても、そこから戻せます。</p>
+    <section class="mbox" id="mBackup"><h4>バックアップ</h4>
+    <p>写真は、この端末の中だけにあります。バックアップしておけば、スマホをなくしたり、機種を変えたりしても、そこから元どおりに戻せます。</p>
     <p id="mPhotos"></p>
-    <div class="rule">ファイルにする</div>
+    <div class="rule">バックアップする</div>
     <select id="mPics" aria-label="写真をファイルに入れるか"><option value="big">写真もいっしょに</option><option value="small">写真は小さくして</option><option value="none">写真なし（メモだけ）</option></select>
-    <div class="acts"><button class="btn sp-only" id="mShare">送る（AirDrop・LINEなど）</button><button class="btn" id="mDown">ファイルに保存</button><button class="btn ghost" id="mCopy">コピー</button></div>
-    <div class="rule">ファイルから戻す</div>
-    <p>保存したファイルを選んでください。PCではこの画面にファイルをドラッグしてもOK。今ある記録に合流します（消えません）。</p>
-    <div class="acts"><label class="btn ghost" style="cursor:pointer">ファイルを選ぶ<input type="file" id="mFile" accept=".json,application/json" hidden></label></div>
+    <div class="acts"><button class="btn sp-only" id="mShare">送る（AirDrop・LINEなど）</button><button class="btn" id="mDown">バックアップする</button><button class="btn ghost" id="mCopy">コピー</button></div>
+    <div class="rule">バックアップから戻す</div>
+    <p>バックアップのファイルを選んでください。PCではこの画面にファイルをドラッグしてもOK。今ある記録に合流します（消えません）。</p>
+    <div class="acts"><label class="btn ghost" style="cursor:pointer">バックアップのファイルを選ぶ<input type="file" id="mFile" accept=".json,application/json" hidden></label></div>
     <details class="mpaste"><summary>コピーした中身を貼り付けて戻す</summary>
     <textarea id="mText" placeholder="ここに貼り付け"></textarea>
     <div class="acts"><button class="btn ghost" id="mPaste">貼り付けた内容を読む</button></div>
@@ -967,7 +978,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.6.2', VERSION_DATE = '2026.11.23';
+const VERSION = '2.7.0', VERSION_DATE = '2026.11.23';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -1121,6 +1132,7 @@ let JAPAN_BB;
    walk  : { d, title, sum, tags:[], u }   — one walk = one day, made from that day's notes
    Everything lives in one JSON object; a server can later store the same three tables. */
 const LS = 'sanpo-log-v2', LS_OLD = 'sanpo-log-v1';
+const FORMAT = 3;   // 記録の形の版。3 = お店（s）が入った形。README の「記録の形」に書いてある
 const enc = s => Array.from(s).map(c => c.codePointAt(0).toString(36)).join('.').slice(0, 180);
 const tKey = (mc, name) => 't' + mc + '_' + enc(name);
 const okKey = k => /^(p\d{2}|m\d{5}|t\d{5}_[0-9a-z.]+)$/.test(k);
@@ -1177,13 +1189,15 @@ const Store = {
   },
   dump() {   // canonical order, so the same records always serialize to the same text
     const sorted = m => Object.fromEntries([...m.entries()].sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
-    return { app: 'sanpo-log', v: 2, places: sorted(this.places), notes: sorted(this.notes), walks: sorted(this.walks), deleted: sorted(this.deleted) };
+    return { app: 'sanpo-log', v: FORMAT, places: sorted(this.places), notes: sorted(this.notes), walks: sorted(this.walks), deleted: sorted(this.deleted) };
   },
   save() { try { localStorage.setItem(LS, JSON.stringify(this.dump())); } catch (e) { toast('保存できませんでした（ブラウザの容量がいっぱいかもしれません）'); } },
   commit() { this.save(); reindex(); changed(); Sync.soon(); FB.soon(); GR.soon(); },
-  /* import / migrate — v1 {r:{key:{n,l,ll,v,e:[]}}} or v2 {places,notes,walks}; the newer copy of each item wins */
+  /* import / migrate — v1 {r:{key:{n,l,ll,v,e:[]}}}, v2/v3 {places,notes,walks,deleted}; the newer copy of each item wins.
+     A record from a newer app (v > FORMAT) is still read: unknown fields are dropped, nothing is lost that this version knows. */
   absorb(o) {
     let n = 0;
+    if (+o.v > FORMAT) this.newer = true;
     const newer = (a, b) => !a || (+b.u || 0) > (+a.u || 0);
     if (o.r && typeof o.r === 'object') for (const k in o.r) {
       const r = o.r[k]; if (!okKey(k) || !r || typeof r !== 'object') continue;
@@ -1795,7 +1809,7 @@ function prefT(pc) {
 }
 function muniT(mc) {
   const a = AG.muni.get(mc); if (!a) return 0;
-  const T = D.pref[mc.slice(0, 2)].T[mc] || 0;
+  const P = D.pref[mc.slice(0, 2)], T = (P && P.T[mc]) || 0;   // that prefecture's data may not be here yet
   if (!a.towns) return T ? .45 : 1;
   return .45 + .55 * Math.sqrt(a.towns / Math.max(1, T));
 }
@@ -2171,7 +2185,12 @@ async function route() {
       if (id !== navId) return;
       enter('pref', h, null);
     } else enter('japan', null, null);
-  } catch (e) { toast('地図を読み込めませんでした。電波のいい所で、もう一度押してください'); console.error(e); }
+  } catch (e) {
+    toast('地図を読み込めませんでした。電波のいい所で、もう一度押してください'); console.error(e);
+    pendingSel = null;
+    const back = S.level === 'muni' ? S.mc : S.level === 'pref' ? S.pc : '';
+    if (location.hash.slice(1) !== (back || '')) history.replaceState(null, '', back ? '#' + back : location.pathname + location.search);
+  }
   finally { if (id === navId) Loading.stop(); }
 }
 function go(h) { if (location.hash.slice(1) === h) route(); else location.hash = h; }
@@ -2318,7 +2337,7 @@ function selInfo() {
     return { eyebrow: `${D.prefInfo[pc].n} ${D.muni[s.mc].n}`, ...info, stat };
   }
   if (s.lv === 'm') {
-    const mc = s.key.slice(1), a = AG.muni.get(mc), T = D.pref[pc].T[mc] || 0;
+    const mc = s.key.slice(1), a = AG.muni.get(mc), T = (D.pref[pc] && D.pref[pc].T[mc]) || 0;
     return { eyebrow: D.prefInfo[pc].n, ...info, stat: T ? `歩いた町 ${a ? a.towns : 0} / ${T}` : '' };
   }
   const a = AG.pref.get(pc), P = D.prefInfo[pc];
@@ -2634,6 +2653,7 @@ const Thumbs = {
     }
   },
   async count() { try { return await idbReq((await this.os()).count()); } catch (e) { return 0; } },
+  async keys() { try { return await idbReq((await this.os()).getAllKeys()); } catch (e) { return []; } },
   async entries() {
     try { const o = await this.os(), kq = o.getAllKeys(), vq = o.getAll(); const ks = await idbReq(kq), vs = await idbReq(vq); return ks.map((k, i) => [k, vs[i] || {}]); } catch (e) { return []; }
   },
@@ -3952,7 +3972,7 @@ function closePanel(id, quiet) {
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = () => closePanel(b.dataset.close));
 /* phones: a sheet opens to 80%. Pull its head down to 45% (to see the map), down again to close; up to come back.
    It follows the finger, then settles by where and how fast you let go — fast, with a long soft ending. */
-const SETTLE = 'transform .48s cubic-bezier(.22,1,.36,1)';
+const SETTLE = 'transform var(--t-move) var(--ease-out)';
 function settleSheet(panel) {
   panel.style.transition = SETTLE; panel.style.transform = 'translateY(0)';
   const done = () => { panel.style.transition = ''; panel.style.transform = ''; panel.removeEventListener('transitionend', done); };
@@ -4509,16 +4529,67 @@ const picMode = () => $('#mPics').value || 'big';
 function exportJSON() { const m = picMode(); return JSON.stringify({ ...Store.dump(), thumbs: m === 'big' ? exportThumbs : m === 'small' ? exportSmall : {}, exported: new Date().toISOString() }, null, 1); }
 const MB = n => n < 1e6 ? `${Math.max(.1, n / 1e6).toFixed(1)}MB` : `${(n / 1e6).toFixed(n < 1e7 ? 1 : 0)}MB`;
 let lastOut = 0; try { lastOut = +localStorage.getItem('sanpo-exported') || 0; } catch (e) {}
-function exported() {   // a file with the photos in it was made
+function exported() {   // a file with the photos in it was made: remember which photos it holds
   if (picMode() === 'none') return;
-  lastOut = Date.now(); try { localStorage.setItem('sanpo-exported', String(lastOut)); } catch (e) {}
+  lastOut = Date.now();
+  try {
+    localStorage.setItem('sanpo-exported', String(lastOut));
+    localStorage.setItem(BK_IDS, Object.keys(picMode() === 'small' ? exportSmall : exportThumbs).join(' '));
+    localStorage.removeItem(BK_LATER);
+  } catch (e) {}
+  $('#bkPill').hidden = true;
   photoInfo();
 }
+const BK_IDS = 'sanpo-backed', BK_LATER = 'sanpo-backup-later';
+const mdj = t => { const x = new Date(t); return `${x.getMonth() + 1}月${x.getDate()}日`; };
+async function unbackedPhotos() {   // photos on this device that no backup holds yet
+  const ks = await Thumbs.keys();
+  let set = null; try { const v = localStorage.getItem(BK_IDS); if (v) set = new Set(v.split(' ')); } catch (e) {}
+  if (set) return ks.filter(k => !set.has(k)).length;
+  if (!lastOut) return ks.length;
+  const after = new Set(); for (const x of Store.notes.values()) if (x.im && (+x.u || 0) > lastOut) x.im.forEach(i => after.add(i));   // before 2.7: the memos changed since
+  return ks.filter(k => after.has(k)).length;
+}
+// once a month, when photos are waiting: a quiet card above the buttons (never while walking or writing)
+let bkTries = 0;
+async function backupPill() {
+  const p = $('#bkPill'); if (!p || !p.hidden) return;
+  let later = 0; try { later = +localStorage.getItem(BK_LATER) || 0; } catch (e) {}
+  if (Date.now() - later < 7 * 864e5) return;
+  const MONTH = 30 * 864e5, n = await unbackedPhotos();
+  if (!n) return;
+  if (lastOut && Date.now() - lastOut < MONTH) return;
+  if (!lastOut) {   // never backed up: once the first photo memo is a month old, or ten photos are waiting
+    const ds = [...Store.notes.values()].filter(x => x.im && x.im.length).map(x => Date.parse(x.d + 'T12:00:00'));
+    if (!(n >= 10 || (ds.length && Date.now() - Math.min(...ds) >= MONTH))) return;
+  }
+  const b = document.body.classList;
+  if (b.contains('first') || b.contains('sheet-open') || b.contains('wsheet-open') || b.contains('drawer-open') || b.contains('rec') || Rec.st || $('#modal').classList.contains('open') || !$('#okPill').hidden) {
+    if (++bkTries < 15) setTimeout(backupPill, 20000);   // busy now: ask again a little later
+    return;
+  }
+  const m = lastOut ? Math.max(1, Math.floor((Date.now() - lastOut) / MONTH)) : 0;
+  $('#bkTxt').textContent = lastOut ? `前のバックアップから${m}か月たちました。まだの写真が${n}枚あります。` : `まだ一度もバックアップしていません。この端末にだけある写真が${n}枚あります。`;
+  photoInfo();   // read the photos now, so one tap can save them
+  p.hidden = false;
+}
+$('#bkGo').onclick = () => {
+  if (!Object.keys(exportThumbs).length) { $('#bData').onclick(); setTimeout(() => $('#mBackup').scrollIntoView({ block: 'start', behavior: 'smooth' }), 300); return; }   // photos not read yet: open the backup in 設定
+  $('#mPics').value = 'big';
+  (W < 720 && navigator.canShare ? $('#mShare') : $('#mDown')).click();
+};
+$('#bkLater').onclick = () => {
+  try { localStorage.setItem(BK_LATER, String(Date.now())); } catch (e) {}
+  $('#bkPill').hidden = true; toast('1週間後に、もう一度お知らせします');
+};
+setTimeout(backupPill, 4000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(backupPill, 1500); });
 async function photoInfo() {
   const es = (await Thumbs.entries()).filter(([, v]) => v.d);
   exportThumbs = {}; exportSmall = {}; let big = 0, small = 0;
   for (const [k, v] of es) { exportThumbs[k] = v.d; big += v.d.length; const sm = v.s || (v.d.length <= 20000 ? v.d : null); if (sm) { exportSmall[k] = sm; small += sm.length; } }
-  const when = lastOut ? `最後にファイルにしたのは ${new Date(lastOut).toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric' })}。` : (es.length ? 'まだ一度もファイルにしていません。' : '');
+  const yet = await unbackedPhotos();
+  const when = lastOut ? `最後のバックアップ：${mdj(lastOut)}。${yet ? `まだの写真が ${yet} 枚あります。` : ''}` : (es.length ? 'まだ一度もバックアップしていません。' : '');
   $('#mPhotos').textContent = `この端末の写真 ${es.length} 枚（約 ${MB(big)}）。写真はクラウドにも、グループにも送らず、この端末の中だけに置いています。${when}`;
   const o = $('#mPics').options; o[0].textContent = `写真もいっしょに（約 ${MB(big)}）`; o[1].textContent = `写真は小さくして（約 ${MB(small)}）`;
   for (const [k, v] of es) if (!exportSmall[k]) Thumbs.small(k).then(sm => { if (sm) exportSmall[k] = sm; });   // old backups without a small copy
@@ -4526,6 +4597,10 @@ async function photoInfo() {
 $('#verTxt').textContent = `SANPO LOG v${VERSION}（${VERSION_DATE}）`;
 $('#bData2').onclick = () => $('#bData').onclick();
 $('#bData').onclick = () => {
+  const sp = W < 720;
+  $('#mShare').textContent = 'バックアップする（保存先を選ぶ）';
+  $('#mDown').textContent = sp ? 'この端末にダウンロード' : 'バックアップする';
+  $('#mDown').classList.toggle('ghost', sp);
   photoInfo();
   if (FB.enabled() && !FB.sdk) FB.load().then(() => Sync.paint()).catch(() => {});
   Sync.paint();
@@ -4540,7 +4615,7 @@ $('#mDown').onclick = () => {
     a.href = URL.createObjectURL(new Blob([exportJSON()], { type: 'application/json' }));
     a.download = `sanpo-log-${today()}.json`;
     document.body.appendChild(a); a.click(); a.remove();
-    toast('保存しました（保存されない場合は「コピー」を）'); exported();
+    toast('バックアップしました（保存されない場合は「コピー」を）'); exported();
   } catch (e) { toast('この環境では保存できません。「コピー」を使ってください'); }
 };
 $('#mCopy').onclick = async () => {
@@ -4555,23 +4630,16 @@ function importText(s) {
     const n = Store.absorb(o);
     if (o.thumbs && typeof o.thumbs === 'object') for (const [id, d] of Object.entries(o.thumbs)) if (/^t[a-z0-9]{6,40}$/.test(id) && /^data:image\//.test(d)) Thumbs.put(id, d);
     Store.commit();
-    toast(`メモ ${n} 件を読み込みました`); closePanel('modal');
+    toast(Store.newer ? `メモ ${n} 件を戻しました（新しいアプリで作られた記録です。アプリを開き直すと、すべて読めます）` : `バックアップから、メモ ${n} 件を戻しました`, 4000); closePanel('modal');
   } catch (e) { toast('読み込めませんでした（形式を確認してください）'); }
 }
 $('#mShare').onclick = async () => {
   try {
     const file = new File([exportJSON()], `sanpo-log-${today()}.json`, { type: 'application/json' });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'SANPO LOG' }); exported(); }
+    if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: 'SANPO LOG' }); toast('バックアップしました'); exported(); }
     else $('#mDown').click();
   } catch (e) { if (e && e.name !== 'AbortError') toast('送れませんでした。「ファイルに保存」を使ってください'); }
 };
-// photos live only here: now and then, a quiet word about keeping a copy
-setTimeout(async () => {
-  let nudged = 0; try { nudged = +localStorage.getItem('sanpo-nudged') || 0; } catch (e) {}
-  if (Date.now() - nudged < 14 * 864e5 || Date.now() - lastOut < 30 * 864e5 || (await Thumbs.count()) < 5) return;
-  try { localStorage.setItem('sanpo-nudged', String(Date.now())); } catch (e) {}
-  toast('写真は、この端末の中だけにあります。ときどき 設定 の「ファイルにする」で、のこしておくと安心です', 6000);
-}, 6000);
 let dragN = 0;
 addEventListener('dragenter', e => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { dragN++; $('#drop').classList.add('on'); } });
 addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; $('#drop').classList.remove('on'); } });
@@ -4657,6 +4725,7 @@ function setHover(n) {
   if (!n) { h.removeAttribute('d'); $('#hName').textContent = ''; return; }
   h.setAttribute('d', n.getAttribute('d'));
   const k = n.dataset.k, kind = n.dataset.kind;
+  if (kind === 't') h.setAttribute('clip-path', 'url(#clipMuni)'); else h.removeAttribute('clip-path');   // a town cell is cut by its city's shape, like its fill
   let name = '';
   if (kind === 'p') name = D.prefInfo[k].n;
   else if (kind === 'm') name = D.muni[k].n;
@@ -4782,6 +4851,7 @@ function refreshPanels() {
 }
 
 /* ---------- boot ---------- */
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 /* 写真のリンクを貼る: the post's own time picks the memo it belongs to */
 const noteTime = n => new Date(n.d + 'T' + (n.at || '12:00') + ':00').getTime();
 function attachLink(u) {
