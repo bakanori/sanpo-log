@@ -418,9 +418,15 @@ body:not(.sp).drawer-open #hud{left:342px}
 .form .kbd{font:9px/1 var(--mono);color:#b0b0aa;margin-left:auto;letter-spacing:.06em}
 
 /* drawer */
-.tabs{display:flex;gap:18px;margin-top:4px}
-.tabs button{font:10px/1 var(--mono);letter-spacing:.14em;color:var(--mute);padding:6px 0;border-bottom:1px solid transparent}
-.tabs button.on{color:var(--ink);border-color:var(--ink)}
+.tabs{position:relative;display:flex;gap:2px;margin:-6px 0 0 -8px;width:fit-content;max-width:calc(100% - 40px)}   /* only as wide as its tabs: the × stays pressable */
+.tabs button{font:12px/1 var(--sans);letter-spacing:.06em;color:#76766f;min-height:36px;min-width:48px;padding:0 8px;transition:color var(--ui)}
+.tabs button.on{color:var(--ink)}
+.tabs .bar{position:absolute;left:0;bottom:0;width:0;height:2px;border-radius:1px;background:var(--ink);pointer-events:none;
+  transition:transform .32s cubic-bezier(.22,1,.36,1),width .32s cubic-bezier(.22,1,.36,1)}   /* the underline glides to the tab you chose */
+@media (hover:hover){.tabs button:not(.on):hover{color:var(--ink)}}
+#drawer .x{top:calc(16px + var(--safe-t));z-index:2}
+#dBody.swap{animation:tabIn .24s cubic-bezier(.22,1,.36,1) both}
+@keyframes tabIn{from{opacity:0;transform:translateY(4px)}}
 .filter{margin-top:14px;width:100%;border:0;border-bottom:1px solid var(--hair);padding:8px 0;font-size:14px;background:none;outline:none}
 .filter:focus{border-color:var(--ink)}
 .li{display:grid;grid-template-columns:1fr auto;gap:5px 10px;align-items:center;width:100%;text-align:left;padding:10px 0;border-bottom:1px solid #efefea}
@@ -683,6 +689,9 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   body.sp.sheet-small #hlbar{bottom:calc(45dvh + 10px)}
   .phead{padding:16px 20px 10px}
   .pbody{padding:0 20px 18px;min-height:64px}
+  .tabs{margin:-4px 0 0 -10px}
+  .tabs button{font-size:14px;min-height:44px;min-width:56px;padding:0 10px}
+  #drawer .x{top:12px}
   .form{padding:12px 20px calc(14px + var(--safe-b))}
   .x{top:8px;right:10px}
   .big{font-size:22px;margin-top:6px}
@@ -713,6 +722,7 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   body.drawer-open #hud{left:calc(min(340px,45vw) + 12px)}
   .phead{padding:12px 20px 8px}
   .x{top:6px;right:10px}
+  #drawer .x{top:8px}
   .big{font-size:20px;margin-top:4px}
   #sheet .coord{display:none}
   .toggle{margin-top:8px;padding:6px 12px 5px 8px}
@@ -828,7 +838,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <aside id="drawer" class="panel" aria-label="一覧">
   <div class="phead">
     <button class="x" data-close="drawer" aria-label="閉じる">×</button>
-    <div class="tabs"><button id="t_list">場所</button><button id="t_walks" class="on">散歩</button><button id="t_tags">タグ</button><button id="t_group" hidden>みんな</button></div>
+    <div class="tabs" role="tablist"><button id="t_list" role="tab">場所</button><button id="t_walks" role="tab" class="on">散歩</button><button id="t_tags" role="tab">タグ</button><button id="t_group" role="tab" hidden>みんな</button><i class="bar" aria-hidden="true"></i></div>
     <input class="filter" id="dFilter" placeholder="名前で絞り込み" autocomplete="off">
   </div>
   <div class="pbody" id="dBody"></div>
@@ -936,7 +946,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.6.0', VERSION_DATE = '2026.11.23';
+const VERSION = '2.6.1', VERSION_DATE = '2026.11.23';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -3701,7 +3711,8 @@ function walkStat(d) {
 }
 function renderDrawer() {
   const body = $('#dBody'), q = $('#dFilter').value.trim();
-  ['list', 'walks', 'tags', 'group'].forEach(t => $('#t_' + t).classList.toggle('on', dTab === t));
+  ['list', 'walks', 'tags', 'group'].forEach(t => { const b = $('#t_' + t); b.classList.toggle('on', dTab === t); b.setAttribute('aria-selected', dTab === t ? 'true' : 'false'); });
+  tabBar();
   $('#dFilter').placeholder = dTab === 'list' ? '名前で絞り込み' : dTab === 'walks' || dTab === 'group' ? '散歩・メモを検索' : 'タグを検索';
   $('#dFilter').style.display = dTab === 'tags' && dTag ? 'none' : '';
   body.innerHTML = '';
@@ -3846,7 +3857,7 @@ function jumpTo(k) {
 }
 function openDrawer(tab) {
   if ($('#drawer').classList.contains('open') && dTab === tab) return closePanel('drawer');
-  dTab = tab; $('#dFilter').value = '';
+  dTab = tab; $('#dFilter').value = ''; $('#dBody').classList.remove('swap');   // opening: the panel's own entrance, not the tab's
   renderDrawer();
   if (W < 720) { closePanel('sheet'); closePanel('wsheet', true); }
   $('#drawer').classList.add('open'); document.body.classList.add('drawer-open');
@@ -3926,7 +3937,24 @@ function sheetBody() { document.body.classList.toggle('sheet-small', ['sheet', '
   };
   head.addEventListener('touchend', end); head.addEventListener('touchcancel', end);
 });
-['list', 'walks', 'tags', 'group'].forEach(t => $('#t_' + t).onclick = () => { dTab = t; if (t !== 'tags') dTag = null; $('#dFilter').value = ''; renderDrawer(); syncTools(); });
+['list', 'walks', 'tags', 'group'].forEach(t => $('#t_' + t).onclick = () => {
+  const moved = dTab !== t;
+  dTab = t; if (t !== 'tags') dTag = null; $('#dFilter').value = ''; renderDrawer(); syncTools();
+  if (moved) { const b = $('#dBody'); b.classList.remove('swap'); void b.offsetWidth; b.classList.add('swap'); }   // the new list arrives softly
+});
+// the underline: as wide as the word, under the tab you are on
+function tabBar() {
+  const box = document.querySelector('#drawer .tabs'), bar = box && box.querySelector('.bar'), on = box && box.querySelector('button.on');
+  if (!bar || !on) return;
+  const bb = box.getBoundingClientRect(); if (!bb.width) return;
+  const r = document.createRange(); r.selectNodeContents(on); const tr = r.getBoundingClientRect();
+  const first = !bar.style.width;
+  if (first) bar.style.transition = 'none';
+  bar.style.width = Math.round(tr.width) + 'px';
+  bar.style.transform = `translateX(${Math.round(tr.left - bb.left)}px)`;
+  if (first) { void bar.offsetWidth; bar.style.transition = ''; }
+}
+addEventListener('resize', () => { const b = document.querySelector('#drawer .tabs .bar'); if (b) { b.style.width = ''; tabBar(); } });
 $('#dFilter').oninput = () => renderDrawer();
 $('#bList').onclick = () => openDrawer('list');
 $('#bLog').onclick = () => $('#drawer').classList.contains('open') ? closePanel('drawer') : openDrawer(dTab || 'walks');
