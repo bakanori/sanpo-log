@@ -198,6 +198,42 @@ body.sp #fWhenRow.open{display:flex}
 #fWhereBox.open{display:block}
 #fWhereBox .scope{margin-bottom:0}
 #fWhereBox .loc{margin-top:8px}
+/* お店: one field, the same everywhere (form, なおす, after a walk, ＋ お店) */
+.shopf{display:flex;flex-direction:column;align-items:flex-start;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--hair);min-width:0;width:100%}
+.shopf .lab{font:9px/1 var(--mono);color:var(--mute);letter-spacing:.12em}
+.shopf .shq{display:flex;gap:6px;align-items:stretch;width:100%;min-width:0}
+.shopf .shn{flex:1;min-width:0;font:inherit;font-size:13px;border:1px solid var(--hair);border-radius:999px;padding:7px 12px;background:#fff}
+.shopf .shn:focus{border-color:var(--ink);outline:none}
+.shopf .shgo{flex:none;font-size:12px;border:1px solid var(--ink);border-radius:999px;padding:0 13px;min-height:34px;color:var(--ink);background:#fff;white-space:nowrap;transition:background var(--ui),color var(--ui)}
+
+.shopf .shpaste{font-size:12px;border:1px dashed #c9c9c2;border-radius:999px;padding:0 14px;min-height:34px;color:#555;background:#fff;transition:background .3s,color .3s,border-color .3s,box-shadow .3s}
+
+.shopf .shpaste.ready{border:1px solid var(--ink);background:var(--ink);color:#fff;box-shadow:0 8px 22px rgba(0,0,0,.14);animation:shopIn .52s cubic-bezier(.22,1,.36,1) both}
+@keyframes shopIn{from{opacity:0;transform:translateY(14px)}}
+.shopf .shin{display:flex;width:100%}
+.shopf .shin[hidden]{display:none}
+.shopf .shin input{flex:1;min-width:0;font:inherit;font-size:16px;border:1px solid var(--ink);border-radius:10px;padding:9px 12px}
+.shopf .shv{display:flex;gap:4px;align-items:center;flex-wrap:wrap;max-width:100%}
+.shopf.has .shq,.shopf.has .shpaste,.shopf.has .shin{display:none}
+.shopf:not(.has) .shv{display:none}
+.shopf .shx{font:10px/1 var(--mono);letter-spacing:.08em;color:var(--mute);padding:10px 8px}
+
+.shop{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-width:0;font-size:12px;line-height:1.2;color:var(--ink);text-decoration:none;border:1px solid var(--ink);border-radius:999px;padding:5px 11px 5px 9px;background:#fff;transition:background var(--ui),color var(--ui)}
+
+.shop svg{flex:none;width:11px;height:13px;fill:none;stroke:currentColor;stroke-width:1.3}
+.shop b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.shop small{font:9px/1 var(--mono);letter-spacing:.06em;color:var(--mute);white-space:nowrap}
+@media (hover:hover){   /* a finger leaves no hover behind */
+  .shopf .shgo:hover{background:var(--ink);color:#fff}
+  .shopf .shpaste:not(.ready):hover{border-color:var(--ink);color:var(--ink)}
+  .shopf .shx:hover{color:var(--ink)}
+  .shop:hover{background:var(--ink);color:#fff}
+  .shop:hover small{color:#ccc}
+}
+.shop.new{animation:shopPop .5s cubic-bezier(.22,1,.36,1) both}
+@keyframes shopPop{from{opacity:0;transform:scale(.94)}}
+.entry .shr{margin-top:8px}
+.edit .shopf{margin:0 0 4px;padding-top:0;border-top:0}
 .compose{display:flex;gap:8px;align-items:stretch}
 .compose textarea{flex:1;min-width:0}
 .compose .btn{flex:none;align-self:flex-end;min-height:44px;padding:0 16px}
@@ -444,6 +480,15 @@ body.rec .brand i{animation:pulse 1.6s infinite}
 #routeDlg .okstep>.btn,#routeDlg .okstep>input{grid-column:2;justify-self:start}
 #routeDlg .okstep>input{width:100%;font:inherit;font-size:16px;min-height:44px;border:1px solid var(--hair);border-radius:10px;padding:0 12px}
 #routeDlg .fresh{color:var(--accent)!important}
+#routeDlg .okn{font-size:13px!important;color:#333;margin-top:6px!important}
+#routeDlg .okstep>.okshop,#routeDlg .okstep>.okday{grid-column:2;min-width:0}
+#routeDlg .okshop .shopf{margin-top:2px;padding-top:0;border-top:0}
+#routeDlg .okday{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#routeDlg .okday input[type=date]{font:13px var(--mono);border:1px solid var(--hair);border-radius:999px;padding:6px 12px;min-height:34px;background:#fff}
+#routeDlg .pick{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.okshop .pick{margin-top:10px}
+.okshop .pick .lab{width:100%;font-size:13px;color:#333}
+#routeDlg .okshops{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 #routeDlg .big2 small{display:inline;font:inherit;font-size:14px;color:#555;margin-left:8px;letter-spacing:.04em}
 #routeDlg.ok{align-items:flex-end;background:rgba(239,239,234,.25);backdrop-filter:none;-webkit-backdrop-filter:none}
 #routeDlg.ok .card{box-shadow:0 -10px 40px rgba(0,0,0,.08)}
@@ -564,6 +609,11 @@ body.rec .brand i{animation:pulse 1.6s infinite}
   .mini{min-height:44px;font-size:12px}
   .ftools .tl{min-height:44px;font-size:13px}
   .loc{min-height:44px;font-size:11px}
+  .shopf .shn{font-size:16px;min-height:44px;padding:0 14px}
+  .shopf .shgo,.shopf .shpaste{min-height:44px;font-size:13px}
+  .shop{min-height:36px;font-size:13px;padding:0 12px 0 10px}
+  .shopf .shx{min-height:44px;font-size:11px}
+  #routeDlg .okday input[type=date]{min-height:44px;font-size:16px}
   .form input[type=date],.form input[type=time],.edit input[type=date],.edit input[type=time]{min-height:44px;padding:0 12px}
   .toggle{min-height:40px}
   .sc{min-height:38px;font-size:13px;padding:0 13px;display:inline-flex;align-items:center}
@@ -886,7 +936,7 @@ body.sp input,body.sp textarea{font-size:16px!important}
 <script>
 'use strict';
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」 */
-const VERSION = '2.5.2', VERSION_DATE = '2026.11.23';
+const VERSION = '2.6.0', VERSION_DATE = '2026.11.23';
 /* ============================================================
    SANPO LOG — 歩いた場所を、地図に。
    Pure SVG, no framework. Data is lazy-loaded per prefecture.
@@ -1036,7 +1086,7 @@ let JAPAN_BB;
 
 /* ---------- records: places · notes · walks (+ tags) ----------
    place : { n: name, l: full label, ll:[lng,lat], v: visited flag, u }
-   note  : { id, k: place key, d:'YYYY-MM-DD', at:'HH:MM', t: memo, x: detail, p:[photo urls], loc:[lat,lng,acc], tags:[], u }
+   note  : { id, k: place key, d:'YYYY-MM-DD', at:'HH:MM', t: memo, x: detail, p:[photo urls], loc:[lat,lng,acc], s:{n,a,u} shop, tags:[], u }
    walk  : { d, title, sum, tags:[], u }   — one walk = one day, made from that day's notes
    Everything lives in one JSON object; a server can later store the same three tables. */
 const LS = 'sanpo-log-v2', LS_OLD = 'sanpo-log-v1';
@@ -1062,6 +1112,10 @@ function cleanNote(x) {
   if (Array.isArray(x.loc) && x.loc.length >= 2 && x.loc.slice(0, 3).every(v => Number.isFinite(+v))) o.loc = x.loc.slice(0, 3).map(Number);
   const tags = uniq((Array.isArray(x.tags) ? x.tags : []).map(normTag));
   if (tags.length) o.tags = tags;
+  if (x.s && typeof x.s === 'object') {   // お店: name, address, map link
+    const sn = String(x.s.n || '').slice(0, 80), sa = String(x.s.a || '').slice(0, 160), su = String(x.s.u || '').slice(0, 800);
+    if (sn || mapUrl(su)) o.s = { ...(sn ? { n: sn } : {}), ...(sa ? { a: sa } : {}), ...(mapUrl(su) ? { u: su } : {}) };
+  }
   o.u = +x.u || Date.now();
   return o;
 }
@@ -2256,6 +2310,10 @@ function openSheet() {
   if (!$('#fDate').value) $('#fDate').value = today();
   fTags.set([]);
   setFormLoc(quickNext);
+  if (formShop && formShop.k !== S.sel.key && !(pendingShop && pendingShop.k === S.sel.key)) {
+    if (formShop.sure) { setFormShop(null); toast('町が変わったので、お店ははずしました'); }
+    else { formShop.k = S.sel.key; fShop.show(formShop, formShop.k); paintWhere(); }
+  }
   paintShare();
   const has = hasMemosHere();
   $('#sForm').classList.toggle('canfold', has);
@@ -2265,10 +2323,11 @@ function openSheet() {
   quickNext = null;
   if (W < 720) closePanel('drawer', true);
   $('#sheet').classList.add('open'); document.body.classList.add('sheet-open');
+  shopAfterOpen();
 }
 
-/* where a new memo goes: this town, its city, or its prefecture */
-let formKey = null;
+/* where a new memo goes: this town, its city, or its prefecture (and, maybe, which shop) */
+let formKey = null, formShop = null, pendingShop = null;
 function scopeChips(box, keys, cur, onPick) {
   box.innerHTML = '';
   const lab = document.createElement('span'); lab.textContent = '場所'; box.appendChild(lab);
@@ -2287,7 +2346,8 @@ function buildScope() {
 }
 function paintWhere() {   // 場所：稲村ガ崎四丁目 ▾ — where this memo goes (and whether it has your position)
   const b = $('#fWhere'); if (!b || !formKey) return;
-  b.textContent = `場所：${placeName(formKey) || ''}${formLoc ? '・位置あり' : ''} ▾`;
+  b.textContent = `場所：${formShop ? (formShop.n || 'お店') + '・' : ''}${placeName(formKey) || ''}${formLoc && !formShop ? '・位置あり' : ''} ▾`;
+  b.classList.toggle('on', !!formShop);
   b.setAttribute('aria-expanded', $('#fWhereBox').classList.contains('open') ? 'true' : 'false');
 }
 $('#fWhere').onclick = () => { $('#fWhereBox').classList.toggle('open'); paintWhere(); };
@@ -2725,21 +2785,28 @@ function firstDays() {
   for (const [d, w] of Store.walks) for (const k of w.tw || []) put(k, d);
   return m;
 }
-function okaeri(d) {
+function okaeri(d, nm) {
   d = d || today();
   const all = dayTowns(d), fd = firstDays(), fresh = all.filter(k => fd.get(k) === d), w = Store.walks.get(d) || {};
   photoInfo();   // so 「ファイルにのこす」 is ready inside the tap
   const big = el2('div', 'big2', String(all.length)); big.appendChild(el2('small', '', '町を歩きました'));
   const body = [big];
   if (fresh.length) body.push(el2('p', 'fresh', `はじめての町 ${fresh.length}：` + fresh.slice(0, 8).map(k => placeName(k)).join('、') + (fresh.length > 8 ? ` ほか ${fresh.length - 8}` : '')));
+  const shopLine = el2('p', 'okn');
+  const paintShopLine = () => { const ss = (IX.byDate.get(d) || []).filter(n => n.s); shopLine.textContent = ss.length ? `寄ったお店 ${ss.length}：` + ss.slice(0, 6).map(n => n.s.n || n.t).join('、') + (ss.length > 6 ? ' ほか' : '') : ''; shopLine.hidden = !ss.length; };
+  paintShopLine(); body.push(shopLine);
+  const pick = el2('div', 'pick');
+  const sf = shopField({ init: nm, k: () => dayTowns(d)[0] || null, ctx: () => ({ kind: 'day', d }), onShop: p => { if (p) addShopDay(d, p, pick, () => { sf.clear(); paintShopLine(); }); } });
+  const sw = el2('div', 'okshop'); sw.append(sf.el, pick);
   const step = (n, title, node) => { const r = el2('div', 'okstep'); r.append(el2('b', '', n), el2('span', '', title)); if (node) r.appendChild(node); return r; };
   const ti = el2('input'); ti.type = 'text'; ti.maxLength = 80; ti.value = w.title || ''; ti.placeholder = autoTitle(d);
   const keepTitle = () => { const v = ti.value.trim(); if (v !== ((Store.walks.get(d) || {}).title || '')) Store.putWalk(d, { title: v }); };
   ti.onchange = keepTitle;
   body.push(
     step('1', '今日の写真を、まとめて入れる', mkBtn('写真をまとめて入れる', 'btn ghost', () => { keepTitle(); pickBulk(() => okaeri(d)); })),
-    step('2', 'この日に、名前をつける', ti),
-    step('3', '写真ごと、ファイルにのこす', mkBtn('ファイルにのこす', 'btn ghost', () => { keepTitle(); $('#mPics').value = 'big'; (W < 720 ? $('#mShare') : $('#mDown')).onclick(); })));
+    step('2', '寄ったお店を、あとから足す', sw),
+    step('3', 'この日に、名前をつける', ti),
+    step('4', '写真ごと、ファイルにのこす', mkBtn('ファイルにのこす', 'btn ghost', () => { keepTitle(); $('#mPics').value = 'big'; (W < 720 ? $('#mShare') : $('#mDown')).onclick(); })));
   routeDlg('おかえりなさい', body, [['おわる', 'btn', () => { keepTitle(); closeRoute(); openWalk(d); }]]);
   $('#routeDlg').classList.add('ok');
   fresh.slice(0, 12).forEach((k, i) => setTimeout(() => burst(k), 600 + i * 380));   // the new towns light up, one by one
@@ -2770,7 +2837,7 @@ const mkBtn = (txt, cls, fn, title) => { const b = document.createElement('butto
 function entryNode(n, opt = {}) {
   if (opt.other) return otherEntry(n, opt);
   const d = document.createElement('div'); d.className = 'entry'; d.dataset.id = n.id;
-  d.innerHTML = `<div class="meta"><span class="d"></span></div><div class="acts"><button class="ad" type="button" aria-label="写真を足す">＋写真</button><button class="ed" type="button">なおす</button></div><div class="pl"></div><div class="t"></div><div class="dx"></div><div class="ph"></div><div class="tg"></div>`;
+  d.innerHTML = `<div class="meta"><span class="d"></span></div><div class="acts"><button class="ad" type="button" aria-label="写真を足す">＋写真</button><button class="ed" type="button">なおす</button></div><div class="pl"></div><div class="t"></div><div class="dx"></div><div class="shr"></div><div class="ph"></div><div class="tg"></div>`;
   d.classList.add('own');
   d.querySelector('.d').textContent = (opt.timeOnly ? (n.at || '--:--') : fmtDay(n.d) + (n.at ? '  ' + n.at : ''));
   const meta = d.querySelector('.meta');
@@ -2781,6 +2848,7 @@ function entryNode(n, opt = {}) {
   if (opt.place) { pl.appendChild(mkBtn(placeLabel(n.k) + ' ›', 'plink', () => jumpTo(n.k))); } else pl.remove();
   d.querySelector('.t').textContent = n.t || (n.x ? '' : (n.im || []).length ? '（写真だけ）' : '（メモなし）');
   d.querySelector('.dx').textContent = n.x || '';
+  if (n.s) d.querySelector('.shr').appendChild(shopChip(n.s, n.k)); else d.querySelector('.shr').remove();
   d.querySelector('.ph').appendChild(chips(n.p, n));
   d.insertBefore(thumbStrip(n), d.querySelector('.ph'));
   d.querySelector('.tg').appendChild(tagChips(n.tags));
@@ -2828,7 +2896,7 @@ function addPhotoUI(node, n) {
 }
 function otherEntry(n, opt) {   // someone else's memo in the group: read only, no GPS
   const d = document.createElement('div'); d.className = 'entry other';
-  d.innerHTML = `<div class="meta"></div><div class="acts"></div><div class="pl"></div><div class="t"></div><div class="dx"></div><div class="ph"></div><div class="tg"></div>`;
+  d.innerHTML = `<div class="meta"></div><div class="acts"></div><div class="pl"></div><div class="t"></div><div class="dx"></div><div class="shr"></div><div class="ph"></div><div class="tg"></div>`;
   const meta = d.querySelector('.meta');
   meta.appendChild(whoChip(n.by));
   const dt = document.createElement('span'); dt.className = 'd'; dt.textContent = fmtDay(n.d) + (n.at ? '  ' + n.at : ''); meta.appendChild(dt);
@@ -2837,6 +2905,7 @@ function otherEntry(n, opt) {   // someone else's memo in the group: read only, 
   d.querySelector('.t').textContent = n.t || '';
   d.querySelector('.dx').textContent = n.x || '';
   d.querySelector('.dx').style.borderLeftColor = GR.color(n.by);
+  if (n.s && typeof n.s === 'object') d.querySelector('.shr').appendChild(shopChip({ n: String(n.s.n || '').slice(0, 80), u: mapUrl(n.s.u) ? n.s.u : '', a: String(n.s.a || '').slice(0, 160) }, n.k)); else d.querySelector('.shr').remove();
   const nph = +n.ph || (Array.isArray(n.imd) ? n.imd.length : 0);
   if (nph) d.querySelector('.ph').appendChild(el2('span', 'phnote', `写真 ${nph} 枚は、本人の手もとに`));
   d.querySelector('.ph').appendChild(chips(noteLinks(n), n));
@@ -2868,6 +2937,7 @@ function editEntry(node, n) {
   node.innerHTML = `<div class="edit">
     <div class="erow"><div><label>日付</label><input type="date" class="eD"></div><div><label>時刻</label><input type="time" class="eA"></div></div>
     <div class="scope eK"></div>
+    <div class="eShop"></div>
     <label>ひとこと</label><textarea class="eT" rows="2"></textarea>
     <label>くわしく</label><textarea class="eX big" placeholder="道順、見つけたもの、天気、寄ったお店、気づいたこと…"></textarea>
     <label>タグ</label><div class="eG"></div>
@@ -2879,6 +2949,25 @@ function editEntry(node, n) {
   scopeChips(q('.eK'), ancestors(n.k), n.k, x => { k = x; });
   q('.eD').value = n.d; q('.eA').value = n.at || ''; q('.eT').value = n.t || ''; q('.eX').value = n.x || ''; q('.eP').value = (n.p || []).join('\n');
   const tg = tagInput(q('.eG'), n.tags);
+  let shop = n.s ? { ...n.s } : null, eloc = n.loc || null;
+  const sf = shopField({
+    name: () => firstLine(q('.eT').value), k: () => k, ctx: () => ({ kind: 'note', id: n.id }),
+    onShop: async p => {
+      if (!p) { if (shop && shop.ll && eloc && eloc[0] === shop.ll[0]) eloc = null; shop = null; sf.show(null); return; }
+      const res = await resolveShop(p), name = p.n || 'お店';
+      shop = p;
+      if (p.ll) eloc = [p.ll[0], p.ll[1], 0];
+      if (res && res.key !== k && (sure(res) || !within(res.key, k))) {   // in another town: the memo moves there
+        k = res.key; scopeChips(q('.eK'), ancestors(k), k, x => { k = x; });
+        if (!p.ll && eloc) eloc = null;
+        toast(`${name} を付けました（${placeName(k)} に移します）`, 3000);
+      } else toast(sure(res) || (res && res.key === k) ? `${name} を付けました` : `${name} を付けました。町だけ、たしかめてください`, 3000);
+      if (!q('.eT').value.trim()) q('.eT').value = name;
+      sf.show(shop, k);
+    }
+  });
+  q('.eShop').appendChild(sf.el); sf.show(shop, k);
+  q('.eT').addEventListener('input', () => sf.fill());
   let im = (n.im || []).slice(), gone = [];
   const paintIm = () => {
     const box = q('.eI'); box.innerHTML = '';
@@ -2893,13 +2982,15 @@ function editEntry(node, n) {
   };
   const save = () => {
     const T = pullLinks(q('.eT').value), X = pullLinks(q('.eX').value), t = T.text, x = X.text;
-    editing = null;
-    Store.putNote({ ...n, k, d: q('.eD').value || n.d, at: q('.eA').value || '', t, x, im, p: parseLinks([q('.eP').value, ...T.links, ...X.links].join(' ')), tags: uniq([...tg.get(), ...hashtags(t + ' ' + x)]) });
+    const all = parseLinks([q('.eP').value, ...T.links, ...X.links].join(' ')), ml = all.find(mapUrl);
+    if (!shop && ml) shop = { u: ml, n: urlName(ml) || firstLine(t) };   // a map link written in the memo is its shop
+    editing = null; shopDone();
+    Store.putNote({ ...n, k, d: q('.eD').value || n.d, at: q('.eA').value || '', t: t || (shop && shop.n) || '', x, im, p: all.filter(u => !mapUrl(u)), loc: eloc || undefined, s: shopOut(shop), tags: uniq([...tg.get(), ...hashtags(t + ' ' + x)]) });
     if (gone.length) Thumbs.del(gone);
     toast(k === n.k ? '保存しました' : `${placeName(k)} に移しました`);
   };
   q('.eS').onclick = save;
-  q('.eC').onclick = () => { editing = null; refreshPanels(); };
+  q('.eC').onclick = () => { editing = null; shopDone(); refreshPanels(); };
   editBar(node.querySelector('.edit'), save, () => q('.eC').click());
   node.querySelectorAll('textarea').forEach(t => t.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); save(); } }));
   (W < 720 ? q('.eT') : q('.eX')).focus();
@@ -3007,20 +3098,22 @@ $('#sForm').onsubmit = ev => {
   const pc = W >= 720;
   // a link written into the memo itself is taken out and kept as a photo link
   const T = pullLinks($('#fText').value), X = pullLinks(pc ? $('#fDetail').value : '');
-  const t = T.text, x = X.text, links = parseLinks([$('#fLinks').value, ...T.links, ...X.links].join(' '));
+  const all = parseLinks([$('#fLinks').value, ...T.links, ...X.links].join(' ')), links = all.filter(u => !mapUrl(u)), ml = all.find(mapUrl);
+  const shop = formShop ? shopOut(formShop) : ml ? shopOut({ u: ml, n: urlName(ml) || firstLine(T.text) }) : undefined;   // a map link written in the memo is its shop
+  const t = T.text || (shop && shop.n) || '', x = X.text;
   const tags = uniq([...(pc ? fTags.get() : []), ...hashtags(t + ' ' + x), ...(shareOn() ? [GR.gtag()] : [])]);
-  if (!t && !x && !links.length && !formThumbs.length) { $('#fText').focus(); toast('メモを書いてください'); return; }
+  if (!t && !x && !links.length && !formThumbs.length && !shop) { $('#fText').focus(); toast('メモを書いてください'); return; }
   const custom = pc || $('#fWhenRow').classList.contains('open');   // phone: only when ◷ was opened
   const d = custom ? ($('#fDate').value || today()) : today();
   const at = custom && $('#fTime').value ? $('#fTime').value : (d === today() ? nowHM() : '');
   const k = formKey || S.sel.key;
   const sp = spreadPrep(k), pt = placePoint(k, formLoc);
   const nid = newId(), ds = formThumbs.slice();
-  Store.putNote({ id: nid, k, d, at, t, x, p: links, loc: formLoc, tags });
+  Store.putNote({ id: nid, k, d, at, t, x, p: links, loc: formLoc, tags, s: shop });
   if (ds.length) saveThumbs(ds).then(im => { const n = Store.notes.get(nid); if (n) Store.putNote({ ...n, im }); });
   spread(sp, pt);
   $('#fText').value = ''; $('#fDetail').value = ''; $('#fLinks').value = ''; paintLinks(); $('#fWhereBox').classList.remove('open'); fTags.set([]); formThumbs = []; paintFormThumbs(); paintSave();
-  setFormLoc(null);
+  setFormLoc(null); setFormShop(null); fShop.clear(); shopDone();
   $('#fTime').value = ''; if (!pc) { $('#fDate').value = today(); $('#fWhenRow').classList.remove('open'); } paintWhen();
   toast((d !== today() ? `${d.slice(5).replace('-', '/')}の分として、` : '') + (k === S.sel.key ? 'のこしました' : `${placeName(k)} にのこしました`) + (shareOn() ? `（#${GR.gtag()} のみんなにも）` : ''));
   burst(k, pt);
@@ -3037,9 +3130,10 @@ function paintFormThumbs() {
 }
 $('#fPick').onclick = () => pickPhotos(6 - formThumbs.length, ds => { formThumbs = formThumbs.concat(ds).slice(0, 6); paintFormThumbs(); });
 $('#fText').addEventListener('paste', e => {   // pasting a link into the memo puts it where photo links go
-  const P = pullLinks((e.clipboardData || {}).getData ? e.clipboardData.getData('text') : '');
+  const raw = (e.clipboardData || {}).getData ? e.clipboardData.getData('text') : '', P = pullLinks(raw);
   if (!P.links.length) return;
   e.preventDefault();
+  if (P.links.some(mapUrl)) { if (fShop.take(raw) && !$('#fText').value.trim()) $('#fText').value = (parseShop(raw) || {}).n || ''; return; }
   $('#fLinks').value = parseLinks([$('#fLinks').value, ...P.links].join(' ')).join(' ');
   if (P.text) document.execCommand('insertText', false, P.text);
   paintLinks(); toast('リンクは、写真のリンクとして付けました');
@@ -3114,7 +3208,7 @@ function setFormLoc(l) {
   formLoc = l;
   const b = $('#fLoc');
   b.classList.toggle('on', !!l);
-  b.textContent = l ? `位置あり ±${Math.round(l[2] || 0)}m（押すと、はずす）` : 'いまの位置も付ける';
+  b.textContent = l ? (l[2] ? `位置あり ±${Math.round(l[2])}m（押すと、はずす）` : 'お店の位置あり（押すと、はずす）') : 'いまの位置も付ける';
   paintWhere();
 }
 $('#fLoc').onclick = async () => {
@@ -3123,6 +3217,294 @@ $('#fLoc').onclick = async () => {
   try { const p = await getPos(); setFormLoc([+p.lat.toFixed(5), +p.lng.toFixed(5), Math.round(p.acc)]); }
   catch (e) { setFormLoc(null); geoErr(e, () => $('#fLoc').onclick()); }
 };
+
+/* ---------- お店: find it in Google Maps, copy, come back, attach (v2.6.0) ----------
+   note.s = { n: name, a: address, u: map link }. The name and link may go to the group with a shared memo; GPS never does. */
+const PIN_SVG = '<svg viewBox="0 0 11 13" aria-hidden="true"><path d="M5.5 12.2S1.3 7.9 1.3 5.2a4.2 4.2 0 0 1 8.4 0c0 2.7-4.2 7-4.2 7z"/><circle cx="5.5" cy="5.2" r="1.4"/></svg>';
+function mapUrl(u) {   // only real map links are kept (and opened)
+  let x; try { x = new URL(String(u || '')); } catch (e) { return false; }
+  if (x.protocol !== 'https:' && x.protocol !== 'http:') return false;
+  const h = x.hostname.replace(/^www\./, '');
+  if (h === 'maps.app.goo.gl' || /^maps\.google\.[a-z.]+$/.test(h) || /^maps\.apple(\.com)?$/.test(h)) return true;
+  if (h === 'goo.gl' || /^google\.[a-z.]+$/.test(h)) return /^\/maps(\/|$)/.test(x.pathname);
+  return false;
+}
+const inJapan = (lat, lng) => lat > 20 && lat < 46.5 && lng > 122 && lng < 154.5;
+function urlLL(u) {   // a PC address bar link carries the position; a phone's short link does not
+  let s = String(u); try { s = decodeURIComponent(s); } catch (e) {}
+  const ok = (a, b) => { const lat = +a, lng = +b; return inJapan(lat, lng) ? [+lat.toFixed(6), +lng.toFixed(6)] : null; };
+  let m = s.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/); if (m) return ok(m[1], m[2]);
+  m = s.match(/[?&](?:ll|sll|q|query|center|daddr|destination|coordinate)=(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/); if (m) return ok(m[1], m[2]);
+  m = s.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/); if (m) return ok(m[1], m[2]);
+  return null;
+}
+function urlName(u) {
+  let x; try { x = new URL(u); } catch (e) { return ''; }
+  let n = '';
+  const m = x.pathname.match(/\/maps\/place\/([^/]+)/);
+  if (m) { try { n = decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch (e) { n = ''; } }
+  else n = x.searchParams.get('name') || (/^maps\.apple/.test(x.hostname) ? x.searchParams.get('q') || '' : '');
+  n = n.trim();
+  return /^-?\d+\.\d+\s*,\s*-?\d+\.\d+$/.test(n) ? '' : n.slice(0, 80);
+}
+const PREF_HEAD = /^(北海道|東京都|大阪府|京都府|\S{2,3}県)/;
+const isAddr = s => { s = String(s || '').normalize('NFKC').replace(/\s+/g, '').replace(/^(日本|Japan)[、,]?/, ''); return /^〒?\d{3}-\d{4}/.test(s) || /^(北海道|東京都|大阪府|京都府|\S{2,3}県)\S*?(市|区|町|村|郡)/.test(s); };
+// what was copied in the map app: a link, and maybe the name and address on the lines around it
+function parseShop(text) {
+  const raw = String(text || '').replace(/\r/g, '');
+  const u = (raw.match(URL_RE) || []).find(mapUrl) || '';
+  const segs = raw.replace(URL_RE, '\n').split(/\n|\s[·•|]\s/).map(x => x.trim()).filter(Boolean);
+  let a = '', n = '';
+  for (const s0 of segs) {
+    if (!a && isAddr(s0)) { a = s0.normalize('NFKC').replace(/^(日本|Japan)[、,]?\s*/, '').replace(/^〒?\s?\d{3}-\d{4}\s*/, '').trim(); continue; }
+    if (!n && s0.length <= 60 && !/^[★☆\d.,()（）\s]+$/.test(s0) && !/^google\s?(マップ|maps)?$/i.test(s0)) n = s0;
+  }
+  if (!n && u) n = urlName(u);
+  const ll = u ? urlLL(u) : null;
+  if (!u && !a) return null;
+  return { u, n: n.slice(0, 80), a: a.slice(0, 160), ll };
+}
+const shopOut = s => s ? { ...(s.n ? { n: s.n } : {}), ...(s.a ? { a: s.a } : {}), ...(s.u && mapUrl(s.u) ? { u: s.u } : {}) } : undefined;
+// address → town: 都道府県, then the longest city name, then the town (丁目 written as 1丁目, 一丁目 or 1-2-3)
+const KD = { '〇': 0, '一': 1, '二': 2, '三': 3, '四': 4, '五': 5, '六': 6, '七': 7, '八': 8, '九': 9 };
+const kanNum = s => s.replace(/[〇一二三四五六七八九十]+/g, m => { let n = 0, c = 0; for (const ch of m) { if (ch === '十') { n += (c || 1) * 10; c = 0; } else c = c * 10 + KD[ch]; } return String(n + c); });
+const addrNorm = s => kanNum(String(s || '').normalize('NFKC').replace(/\s+/g, '').replace(/[ヶヵケがガ]/g, 'ケ').replace(/の/g, 'ノ')).replace(/^大字/, '');
+function townIn(towns, rest) {
+  const r = addrNorm(rest), m = r.match(/^(\D+?)(\d+)(?:[-‐−ー－]|番|$)/);
+  const cands = m ? [r, m[1] + m[2] + '丁目' + r.slice(m[0].length)] : [r];
+  let best = null;
+  for (const t of towns) { const tn = addrNorm(t.n); if (tn && cands.some(c => c.startsWith(tn)) && (!best || tn.length > best.len)) best = { t, len: tn.length }; }
+  if (best) return best.t;
+  for (const t of towns) { const base = addrNorm(t.n).replace(/\d+丁目$/, ''); if (base.length >= 2 && r.startsWith(base)) return t; }   // no 丁目 in the address
+  return null;
+}
+async function addrKey(a) {
+  let s = String(a || '').normalize('NFKC').replace(/\s+/g, '').replace(/^(日本|Japan)[、,]?/, '').replace(/^〒?\d{3}-\d{4}/, '');
+  const pc = Object.keys(D.prefInfo).find(c => s.startsWith(D.prefInfo[c].n));
+  if (!pc) return null;
+  s = s.slice(D.prefInfo[pc].n.length);
+  const P = await ensurePref(pc);
+  let best = null;
+  for (const r of [s, s.replace(/^\S{1,6}?郡/, '')]) for (const f of P.feats) if (f.n && r.startsWith(f.n) && (!best || f.n.length > best.n.length)) best = { mc: f.c, n: f.n, r: r.slice(f.n.length) };
+  if (!best) return { key: 'p' + pc, how: 'pref' };
+  const t = townIn(await ensureTowns(best.mc), best.r);
+  return t ? { key: t.k, how: 'addr' } : { key: 'm' + best.mc, how: 'muni' };
+}
+async function resolveShop(p) {   // → { key, how: 'll' | 'addr' | 'muni' | 'pref' } or null
+  try {
+    if (p.ll) { const r = await whereIs(p.ll[1], p.ll[0]); return { key: r.key, how: r.key[0] === 't' ? 'll' : 'muni' }; }
+    if (p.a) return await addrKey(p.a);
+  } catch (e) {}
+  return null;
+}
+const sure = r => !!r && (r.how === 'll' || r.how === 'addr');
+const shopSearch = q => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
+const shopHref = s => s && s.u && mapUrl(s.u) ? s.u : shopSearch([s && s.n, s && s.a].filter(Boolean).join(' '));
+function shopQuery(name, k) {   // the shop's name and the city it is probably in
+  const P = k ? D.prefInfo[k.slice(1, 3)] : null, M = k && k[0] !== 'p' ? D.muni[k.slice(1, 6)] : null;
+  return [name, P ? P.n + (M ? M.n : '') : ''].filter(Boolean).join(' ');
+}
+function shopChip(s, k, cls) {
+  const a = document.createElement('a'); a.className = 'shop' + (cls ? ' ' + cls : '');
+  a.href = shopHref(s); a.target = '_blank'; a.rel = 'noopener noreferrer'; a.title = 'お店を開く（地図アプリ）';
+  a.innerHTML = PIN_SVG + '<b></b>';
+  a.querySelector('b').textContent = s.n || 'お店';
+  const sub = (k && placeName(k)) || '';
+  if (sub && sub !== s.n) { const sm = document.createElement('small'); sm.textContent = sub; a.appendChild(sm); }
+  a.addEventListener('click', e => e.stopPropagation());
+  return a;
+}
+const firstLine = s => String(s || '').split('\n')[0].replace(URL_RE, ' ').replace(/[#＃][^\s#＃]+/g, ' ').replace(/\s{2,}/g, ' ').trim().slice(0, 40);
+// leaving for the map app: remember what we were doing (the page may be reloaded while we are away)
+const SHOPGO = 'sanpo-shopgo';
+let shopGo = null;
+function goFind(name, k, ctx) {
+  shopGo = { t: Date.now(), name, ...ctx };
+  try { localStorage.setItem(SHOPGO, JSON.stringify(shopGo)); } catch (e) {}
+  window.open(shopSearch(shopQuery(name, k)), '_blank', 'noopener');
+}
+function shopDone() { shopGo = null; try { localStorage.removeItem(SHOPGO); } catch (e) {} }
+function shopBack() {   // back from the map app: the button to attach rises, once
+  if (!shopGo || shopGo.shown || Date.now() - shopGo.t > 6e5) return;
+  const b = [...document.querySelectorAll('.shopf .shpaste')].find(x => x.offsetParent);
+  if (!b) return;
+  shopGo.shown = true;
+  b.classList.remove('ready'); void b.offsetWidth; b.classList.add('ready');
+  b.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(shopBack, 300); });
+// one field, used in the memo form, in なおす, after a walk, and in 「＋ お店」
+function shopField(o) {
+  const box = document.createElement('div'); box.className = 'shopf';
+  box.innerHTML = '<span class="lab">お店</span><div class="shq"><input class="shn" type="text" maxlength="60" placeholder="お店の名前" autocomplete="off" enterkeyhint="search"><button type="button" class="shgo">Googleマップで探す</button></div>' +
+    '<button type="button" class="shpaste">コピーしたお店を、付ける</button><div class="shin" hidden><input type="text" placeholder="ここに貼り付け（長押し →「ペースト」）" autocomplete="off"></div><div class="shv"></div>';
+  const q = c => box.querySelector(c), inp = q('.shn');
+  if (o.init) inp.value = o.init;
+  const sug = () => (o.name ? o.name() : '') || '';
+  const fill = () => { inp.placeholder = sug() || 'お店の名前'; };   // a suggestion from the memo, in grey: never taken for something you typed
+  const go = () => {
+    const n = inp.value.trim() || sug();
+    if (!n) { inp.focus(); toast('先に、お店の名前を書いてください'); return; }
+    goFind(n, o.k ? o.k() : null, o.ctx ? o.ctx(n) : {});
+  };
+  q('.shgo').onclick = go;
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); go(); } });
+  const take = txt => {
+    const p = parseShop(txt);
+    if (!p) { toast('地図のリンクが見つかりませんでした。もう一度コピーしてみてください', 3400); return false; }
+    if (!p.n) p.n = inp.value.trim() || sug();
+    q('.shin').hidden = true; q('.shpaste').classList.remove('ready');
+    shopDone();
+    o.onShop(p);
+    return true;
+  };
+  const ask = () => { const w = q('.shin'), i = w.querySelector('input'); w.hidden = false; i.value = ''; i.focus(); };
+  q('.shin input').addEventListener('input', e => { const v = e.target.value; if ((v.match(URL_RE) || []).length || isAddr(v)) take(v); });
+  q('.shpaste').onclick = async () => {
+    let t = null; try { t = await navigator.clipboard.readText(); } catch (e) {}
+    if (t == null) return ask();   // the clipboard can't be read here: paste by hand
+    take(t);
+  };
+  inp.addEventListener('paste', e => {   // a map link pasted into the name: that is the shop
+    const t = e.clipboardData && e.clipboardData.getData('text');
+    if (t && (t.match(URL_RE) || []).some(mapUrl)) { e.preventDefault(); take(t); }
+  });
+  const show = (s, k) => {
+    const v = q('.shv'); v.innerHTML = ''; box.classList.toggle('has', !!s);
+    if (!s) { fill(); return; }
+    v.appendChild(shopChip(s, k, 'new'));
+    v.appendChild(mkBtn('はずす', 'shx', () => o.onShop(null), 'このお店を、メモからはずす'));
+  };
+  fill();
+  const clear = () => { inp.value = ''; q('.shin').hidden = true; q('.shpaste').classList.remove('ready'); fill(); };
+  return { el: box, show, fill, take, clear, name: v => { inp.value = v || ''; } };
+}
+// the memo form: 場所 ▾ → お店
+function dropPin(loc, key) {
+  if (!loc || !key) { $('#pin').removeAttribute('d'); $('#pinRing').removeAttribute('d'); return; }
+  const [x, y] = proj(loc[1], loc[0], key.slice(1, 3) === '47'), d = `M${x} ${y}h0`;
+  $('#pin').setAttribute('d', d); $('#pinRing').setAttribute('d', d);
+}
+function setFormShop(s, k) {
+  const was = formShop;
+  if (!s && was && was.ll) dropPin(null);
+  formShop = s ? { ...s, k: k || (S.sel && S.sel.key) } : null;
+  if (!s && was && was.ll && formLoc && formLoc[0] === was.ll[0] && formLoc[1] === was.ll[1]) setFormLoc(null);   // its position leaves with it
+  fShop.show(formShop, formShop && formShop.k);
+  paintWhere();
+}
+const fShop = shopField({
+  name: () => firstLine($('#fText').value),
+  k: () => formKey || (S.sel && S.sel.key) || null,
+  ctx: () => ({ kind: 'form', sel: S.sel && S.sel.key, text: $('#fText').value, detail: $('#fDetail').value, date: $('#fDate').value, time: $('#fTime').value, when: $('#fWhenRow').classList.contains('open') }),
+  onShop: p => p ? attachToForm(p) : setFormShop(null)
+});
+$('#fWhereBox').appendChild(fShop.el);
+$('#fText').addEventListener('input', () => fShop.fill());
+async function attachToForm(p) {
+  const res = await resolveShop(p), k0 = S.sel && S.sel.key;
+  const name = p.n || 'お店';
+  p.sure = sure(res);
+  const here = k0 && (!res || res.key === k0 || (!sure(res) && within(res.key, k0)));
+  if (here) {   // the town in front of you
+    setFormShop(p, k0);
+    if (p.ll) { setFormLoc([p.ll[0], p.ll[1], 0]); dropPin(p.ll, k0); }
+    if (!$('#fText').value.trim()) { $('#fText').value = name; paintWbar(); }
+    $('#sForm').classList.remove('collapsed'); $('#fWhereBox').classList.add('open'); paintWhere();
+    toast(sure(res) || res && res.key === k0 ? `${name} を付けました` : `${name} を付けました。町だけ、たしかめてください`, 3000);
+    setTimeout(() => burst(k0, placePoint(k0, formLoc)), 200);
+    return;
+  }
+  if (!res) { toast('町がわからなかったので、地図で町をえらんでから、付けてください', 3600); return; }
+  // the shop is in another town: go there, the memo comes along
+  pendingShop = { p, k: res.key, drop: !!formLoc && !p.ll, sure: sure(res) };
+  jumpTo(res.key);
+}
+let pendingDraft = null, pendingEdit = null;
+function shopAfterOpen() {   // the sheet has opened: finish what was waiting for it
+  if (!S.sel) return;
+  if (pendingDraft && pendingDraft.sel === S.sel.key) {   // back after a reload: the memo you were writing
+    const g = pendingDraft; pendingDraft = null;
+    if (g.text && !$('#fText').value) $('#fText').value = g.text;
+    if (g.detail && !$('#fDetail').value) $('#fDetail').value = g.detail;
+    if (g.date) $('#fDate').value = g.date;
+    if (g.time) $('#fTime').value = g.time;
+    if (g.when) $('#fWhenRow').classList.add('open');
+    fShop.name(g.name); paintWhen(); paintWbar();
+    $('#sForm').classList.remove('collapsed'); $('#fWhereBox').classList.add('open'); paintWhere();
+  }
+  if (pendingShop && pendingShop.k === S.sel.key) {
+    const ps = pendingShop; pendingShop = null;
+    setFormShop(ps.p, ps.k);
+    if (ps.p.ll) { setFormLoc([ps.p.ll[0], ps.p.ll[1], 0]); dropPin(ps.p.ll, ps.k); }
+    if (!$('#fText').value.trim()) $('#fText').value = ps.p.n || '';
+    $('#sForm').classList.remove('collapsed'); $('#fWhereBox').classList.add('open'); paintWhere(); paintWbar();
+    setTimeout(() => { burst(ps.k, placePoint(ps.k, formLoc)); toast(`${ps.p.n || 'お店'} を付けました。${placeName(ps.k)} にしました` + (ps.drop ? '（いまの位置は、はずしました）' : '') + (ps.sure ? '' : '。町だけ、たしかめてください'), 3400); }, 650);
+  }
+  if (pendingEdit) {
+    const id = pendingEdit; pendingEdit = null;
+    const node = document.querySelector(`#sEntries .entry[data-id="${id}"]`), n = Store.notes.get(id);
+    if (node && n) editEntry(node, n);
+  }
+}
+function shopResume() {   // the page was reloaded while you were in the map app
+  let g = null; try { g = JSON.parse(localStorage.getItem(SHOPGO) || 'null'); } catch (e) {}
+  if (!g || !(Date.now() - g.t < 6e5)) return shopDone();
+  shopGo = { ...g, shown: false };
+  if (g.kind === 'form' && g.sel) { pendingDraft = g; jumpTo(g.sel); }
+  else if (g.kind === 'note') { const n = Store.notes.get(g.id); if (n) { pendingEdit = n.id; jumpTo(n.k); } }
+  else if (g.kind === 'day') { openWalk(g.d); setTimeout(() => okaeri(g.d, g.name), 700); }
+  else if (g.kind === 'add') setTimeout(() => shopAddDlg(g.d, g.name), 300);
+  setTimeout(shopBack, 1500);
+}
+// after the walk: a shop becomes a memo of that day, in the town it is in
+const recentTowns = () => uniq([...Store.notes.values()].sort(newestFirst).map(n => n.k).filter(k => k[0] === 't')).slice(0, 6);
+async function addShopDay(d, p, host, done) {
+  const res = await resolveShop(p);
+  const put = k => {
+    host.innerHTML = '';
+    const n = { id: newId(), k, d, at: '', t: p.n || 'お店', s: shopOut(p), ...(p.ll ? { loc: [p.ll[0], p.ll[1], 0] } : {}) };
+    Store.putNote(n);
+    setTimeout(() => burst(k, placePoint(k, n.loc)), 120);
+    toast(`${n.t} を、${placeName(k) || 'この町'} にのこしました`, 2800);
+    if (done) done(Store.notes.get(n.id) || n);
+  };
+  if (sure(res)) return put(res.key);
+  // the town is not clear: most likely one you walked that day
+  const area = res ? res.key : null, ins = k => !area || k === area || within(area, k);
+  const ks = uniq([...dayTowns(d).filter(ins), ...(area ? [area] : []), ...dayTowns(d), ...recentTowns()]).slice(0, 10);
+  if (!ks.length) { toast('町がわからなかったので、地図で町をえらんでから、メモの「場所」で付けてください', 3800); return; }
+  host.innerHTML = '';
+  host.appendChild(Object.assign(document.createElement('span'), { className: 'lab', textContent: `${p.n || 'このお店'}は、どの町でしたか？` }));
+  ks.forEach(k => host.appendChild(mkBtn(placeName(k) || '（この町）', 'sc', () => put(k))));
+  host.lastChild.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+}
+const okStep = (n, title, node) => { const r = el2('div', 'okstep'); r.append(el2('b', '', n), el2('span', '', title)); if (node) r.appendChild(node); return r; };
+const yday = () => { const x = new Date(today() + 'T12:00:00'); x.setDate(x.getDate() - 1); return x.toISOString().slice(0, 10); };
+const dayLabel = d => d === today() ? '今日' : d === yday() ? '昨日' : `${+d.slice(5, 7)}/${+d.slice(8)}`;
+function shopAddDlg(d0, nm) {   // 記録 → ＋ お店: any day, even one with nothing written
+  let d = d0 || today();
+  const di = el2('input'); di.type = 'date'; di.value = d; di.max = today(); di.setAttribute('aria-label', '日付');
+  const chips = el2('div', 'pick'), days = uniq([today(), yday(), ...walkDays()]).filter(x => x <= today()).slice(0, 4);
+  const paintDays = () => { chips.innerHTML = ''; days.forEach(x => chips.appendChild(mkBtn(dayLabel(x), 'sc' + (x === d ? ' on' : ''), () => { d = x; di.value = x; paintDays(); }))); };
+  di.onchange = () => { if (di.value) { d = di.value; paintDays(); } };
+  const pick = el2('div', 'pick'), got = el2('div', 'okshops');
+  const sf = shopField({ init: nm, k: () => dayTowns(d)[0] || (S.sel && S.sel.key) || recentTowns()[0] || null, ctx: () => ({ kind: 'add', d }),
+    onShop: p => { if (p) addShopDay(d, p, pick, n => { sf.clear(); got.appendChild(shopChip(n.s, n.k, 'new')); }); } });
+  const w1 = el2('div', 'okday'); w1.append(chips, di);
+  const w2 = el2('div', 'okshop'); w2.append(sf.el, pick);
+  routeDlg('お店を、あとから足す', [
+    el2('p', '', 'Googleマップでお店を開いて「共有」→「コピー」。戻ってきて「コピーしたお店を、付ける」を押すと、その日のメモになります。'),
+    okStep('1', 'いつ？', w1), okStep('2', 'どのお店？', w2), got
+  ], [['おわる', 'btn', () => { closeRoute(); if (got.children.length) openWalk(d); }]]);
+  $('#routeDlg').classList.add('ok');
+  paintDays();
+}
+function shopFromOutside(text) {   // a map link pasted on the map (PC), or sent by a shortcut
+  const p = parseShop(text);
+  if (!p) return toast('地図のリンクが見つかりませんでした');
+  attachToForm(p);
+}
 
 /* ---------- GPS: where am I? ---------- */
 let me = null;
@@ -3201,6 +3583,13 @@ function nearest(feats, lng, lat, oki) {
 }
 async function locate() {
   const pos = await getPos();
+  const r = await whereIs(pos.lng, pos.lat);
+  me = { ...pos, x: r.p[0], y: r.p[1] };
+  drawMe();
+  return { pc: r.pc, mc: r.mc, key: r.key, name: r.name, loc: [+pos.lat.toFixed(5), +pos.lng.toFixed(5), Math.round(pos.acc)] };
+}
+async function whereIs(lng, lat) {
+  const pos = { lng, lat };
   const isOki = f => f.c === '47';
   // coarse prefecture outlines first, then confirm with detailed city outlines (handles borders & coasts)
   const exact = exactHits(D.japanFeats, pos.lng, pos.lat, isOki).map(f => f.c);
@@ -3222,9 +3611,7 @@ async function locate() {
   const p = proj(pos.lng, pos.lat, pc === '47');
   let ti = -1, bd = Infinity;
   towns.forEach((t, i) => t.pts.forEach(q => { const d = (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2; if (d < bd) { bd = d; ti = i; } }));
-  me = { ...pos, x: p[0], y: p[1] };
-  drawMe();
-  return { pc, mc, key: ti >= 0 ? towns[ti].k : 'm' + mc, name: ti >= 0 ? towns[ti].n : D.muni[mc].n, loc: [+pos.lat.toFixed(5), +pos.lng.toFixed(5), Math.round(pos.acc)] };
+  return { pc, mc, p, key: ti >= 0 ? towns[ti].k : 'm' + mc, name: ti >= 0 ? towns[ti].n : D.muni[mc].n };
 }
 const metersToUnits = (m, lat) => m / (1113.2 * Math.cos(lat * Math.PI / 180));
 function drawMe() {
@@ -3349,6 +3736,7 @@ function renderDrawer() {
     if (!q) {
       const ar = document.createElement('div'); ar.className = 'addrow';
       ar.appendChild(mkBtn('＋ 写真をまとめて', 'addq addpics', () => pickBulk(), 'その日の写真をまとめて選ぶと、撮った時刻で近いメモに振り分けます'));
+      ar.appendChild(mkBtn('＋ お店', 'addq addshop', () => shopAddDlg(), 'あとから、寄ったお店をメモに（Googleマップで探して、コピーして、付ける）'));
       ar.appendChild(mkBtn('＋ 道のり（GPX）', 'addq', pickGPX, 'ほかのアプリで記録した道のり（GPXファイル）を読みこむ'));
       frag.appendChild(ar);
       ar.insertBefore(mkBtn('＋ 写真のリンク', 'addq addlink', async () => {
@@ -3367,7 +3755,7 @@ function renderDrawer() {
       if (!q) return true;
       const w = Store.walks.get(d) || {};
       return (w.title || '').includes(q) || (w.sum || '').includes(q) || (w.tags || []).some(t => t.includes(q)) ||
-        (IX.byDate.get(d) || []).some(n => (n.t || '').includes(q) || (n.x || '').includes(q) || placeLabel(n.k).includes(q) || (n.tags || []).some(t => t.includes(q)));
+        (IX.byDate.get(d) || []).some(n => (n.t || '').includes(q) || (n.x || '').includes(q) || (n.s && ((n.s.n || '') + (n.s.a || '')).includes(q)) || placeLabel(n.k).includes(q) || (n.tags || []).some(t => t.includes(q)));
     };
     const list = days.filter(d => (!dRaw || walkStat(d).raw) && hit(d));
     if (!list.length) empty(q ? '見つかりませんでした' : dRaw ? 'まだ書いていない日はありません。ぜんぶ書けています' : 'まだ散歩の記録はありません');
@@ -4301,6 +4689,7 @@ function refreshPanels() {
 /* 写真のリンクを貼る: the post's own time picks the memo it belongs to */
 const noteTime = n => new Date(n.d + 'T' + (n.at || '12:00') + ':00').getTime();
 function attachLink(u) {
+  if ((String(u || '').match(URL_RE) || []).some(mapUrl)) return shopFromOutside(u);   // a shop, not a photo
   const ls = parseLinks(u); if (!ls.length) return toast('リンクが見つかりませんでした');
   const url = ls[0], when = postTime(url), mine = [...Store.notes.values()];
   if (!mine.length) return toast('まずメモをのこしてから、写真を付けてください');
@@ -4331,7 +4720,8 @@ function attachAsk() {   // when the clipboard can't be read: paste by hand
 $('#attach').addEventListener('click', e => { if (e.target.id === 'attach') closePanel('attach'); });
 document.addEventListener('paste', e => {   // PC: paste a link anywhere on the map
   if (e.target.closest && e.target.closest('input,textarea,[contenteditable]')) return;
-  const ls = parseLinks(e.clipboardData ? e.clipboardData.getData('text') : '');
+  const txt = e.clipboardData ? e.clipboardData.getData('text') : '', ls = parseLinks(txt);
+  if (ls.some(mapUrl)) { e.preventDefault(); return shopFromOutside(txt); }
   if (ls.length) { e.preventDefault(); attachLink(ls[0]); }
 });
 let pendingAdd = '';
@@ -4367,6 +4757,7 @@ let pendingAdd = '';
   await route();
   Sync.soon(0);
   if (pendingAdd) setTimeout(() => attachLink(pendingAdd), 400);
+  else setTimeout(shopResume, 600);
   Rec.load();
   if (Rec.st) {
     const last = Math.max(Rec.st.t, ...Rec.pts().map(q => q[2]));
