@@ -12,6 +12,10 @@ SITE = os.environ.get('SITE', os.path.join(ROOT, '_site'))
 PORT = int(os.environ.get('PORT', '8799'))
 FAILS, PASSES = [], []
 
+def said(e):   # a page error, with where it happened (the first lines of its stack)
+    st = [l.strip() for l in (getattr(e, 'stack', '') or '').splitlines()[1:4]]
+    return str(e) + (' @ ' + ' | '.join(st) if st else '')
+
 def check(name, ok, got=None):
     (PASSES if ok else FAILS).append(name)
     print(('  ok   ' if ok else '  FAIL ') + name + ('' if ok else f'   got: {got!r}'))
@@ -26,7 +30,7 @@ async def page(b, phone, base):
     await ctx.route('**/firebase-config.js', lambda r: r.fulfill(status=200, content_type='text/javascript', body=NO_FIREBASE))
     await ctx.add_init_script(INIT)
     m = await ctx.new_page(); errs = []
-    m.on('pageerror', lambda e: errs.append(str(e)))
+    m.on('pageerror', lambda e: errs.append(said(e)))
     return ctx, m, errs
 
 async def app(b, phone, base):
@@ -84,14 +88,18 @@ async def app(b, phone, base):
 async def offline(b, base):
     ctx = await b.new_context(viewport={'width': 393, 'height': 852}, is_mobile=True, has_touch=True)
     await ctx.add_init_script(INIT)
-    m = await ctx.new_page(); errs = []; m.on('pageerror', lambda e: errs.append(str(e)))
+    m = await ctx.new_page(); errs = []; phase = ['online']
+    m.on('pageerror', lambda e: errs.append(phase[0] + ': ' + said(e)))
     await m.goto(base + '/index.html#14204'); await m.wait_for_timeout(3000)
     await m.evaluate("async () => { await navigator.serviceWorker.ready; }")
     await m.reload(); await m.wait_for_timeout(2500)
-    await ctx.set_offline(True)
-    await m.goto(base + '/index.html#14204'); await m.wait_for_timeout(3500)
+    await ctx.set_offline(True); phase[0] = 'offline'
+    await m.evaluate('window.__before = 1')
+    await m.reload(); await m.wait_for_timeout(3500)   # a real fresh open, with no signal
+    check('offline: the page really opened again', await m.evaluate('window.__before !== 1'))
     n = await m.evaluate("() => document.querySelectorAll('#gCells path').length")
     check('offline: opens again without a signal', n > 100, n)
+    phase[0] = 'offline jump'
     await m.evaluate("() => jumpTo('m13106')"); await m.wait_for_timeout(2500)
     check('offline: an area never opened says so and stays put', await m.evaluate("() => location.hash === '#14204' && S.level === 'muni'"))
     check('offline: no errors on the page', not errs, errs)
