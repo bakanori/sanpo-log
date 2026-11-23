@@ -74,6 +74,11 @@ async def app(b, phone, base):
     check(f'{tag}: the backup card appears when photos wait', await m.evaluate("() => !$('#bkPill').hidden && $('#bkTxt').textContent.includes('2枚')"))
     await m.click('#bkLater'); await m.wait_for_timeout(300)
     check(f'{tag}: あとで puts it away for a week', await m.evaluate("async () => { await backupPill(); return $('#bkPill').hidden; }"))
+    # おかえり (after a walk) also says バックアップ
+    await m.evaluate("() => okaeri()"); await m.wait_for_timeout(500)
+    t = await m.evaluate("() => $('#routeDlg').innerText")
+    check(f'{tag}: おかえり says バックアップ', 'バックアップする' in t and 'ファイル' not in t, t[-120:])
+    await m.evaluate("() => closeRoute()"); await m.wait_for_timeout(300)
     # the record format
     r = await m.evaluate("() => { const v = Store.dump().v; const n = Store.absorb({ app: 'sanpo-log', v: 2, notes: { old2: { id: 'old2', k: 'p13', d: '2024-05-05', t: '第2版', u: 1 } } }); return [v, n, !!Store.notes.get('old2')]; }")
     check(f'{tag}: records are 第3版 and old ones still open', r == [3, 1, True], r)
