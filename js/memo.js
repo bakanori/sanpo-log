@@ -534,7 +534,7 @@ function renderEntries() {
     theirs.forEach(n => box.appendChild(entryNode(n, { other: true })));
     const e = el2('div', 'empty mine'); e.innerHTML = `あなたのメモは、まだありません。<br>行ったことがあれば「わたしも行った」、書くなら${writeW}`; box.appendChild(e);
   } else if (!own.length) box.innerHTML = `<div class="empty">まだ、この${hereW}の話はありません。<br>${writeW}</div>`;
-  own.forEach(n => box.appendChild(entryNode(n)));
+  own.forEach(n => box.appendChild(swipeRow(entryNode(n), n)));
   if (own.length && theirs.length) {
     const os = theirs;
     const r = document.createElement('div'); r.className = 'rule'; r.textContent = `みんなのメモ ${os.length}`; photosBtn(r, os); box.appendChild(r);
