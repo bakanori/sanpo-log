@@ -302,7 +302,7 @@ function renderDrawer() {
         const nph = +n.ph || (n.im || []).length || (Array.isArray(n.imd) ? n.imd.length : 0);
         b.querySelector('.t').textContent = n.t || n.x || withText(n) || (nph ? (n.by === me ? `写真 ${nph} 枚（この端末に）` : `写真 ${nph} 枚は、本人の手もとに`) : '');
         b.onclick = () => { Pane.leave(); jumpTo(n.k); };
-        frag.appendChild(b);
+        frag.appendChild(n.by === me && Store.notes.has(n.id) ? swipeRow(b, Store.notes.get(n.id)) : b);   // けす: only your own
       });
     }
   } else if (!dTag) {
@@ -350,7 +350,7 @@ function renderDrawer() {
       b.querySelector('.p').textContent = placeLabel(n.k);
       b.querySelector('.t').textContent = n.t || n.x || '';
       b.onclick = () => { Pane.leave(); jumpTo(n.k); };
-      frag.appendChild(b);
+      frag.appendChild(swipeRow(b, n));
     });
   }
   body.appendChild(frag);
@@ -477,7 +477,7 @@ function renderWalk() {
   body.appendChild(add);
   const r = document.createElement('div'); r.className = 'rule'; r.textContent = `メモ ${st.ns.length}`; photosBtn(r, st.ns); body.appendChild(r);
   if (!st.ns.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'この日のメモはありません。'; body.appendChild(e); }
-  st.ns.forEach(n => body.appendChild(entryNode(n, { place: true, timeOnly: true })));
+  st.ns.forEach(n => body.appendChild(swipeRow(entryNode(n, { place: true, timeOnly: true }), n)));
 }
 function editWalk(node, d) {
   editing = 'walk';
@@ -939,10 +939,10 @@ addEventListener('visibilitychange', () => { if (document.visibilityState === 'h
 
 async function delNoteUndo(n) {   // けす: gone at once, with 5 seconds to take it back (photos too)
   editing = null;
-  const keep = { ...n }, pics = [];
+  const keep = { ...n }, pics = [], to = GR.sharedTo(n).map(G => G.g.name);
   for (const id of n.im || []) { try { const d = await Thumbs.src(id); if (d) pics.push([id, d, await Thumbs.small(id)]); } catch (e) {} }
   Store.delNote(n.id); Thumbs.del(n.im);
-  toast('メモをけしました', 5200, ['もどす', () => {
+  toast(to.length ? `メモをけしました（${to.join('・')}からも）` : 'メモをけしました', 5200, ['もどす', () => {
     Store.deleted.delete('n:' + keep.id);
     for (const [id, d, sm] of pics) Thumbs.put(id, d, false, sm || undefined);
     Store.putNote(keep); toast('もどしました');
