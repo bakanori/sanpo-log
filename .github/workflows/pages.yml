@@ -1,4 +1,6 @@
 # Builds the SANPO LOG site (downloads public map data) and publishes it with GitHub Pages.
+# Two jobs (GitHub's own layout): build + check + upload, then deploy in a job of its own.
+# Deploying in the same job right after the upload can miss the just-uploaded site (since 2026-11), so they are apart.
 name: Build and publish
 
 on:
@@ -16,10 +18,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -41,6 +40,14 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: _site
+
+  deploy:
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
