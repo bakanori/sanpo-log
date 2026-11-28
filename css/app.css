@@ -128,7 +128,8 @@ body.busy .brand i{animation:pulse .6s var(--ease) infinite}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 #toast.act.show{pointer-events:auto;display:flex;align-items:center;gap:12px;padding:5px 5px 5px 14px;white-space:nowrap;max-width:none}
 #toast .tact{font:500 12px/1 var(--sans);letter-spacing:.06em;color:#fff;border:1px solid rgba(255,255,255,.55);border-radius:999px;min-height:30px;padding:0 14px;white-space:nowrap}
-@media (max-width:720px){#toast .tact{min-height:40px;font-size:14px;padding:0 16px}}
+@media (max-width:720px){#toast .tact{min-height:40px;font-size:14px;padding:0 16px}
+#toast.act{z-index:50}   /* over a question too (v2.15.0: 「ウェブで開く」 while 寄ったところ is asked) */}
 
 /* ---------- panels ---------- */
 .panel{position:fixed;top:0;bottom:0;width:380px;background:#fff;display:flex;flex-direction:column;transition:transform var(--panel);z-index:10}
