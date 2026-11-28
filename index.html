@@ -12,7 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#efefea">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='5' fill='%23ff4f00'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/app.css?v=d6cdeec243">
+<link rel="stylesheet" href="css/app.css?v=31b9524868">
 </head>
 <body data-level="japan">
 <div id="bar"></div>
@@ -40,7 +40,7 @@
   <div>
     <button class="brand" id="brand" title="日本全体へ"><i></i><span>SANPO LOG</span></button>
     <nav id="crumb"></nav>
-    <div id="title"><h1 id="name">日本</h1><button id="memoHere" hidden>＋ メモ</button></div>
+    <div id="title"><span id="namePre"></span><h1 id="name">日本</h1><button id="memoHere" hidden>＋ メモ</button></div>
     <div id="kind">日本</div>
     <button id="bData2" type="button" aria-label="設定（スマホとPCをそろえる・みんなで・バックアップ）"><i></i>設定</button>
     <p id="intro" hidden></p>
@@ -62,7 +62,7 @@
 <div id="hint">押すと近づく ・ ドラッグで動かす ・ スクロールで拡大 ・ Esc でもどる</div>
 <div id="tools">
   <button class="pill sp-only" id="bLoc" title="いまいる場所を地図に出す" aria-label="いまの場所"><svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="5.2"/><circle cx="10" cy="10" r="1.6" class="c"/><path d="M10 1.5v3.2M10 15.3v3.2M1.5 10h3.2M15.3 10h3.2"/></svg><span>いまの場所</span></button>
-  <button class="pill" id="bHome" title="日本全体へ" aria-label="日本全体へ"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 6.2 6 2l4.5 4.2M3 5v5h6V5"/></svg><span>HOME</span></button>
+  <button class="pill" id="bHome" title="日本地図にもどる" aria-label="日本地図にもどる"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 6.2 6 2l4.5 4.2M3 5v5h6V5"/></svg><span>日本</span></button>
   <button class="pill" id="bUp" title="上の階層へ (Esc)">↑ もどる</button>
   <button class="pill" id="bList">LIST</button>
   <button class="pill" id="bLog" title="場所・散歩・タグの一覧">ノート</button>
@@ -232,15 +232,15 @@
 /* version: big redesign . new feature . fix — bump with every release and add a line to README「更新履歴」.
    The parts below (and css/app.css above) are named by their content: ?v= is the start of the file's sha256.
    Change a part → change its ?v= too (the tests check), so phones fetch only the parts that changed. */
-const VERSION = '2.12.0', VERSION_DATE = '2026.11.24';
+const VERSION = '2.14.0', VERSION_DATE = '2026.11.28';
 </script>
 <script src="js/base.js?v=92aa2b1b98"></script>
-<script src="js/parts.js?v=2d09af3e23"></script>
+<script src="js/parts.js?v=92d213ba9c"></script>
 <script src="js/records.js?v=6c1747df84"></script>
 <script src="js/sync.js?v=2197bdfa9e"></script>
-<script src="js/map.js?v=0d27f769fe"></script>
-<script src="js/memo.js?v=801c784237"></script>
-<script src="js/screens.js?v=a3c07ff104"></script>
+<script src="js/map.js?v=ab32aa9e8d"></script>
+<script src="js/memo.js?v=26715a3c11"></script>
+<script src="js/screens.js?v=8489c35ab2"></script>
 <script src="js/start.js?v=86e2528620"></script>
 </body>
 </html>
