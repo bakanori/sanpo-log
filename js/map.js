@@ -461,23 +461,23 @@ function enter(level, pc, mc) {
 }
 
 function updateHeader() {
-  const c = $('#crumb'); c.innerHTML = '';
-  const add = (label, h) => { const b = document.createElement('button'); b.textContent = label; b.onclick = () => go(h); c.appendChild(b); const s = document.createElement('span'); s.textContent = '/'; c.appendChild(s); };
-  let name = '日本', kind = '47 都道府県';
-  if (S.level !== 'japan') add('日本', '');
+  // the top row only shows (v2.14.0): where you are and how much you walked; 設定 is its one button.
+  // Back to the whole of Japan is ⌂, next to ◎ (PC: next to ノート). The prefecture is a small word before a city's name.
+  let name = '日本', kind = '47 都道府県', pre = '';
   if (S.level === 'pref') { name = D.prefInfo[S.pc].n; kind = `${D.pref[S.pc].feats.length} 市区町村`; }
   if (S.level === 'muni') {
-    add(D.prefInfo[S.pc].n, S.pc);
+    pre = D.prefInfo[S.pc].n;
     name = D.muni[S.mc].n;
     kind = `${(D.towns[S.mc] || []).length} 町`;
   }
+  $('#namePre').textContent = pre;
   const n = $('#name');
   n.innerHTML = '';
   Array.from(name).forEach((ch, i) => { const s = document.createElement('span'); s.className = 'ch'; s.style.animationDelay = (i * 35) + 'ms'; s.textContent = ch; n.appendChild(s); });
   $('#kind').textContent = kind;
   $('#memoHere').hidden = S.level === 'japan';
   $('#bUp').style.display = S.level === 'japan' ? 'none' : '';
-  $('#bHome').style.display = S.level === 'muni' ? '' : 'none';   // at the prefecture level UP already goes home
+  $('#bHome').style.display = S.level === 'japan' ? 'none' : '';   // ⌂: shown wherever there is a way back to Japan
   document.title = (S.level === 'japan' ? '' : name + ' — ') + 'SANPO LOG';
   refreshMemoBtn(); intro();
 }
