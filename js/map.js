@@ -462,7 +462,8 @@ function enter(level, pc, mc) {
 
 function updateHeader() {
   // the top row only shows (v2.14.0): where you are and how much you walked; 設定 is its one button.
-  // Back to the whole of Japan is ⌂, next to ◎ (PC: next to ノート). The prefecture is a small word before a city's name.
+  // Back to the whole of Japan is ⌂, next to ◎ (PC: next to ノート), always there — on the Japan map it brings all of Japan
+  // back into view. The prefecture is a small word before a city's name.
   let name = '日本', kind = '47 都道府県', pre = '';
   if (S.level === 'pref') { name = D.prefInfo[S.pc].n; kind = `${D.pref[S.pc].feats.length} 市区町村`; }
   if (S.level === 'muni') {
@@ -477,7 +478,6 @@ function updateHeader() {
   $('#kind').textContent = kind;
   $('#memoHere').hidden = S.level === 'japan';
   $('#bUp').style.display = S.level === 'japan' ? 'none' : '';
-  $('#bHome').style.display = S.level === 'japan' ? 'none' : '';   // ⌂: shown wherever there is a way back to Japan
   document.title = (S.level === 'japan' ? '' : name + ' — ') + 'SANPO LOG';
   refreshMemoBtn(); intro();
 }
@@ -488,7 +488,7 @@ function intro() {
   document.body.classList.toggle('first', first);
   const p = $('#intro'), show = S.level === 'japan' && empty;
   p.hidden = !show;
-  if (show) p.innerHTML = '<b>歩いた町が、ぬられていく。</b><br>' + (first ? 'まずは、いまいる町から。' : W < 720 ? '右下の ＋ で、いまいる町にひとこと。' : '地図を押して町までおりると、ひとこと残せます。');
+  if (show) p.innerHTML = '<b>歩いた町が、ぬられていく。</b><br>' + (first ? 'まずは、いまいる町から。' : W < 720 ? '下の「＋ ここでメモ」で、いまいる町にひとこと。' : '地図を押して町までおりると、ひとこと残せます。');
 }
 function started() { try { localStorage.setItem('sanpo-started', '1'); } catch (e) {} intro(); }
 async function firstTown() {
