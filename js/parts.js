@@ -1,6 +1,7 @@
 /* SANPO LOG — js/parts.js
    部品 — pieces every screen uses: the tag input, links and photos on a memo card, the photo viewer,
-   one panel at a time (‹ back, sheets you pull down), and the short message at the bottom (toast).
+   one panel at a time (‹ back, sheets you pull down), the short message at the bottom (toast),
+   and けす on a row of your own memo (slide it to the left on a phone, point at it on a PC).
    The files load in this order (see index.html): base → parts → records → sync → map → memo → screens → start.
    They share one scope: a name made in an earlier file can be used in any later one, but code that runs
    while the page loads may only use names from its own file and the earlier ones. */
@@ -330,4 +331,72 @@ function toast(s, ms, act) {   // act: [label, fn] — one button, e.g. もど�
   const t = $('#toast'); t.textContent = s; t.classList.toggle('act', !!act);
   if (act) { const b = document.createElement('button'); b.type = 'button'; b.className = 'tact'; b.textContent = act[0]; b.onclick = e => { e.stopPropagation(); clearTimeout(toastT); t.classList.remove('show', 'act'); act[1](); }; t.appendChild(b); }
   t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show', 'act'), ms || 2400);
+}
+
+/* けす from a list (v2.13.0) — only on your own memo, never on someone else's.
+   Phone: slide the row to the left → 「けす」 behind it (slide all the way → gone at once). A tap on an open row closes it.
+   PC: point at the row → 「けす」 at its right end (a memo card: next to なおす).
+   Gone at once, with もどす for 5 seconds (delNoteUndo). The first time on a phone, one row peeks to show it can slide. */
+const SWD = { open: null, hint: false, W: 76 };
+function swipeRow(row, n) {
+  const box = document.createElement('div'); box.className = 'swd' + (row.classList.contains('entry') ? ' swe' : '');
+  const del = document.createElement('button'); del.type = 'button'; del.className = 'swdel'; del.textContent = 'けす';
+  del.title = 'このメモをけす（5秒のあいだ、もどせます）';
+  box.append(row, del);
+  let x0 = null, y0 = 0, dx = 0, how = '', t0 = 0, moved = false, gone = false;
+  const at = x => { row.style.transform = x ? `translateX(${x}px)` : ''; };
+  const settle = x => {
+    row.style.transition = 'transform var(--t-switch) var(--ease-out)'; at(x); box.classList.toggle('open', x !== 0);
+    setTimeout(() => { row.style.transition = ''; }, 260);
+  };
+  const close = () => { settle(0); if (SWD.open === close) SWD.open = null; };
+  const open = () => { if (SWD.open && SWD.open !== close) SWD.open(); SWD.open = close; settle(-SWD.W); };
+  const go = () => {   // the row slides away and the gap closes, then the memo is gone (もどす for 5 s)
+    if (gone) return; gone = true; if (SWD.open === close) SWD.open = null;
+    box.style.height = box.offsetHeight + 'px'; void box.offsetHeight; box.classList.add('gone');
+    setTimeout(() => delNoteUndo(n), 220);
+  };
+  del.onclick = e => { e.stopPropagation(); go(); };
+  const acts = row.querySelector(':scope > .acts');
+  if (acts) { const k = document.createElement('button'); k.type = 'button'; k.className = 'kesu'; k.textContent = 'けす'; k.title = del.title; k.onclick = e => { e.stopPropagation(); go(); }; acts.appendChild(k); }
+  row.addEventListener('touchstart', e => {
+    x0 = null;
+    if (gone || e.touches.length !== 1 || e.target.closest('input,textarea,select,.edit,.addph') || row.querySelector('.edit')) return;
+    if (SWD.open && SWD.open !== close) SWD.open();
+    box.classList.remove('peek');
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; how = ''; t0 = Date.now(); moved = false;
+  }, { passive: true });
+  row.addEventListener('touchmove', e => {
+    if (x0 == null) return;
+    const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+    if (!how) { if (Math.abs(mx) > 8 && Math.abs(mx) > Math.abs(my) * 1.2) how = 'x'; else if (Math.abs(my) > 8) how = 'y'; }
+    if (how !== 'x') return;
+    moved = true; dx = mx;
+    at(Math.min(0, (box.classList.contains('open') ? -SWD.W : 0) + dx));   // it follows the finger
+  }, { passive: true });
+  const end = () => {
+    if (x0 == null) return;
+    x0 = null; if (how !== 'x') return;
+    const x = Math.min(0, (box.classList.contains('open') ? -SWD.W : 0) + dx), v = dx / Math.max(1, Date.now() - t0);
+    try { localStorage.setItem('sanpo-swiped', '1'); } catch (e) {}
+    if (-x > row.offsetWidth * .6) return go();   // all the way: gone
+    if (-x > SWD.W / 2 || v < -.5) open(); else close();
+  };
+  row.addEventListener('touchend', end); row.addEventListener('touchcancel', end);
+  row.addEventListener('click', e => {   // a slide is not a tap; a tap on an open row only closes it
+    if (!moved && !box.classList.contains('open')) return;
+    e.preventDefault(); e.stopImmediatePropagation(); moved = false;
+    if (box.classList.contains('open')) close();
+  }, true);
+  let seen = false; try { seen = !!(localStorage.getItem('sanpo-swiped') || localStorage.getItem('sanpo-swipe-hint')); } catch (e) {}
+  if (!SWD.hint && !seen && matchMedia('(hover: none)').matches) {   // the first time on a phone: one row peeks
+    SWD.hint = true;
+    setTimeout(() => {   // the list may have been drawn again meanwhile: then the first row of it that shows
+      const t = !gone && box.isConnected && box.offsetParent ? box : [...document.querySelectorAll('.swd')].find(x => x.offsetParent && !x.classList.contains('gone'));
+      if (!t) { SWD.hint = false; return; }
+      try { localStorage.setItem('sanpo-swipe-hint', '1'); } catch (e) {}
+      t.classList.add('peek'); setTimeout(() => t.classList.remove('peek'), 1200);
+    }, 900);
+  }
+  return box;
 }
