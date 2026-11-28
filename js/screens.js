@@ -236,7 +236,7 @@ function renderDrawer() {
     const days = walkDays();
     if (!q) {
       const ar = document.createElement('div'); ar.className = 'addrow';
-      ar.appendChild(mkBtn('＋ 日をえらんで足す', 'addq pickday', () => pickDay(), '写真・お店・写真のリンクを、えらんだ日に足す（その日のページが開きます）'));
+      ar.appendChild(mkBtn('＋ 日をえらんで足す', 'addq pickday', () => pickDay(), '写真・寄ったところ・写真のリンクを、えらんだ日に足す（その日のページが開きます）'));
       ar.appendChild(mkBtn('＋ 道のりを足す', 'addq', pickGPX, 'ほかのアプリで記録した道のり（GPXファイル）を読みこむ'));
       frag.appendChild(ar);
       frag.appendChild(yearCal(days));
@@ -472,7 +472,7 @@ function renderWalk() {
   const add = el2('div', 'addday');   // この日に足す: what used to sit on top of ノート, now where the day is already chosen
   add.appendChild(el2('span', 'lab', 'この日に足す'));
   add.append(mkBtn('＋ 写真をまとめて', 'pgo', () => pickBulk(() => openWalk(d)), 'この日の写真をまとめて選ぶと、撮った時刻で近いメモに振り分けます'),
-    mkBtn('＋ お店', 'pgo', () => shopAddDlg(d), '寄ったお店を、この日のメモに（Googleマップで探して、コピーして、付ける）'),
+    mkBtn('＋ 寄ったところ', 'pgo', () => shopAddDlg(d), 'お店・公園・駅など、寄ったところを、この日のメモに（Googleマップで探して、コピーして、付ける）'),
     mkBtn('＋ 写真のリンク', 'pgo', async () => { try { const ls = parseLinks(await navigator.clipboard.readText()); if (ls.length) return attachLink(ls[0]); } catch (e) {} attachAsk(); }, 'コピーした Instagram・X のリンクを、投稿の時刻に近いメモに付けます'));
   body.appendChild(add);
   const r = document.createElement('div'); r.className = 'rule'; r.textContent = `メモ ${st.ns.length}`; photosBtn(r, st.ns); body.appendChild(r);
