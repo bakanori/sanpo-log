@@ -136,8 +136,13 @@ async def app(b, phone, base):
       return [$('#namePre').textContent, getComputedStyle($('#crumb')).display, h.width > 0, phone ? Math.round(h.right) <= Math.round(l.left) && Math.abs(h.bottom - l.bottom) < 2 : Math.round(h.right) <= Math.round(g.left) && $('#bHome').textContent.trim() === '日本',
         phone ? getComputedStyle($('#bData2')).borderTopWidth : '1px']; }""", phone)
     await m.click('#bHome'); await m.wait_for_timeout(1800)
-    back = await m.evaluate("() => S.level === 'japan' && location.hash === '' && getComputedStyle($('#bHome')).display === 'none'")
-    check(f'{tag}: ⌂ ({"next to ◎" if phone else "next to ノート"}) goes back to the Japan map; the top row only shows', r == ['神奈川県', 'none', True, True, '1px'] and back, [r, back])
+    back = await m.evaluate("() => S.level === 'japan' && location.hash === '' && getComputedStyle($('#bHome')).display !== 'none'")
+    # on the Japan map ⌂ stays (v2.14.1): moved or zoomed, it brings the whole of Japan back into view
+    v0 = await m.evaluate("() => [V.cx, V.cy, V.s].map(x => Math.round(x * 1000))")
+    await m.evaluate("() => flyTo({ cx: V.cx + 300, cy: V.cy - 200, s: V.s / 3 }, 10)"); await m.wait_for_timeout(500)
+    await m.click('#bHome'); await m.wait_for_timeout(1600)
+    v1 = await m.evaluate("() => [V.cx, V.cy, V.s].map(x => Math.round(x * 1000))")
+    check(f'{tag}: ⌂ ({"next to ◎" if phone else "next to ノート"}) goes back to the Japan map, and is there from the start; the top row only shows', r == ['神奈川県', 'none', True, True, '1px'] and back and v1 == v0, [r, back, v0, v1])
     check(f'{tag}: no errors on the page', not errs, errs)
     await ctx.close()
 
