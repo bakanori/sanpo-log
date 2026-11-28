@@ -34,6 +34,14 @@ async def page(b, phone, base):
     m.on('pageerror', lambda e: errs.append(said(e)))
     return ctx, m, errs
 
+async def swipe_left(m, cdp, sel, dx=-120):   # a finger sliding a row to the left
+    x, y = await m.evaluate(f"() => {{ const e = document.querySelector({sel!r}); e.scrollIntoView({{ block: 'center' }}); const b = e.getBoundingClientRect(); return [b.right - 40, b.top + Math.min(b.height / 2, 40)]; }}")
+    await m.wait_for_timeout(250)
+    await cdp.send('Input.dispatchTouchEvent', {'type': 'touchStart', 'touchPoints': [{'x': x, 'y': y}]})
+    for i in range(1, 9):
+        await cdp.send('Input.dispatchTouchEvent', {'type': 'touchMove', 'touchPoints': [{'x': x + dx * i / 8, 'y': y}]}); await m.wait_for_timeout(20)
+    await cdp.send('Input.dispatchTouchEvent', {'type': 'touchEnd', 'touchPoints': []}); await m.wait_for_timeout(400)
+
 async def app(b, phone, base):
     tag = 'phone' if phone else 'pc'
     ctx, m, errs = await page(b, phone, base)
@@ -61,6 +69,20 @@ async def app(b, phone, base):
     gone = await m.evaluate("() => ![...Store.notes.values()].some(n => n.t === 'テストの散歩（なおした）') && $('#toast').textContent.includes('もどす')")
     await m.click('#toast .tact'); await m.wait_for_timeout(600)
     check(f'{tag}: けす is at once, and もどす brings it back', gone and await m.evaluate("() => [...Store.notes.values()].some(n => n.t === 'テストの散歩（なおした）')"))
+    # けす from the list itself (v2.13.0): phone — slide the memo to the left; PC — point at it
+    sel = '#sEntries .swd > .entry'
+    if phone:
+        await swipe_left(m, await ctx.new_cdp_session(m), sel)
+        opened = await m.evaluate("() => { const b = document.querySelector('#sEntries .swd'); return b.classList.contains('open') && b.firstChild.getBoundingClientRect().right <= b.querySelector('.swdel').getBoundingClientRect().left + 1; }")
+        await m.evaluate("() => document.querySelector('#sEntries .swd.open .swdel').click()")
+    else:
+        await m.hover(sel); await m.wait_for_timeout(300)
+        opened = await m.evaluate("() => getComputedStyle(document.querySelector('#sEntries .swd .acts .kesu')).opacity === '1'")
+        await m.click('#sEntries .swd .acts .kesu')
+    await m.wait_for_timeout(700)
+    gone = await m.evaluate("() => ![...Store.notes.values()].some(n => n.t === 'テストの散歩（なおした）') && $('#toast').textContent.includes('もどす')")
+    await m.click('#toast .tact'); await m.wait_for_timeout(600)
+    check(f'{tag}: けす right from the list ({"slide to the left" if phone else "point at it"}), もどす', opened and gone and await m.evaluate("() => [...Store.notes.values()].some(n => n.t === 'テストの散歩（なおした）')"), [opened, gone])
     # an Instagram link pasted into the memo becomes a photo mark
     await m.evaluate("() => { if ($('#sForm').classList.contains('collapsed')) $('#fOpen').click(); const e = new Event('paste', { bubbles: true, cancelable: true }); e.clipboardData = { getData: () => 'https://www.instagram.com/p/TEST12345/' }; $('#fText').dispatchEvent(e); }"); await m.wait_for_timeout(400)
     check(f'{tag}: a pasted Instagram link becomes a photo', await m.evaluate("() => parseLinks($('#fLinks').value).length === 1 && $('#fPick').textContent.includes('1')"))
@@ -107,6 +129,15 @@ async def app(b, phone, base):
         await m.evaluate("() => jumpTo(D.towns['14204'][3].k)"); await m.wait_for_timeout(1500)
         h = await m.evaluate("() => Math.round($('#sheet').getBoundingClientRect().top / innerHeight * 100)")
         check('phone: the sheet opens to 8/10', 15 <= h <= 25, h)
+    # ⌂ (v2.14.0): back to the Japan map from the map's own buttons; the top row only shows, 設定 is its one framed button
+    await m.evaluate("() => ['ig', 'modal', 'sheet', 'wsheet', 'drawer'].forEach(id => $('#' + id).classList.contains('open') && closePanel(id, true))")
+    await m.goto(base + '/index.html#14204'); await m.wait_for_timeout(2500)
+    r = await m.evaluate("""phone => { const h = $('#bHome').getBoundingClientRect(), l = $('#bLoc').getBoundingClientRect(), g = $('#bLog').getBoundingClientRect();
+      return [$('#namePre').textContent, getComputedStyle($('#crumb')).display, h.width > 0, phone ? Math.round(h.right) <= Math.round(l.left) && Math.abs(h.bottom - l.bottom) < 2 : Math.round(h.right) <= Math.round(g.left) && $('#bHome').textContent.trim() === '日本',
+        phone ? getComputedStyle($('#bData2')).borderTopWidth : '1px']; }""", phone)
+    await m.click('#bHome'); await m.wait_for_timeout(1800)
+    back = await m.evaluate("() => S.level === 'japan' && location.hash === '' && getComputedStyle($('#bHome')).display === 'none'")
+    check(f'{tag}: ⌂ ({"next to ◎" if phone else "next to ノート"}) goes back to the Japan map; the top row only shows', r == ['神奈川県', 'none', True, True, '1px'] and back, [r, back])
     check(f'{tag}: no errors on the page', not errs, errs)
     await ctx.close()
 
@@ -178,6 +209,15 @@ async def together(b, base):   # a group: わたしも行った on someone's mem
     r = await m.evaluate("""() => { const n = [...Store.notes.values()].find(x => x.t === '家族だけ'), M = window.__FBMOCK.__store, [a, b] = GR.gids();
       return [M.has('groups/' + a + '/notes/u1_' + n.id), M.has('groups/' + b + '/notes/u1_' + n.id)]; }""")
     check('group: 共有 sends a memo only to the group chosen', r == [False, True], r)
+    # けす from みんな: only my own memo slides; it goes from the group too (and says so)
+    await m.evaluate("() => { GR.view = GR.gids()[1]; GR.saveView(); groupIndex(); paintGroup(); changed(); closePanel('sheet'); openDrawer('group'); }"); await m.wait_for_timeout(800)
+    rows = await m.evaluate("() => [...document.querySelectorAll('#dBody .log')].map(b => [b.querySelector('.t').textContent, b.parentNode.classList.contains('swd')])")
+    await swipe_left(m, await ctx.new_cdp_session(m), '#dBody .swd > .log')
+    await m.evaluate("() => document.querySelector('#dBody .swd.open .swdel').click()"); await m.wait_for_timeout(2500)
+    r = await m.evaluate("() => { const M = window.__FBMOCK.__store, b = GR.gids()[1]; return [$('#toast').textContent, [...Store.notes.values()].some(x => x.t === '家族だけ'), [...M.keys()].some(k => k.startsWith('groups/' + b + '/notes/u1_'))]; }")
+    await m.evaluate("() => { GR.view = GR.gids()[0]; GR.saveView(); groupIndex(); paintGroup(); changed(); renderDrawer(); }"); await m.wait_for_timeout(800)
+    theirs = await m.evaluate("() => [...document.querySelectorAll('#dBody .log')].filter(b => b.textContent.includes('はなこのメモ')).map(b => b.parentNode.classList.contains('swd'))")
+    check('group: けす from みんな — only on my own memos, and gone from the group too', rows == [['家族だけ', True]] and '家族からも' in r[0] and not r[1] and not r[2] and theirs and not any(theirs), [rows, r, theirs])
     check('group: no errors on the page', not errs, errs)
     await ctx.close()
 
