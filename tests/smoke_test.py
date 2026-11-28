@@ -129,6 +129,17 @@ async def app(b, phone, base):
         await m.evaluate("() => jumpTo(D.towns['14204'][3].k)"); await m.wait_for_timeout(1500)
         h = await m.evaluate("() => Math.round($('#sheet').getBoundingClientRect().top / innerHeight * 100)")
         check('phone: the sheet opens to 8/10', 15 <= h <= 25, h)
+    # 寄ったところ (v2.15.0): from a day's page one question; a copied map link becomes that day's memo, back on the day's page
+    await m.evaluate("""() => { window.open = u => { (window.__opened = window.__opened || []).push(u); return null; };
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { readText: async () => '喫茶ひなた\\n日本、〒248-0006 神奈川県鎌倉市小町２丁目１０−１１\\nhttps://maps.app.goo.gl/AbCdEf123?g_st=ic', writeText: async () => {} } });
+      ['sheet', 'drawer'].forEach(id => $('#' + id).classList.contains('open') && closePanel(id, true)); openWalk(today()); }""")
+    await m.wait_for_timeout(700)
+    await m.evaluate("() => [...document.querySelectorAll('#wBody .addday button')].find(b => b.textContent === '＋ 寄ったところ').click()"); await m.wait_for_timeout(500)
+    r = await m.evaluate("() => [$('#rtTitle').textContent, !document.querySelector('#routeDlg .okday'), document.querySelector('#routeDlg .shopf .lab').textContent, document.querySelector('#routeDlg .shpaste').textContent]")
+    await m.evaluate("() => document.querySelector('#routeDlg .shpaste').click()"); await m.wait_for_timeout(1800)
+    r2 = await m.evaluate("() => [$('#routeDlg').classList.contains('open'), $('#wsheet').classList.contains('open'), [...Store.notes.values()].some(n => n.t === '喫茶ひなた' && n.d === today() && placeName(n.k) === '小町二丁目' && n.s), $('#toast').textContent.includes('もう1つ'), !!document.querySelector('#wBody .shop')]")
+    check(f'{tag}: 寄ったところ: one question from the day page; the copied place becomes the day\'s memo, back on the page', r == ['寄ったところを、足す', True, '寄ったところ', 'コピーした場所を、付ける'] and r2 == [False, True, True, True, True], [r, r2])
+    await m.evaluate("() => closePanel('wsheet', true)"); await m.wait_for_timeout(300)
     # ⌂ (v2.14.0): back to the Japan map from the map's own buttons; the top row only shows, 設定 is its one framed button
     await m.evaluate("() => ['ig', 'modal', 'sheet', 'wsheet', 'drawer'].forEach(id => $('#' + id).classList.contains('open') && closePanel(id, true))")
     await m.goto(base + '/index.html#14204'); await m.wait_for_timeout(2500)
