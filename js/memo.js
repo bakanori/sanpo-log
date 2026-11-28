@@ -1,6 +1,6 @@
 /* SANPO LOG — js/memo.js
    メモ — choosing a place and its sheet, writing and fixing a memo (photos, links, date, place, 共有),
-   おかえり after a walk, お店 from Google Maps.
+   おかえり after a walk, 寄ったところ (a shop, a park, a station…) from Google Maps.
    The files load in this order (see index.html): base → parts → records → sync → map → memo → screens → start.
    They share one scope: a name made in an earlier file can be used in any later one, but code that runs
    while the page loads may only use names from its own file and the earlier ones. */
@@ -78,7 +78,7 @@ function openSheet() {
   fTags.set([]);
   setFormLoc(quickNext);
   if (formShop && formShop.k !== S.sel.key && !(pendingShop && pendingShop.k === S.sel.key)) {
-    if (formShop.sure) { setFormShop(null); toast('町が変わったので、お店ははずしました'); }
+    if (formShop.sure) { setFormShop(null); toast('町が変わったので、寄ったところははずしました'); }
     else { formShop.k = S.sel.key; fShop.show(formShop, formShop.k); paintWhere(); }
   }
   paintShare();
@@ -114,7 +114,7 @@ function buildScope() {
 }
 function paintWhere() {   // 場所：稲村ガ崎四丁目 ▾ — where this memo goes (and whether it has your position)
   const b = $('#fWhere'); if (!b || !formKey) return;
-  b.textContent = `場所：${formShop ? (formShop.n || 'お店') + '・' : ''}${placeName(formKey) || ''}${formLoc && !formShop ? '・位置あり' : ''} ▾`;
+  b.textContent = `場所：${formShop ? (formShop.n || '寄ったところ') + '・' : ''}${placeName(formKey) || ''}${formLoc && !formShop ? '・位置あり' : ''} ▾`;
   b.classList.toggle('on', !!formShop);
   b.setAttribute('aria-expanded', $('#fWhereBox').classList.contains('open') ? 'true' : 'false');
 }
@@ -477,7 +477,7 @@ function editEntry(node, n) {   // なおす: the same order and words as writin
     name: () => firstLine(q('.eT').value), k: () => k, ctx: () => ({ kind: 'note', id: n.id }),
     onShop: async p => {
       if (!p) { if (shop && shop.ll && eloc && eloc[0] === shop.ll[0]) eloc = null; shop = null; sf.show(null); return; }
-      const res = await resolveShop(p), name = p.n || 'お店';
+      const res = await resolveShop(p), name = p.n || '寄ったところ';
       shop = p;
       if (p.ll) eloc = [p.ll[0], p.ll[1], 0];
       if (res && res.key !== k && (sure(res) || !within(res.key, k))) {   // in another town: the memo moves there
@@ -777,7 +777,7 @@ function setFormLoc(l) {
   formLoc = l;
   const b = $('#fLoc');
   b.classList.toggle('on', !!l);
-  b.textContent = l ? (l[2] ? `位置あり ±${Math.round(l[2])}m（押すと、はずす）` : 'お店の位置あり（押すと、はずす）') : 'いまの位置も付ける';
+  b.textContent = l ? (l[2] ? `位置あり ±${Math.round(l[2])}m（押すと、はずす）` : '寄ったところの位置あり（押すと、はずす）') : 'いまの位置も付ける';
   paintWhere();
 }
 $('#fLoc').onclick = async () => {
@@ -875,9 +875,9 @@ function shopQuery(name, k) {   // the shop's name and the city it is probably i
 }
 function shopChip(s, k, cls) {
   const a = document.createElement('a'); a.className = 'shop' + (cls ? ' ' + cls : '');
-  a.href = shopHref(s); a.target = '_blank'; a.rel = 'noopener noreferrer'; a.title = 'お店を開く（地図アプリ）';
+  a.href = shopHref(s); a.target = '_blank'; a.rel = 'noopener noreferrer'; a.title = 'Googleマップで開く';
   a.innerHTML = PIN_SVG + '<b></b>';
-  a.querySelector('b').textContent = s.n || 'お店';
+  a.querySelector('b').textContent = s.n || '寄ったところ';
   const sub = (k && placeName(k)) || '';
   if (sub && sub !== s.n) { const sm = document.createElement('small'); sm.textContent = sub; a.appendChild(sm); }
   a.addEventListener('click', e => e.stopPropagation());
@@ -890,7 +890,28 @@ let shopGo = null;
 function goFind(name, k, ctx) {
   shopGo = { t: Date.now(), name, ...ctx };
   try { localStorage.setItem(SHOPGO, JSON.stringify(shopGo)); } catch (e) {}
-  window.open(shopSearch(shopQuery(name, k)), '_blank', 'noopener');
+  openMaps(shopQuery(name, k));
+}
+/* v2.15.0: on an iPhone, straight into the Google Maps app — no web page opens in between, so there is none to come back
+   through. If the app does not open (not there), say so with the web page one tap away, and go to the web page at once
+   for a month. Elsewhere (Android, PC) the web address, which Android hands to the app by itself. */
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const GMAPP = 'sanpo-gmapp';   // 'yes' | the time it did not open
+function openApp(url) { location.href = url; }
+function openMaps(q) {
+  const web = shopSearch(q), toWeb = () => window.open(web, '_blank', 'noopener');
+  let app = null; try { app = localStorage.getItem(GMAPP); } catch (e) {}
+  if (!IOS || (app && app !== 'yes' && Date.now() - +app < 30 * 864e5)) return toWeb();
+  let left = false;
+  const away = () => { if (!document.hidden) return; left = true; try { localStorage.setItem(GMAPP, 'yes'); } catch (e) {} };
+  document.addEventListener('visibilitychange', away);
+  setTimeout(() => document.removeEventListener('visibilitychange', away), 15000);
+  openApp('comgooglemaps://?q=' + encodeURIComponent(q));
+  setTimeout(() => {
+    if (left || document.hidden) return;
+    try { localStorage.setItem(GMAPP, String(Date.now())); } catch (e) {}
+    toast('Googleマップのアプリが開きませんでした', 7000, ['ウェブで開く', toWeb]);
+  }, 2500);
 }
 function shopDone() { shopGo = null; try { localStorage.removeItem(SHOPGO); } catch (e) {} }
 function shopBack() {   // back from the map app: the button to attach rises, once
@@ -902,18 +923,18 @@ function shopBack() {   // back from the map app: the button to attach rises, on
   b.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(shopBack, 300); });
-// one field, used in the memo form, in なおす, after a walk, and in 「＋ お店」
+// one field, used in the memo form, in なおす, after a walk, and in 「＋ 寄ったところ」
 function shopField(o) {
   const box = document.createElement('div'); box.className = 'shopf';
-  box.innerHTML = '<span class="lab">お店</span><div class="shq"><input class="shn" type="text" maxlength="60" placeholder="お店の名前" autocomplete="off" enterkeyhint="search"><button type="button" class="shgo">Googleマップで探す</button></div>' +
-    '<button type="button" class="shpaste">コピーしたお店を、付ける</button><div class="shin" hidden><input type="text" placeholder="ここに貼り付け（長押し →「ペースト」）" autocomplete="off"></div><div class="shv"></div>';
+  box.innerHTML = '<span class="lab">寄ったところ</span><div class="shq"><input class="shn" type="text" maxlength="60" placeholder="お店・公園・駅など" autocomplete="off" enterkeyhint="search"><button type="button" class="shgo">Googleマップで探す</button></div>' +
+    '<button type="button" class="shpaste">コピーした場所を、付ける</button><div class="shin" hidden><input type="text" placeholder="ここに貼り付け（長押し →「ペースト」）" autocomplete="off"></div><div class="shv"></div>';
   const q = c => box.querySelector(c), inp = q('.shn');
   if (o.init) inp.value = o.init;
   const sug = () => (o.name ? o.name() : '') || '';
-  const fill = () => { inp.placeholder = sug() || 'お店の名前'; };   // a suggestion from the memo, in grey: never taken for something you typed
+  const fill = () => { inp.placeholder = sug() || 'お店・公園・駅など'; };   // a suggestion from the memo, in grey: never taken for something you typed
   const go = () => {
     const n = inp.value.trim() || sug();
-    if (!n) { inp.focus(); toast('先に、お店の名前を書いてください'); return; }
+    if (!n) { inp.focus(); toast('先に、名前を書いてください'); return; }
     goFind(n, o.k ? o.k() : null, o.ctx ? o.ctx(n) : {});
   };
   q('.shgo').onclick = go;
@@ -942,13 +963,13 @@ function shopField(o) {
     const v = q('.shv'); v.innerHTML = ''; box.classList.toggle('has', !!s);
     if (!s) { fill(); return; }
     v.appendChild(shopChip(s, k, 'new'));
-    v.appendChild(mkBtn('はずす', 'shx', () => o.onShop(null), 'このお店を、メモからはずす'));
+    v.appendChild(mkBtn('はずす', 'shx', () => o.onShop(null), 'これを、メモからはずす'));
   };
   fill();
   const clear = () => { inp.value = ''; q('.shin').hidden = true; q('.shpaste').classList.remove('ready'); fill(); };
   return { el: box, show, fill, take, clear, name: v => { inp.value = v || ''; } };
 }
-// the memo form: 場所 ▾ → お店
+// the memo form: 場所 ▾ → 寄ったところ
 function dropPin(loc, key) {
   if (!loc || !key) { $('#pin').removeAttribute('d'); $('#pinRing').removeAttribute('d'); return; }
   const [x, y] = proj(loc[1], loc[0], key.slice(1, 3) === '47'), d = `M${x} ${y}h0`;
@@ -972,7 +993,7 @@ $('#fWhereBox').appendChild(fShop.el);
 $('#fText').addEventListener('input', () => fShop.fill());
 async function attachToForm(p) {
   const res = await resolveShop(p), k0 = S.sel && S.sel.key;
-  const name = p.n || 'お店';
+  const name = p.n || '寄ったところ';
   p.sure = sure(res);
   const here = k0 && (!res || res.key === k0 || (!sure(res) && within(res.key, k0)));
   if (here) {   // the town in front of you
@@ -1009,7 +1030,7 @@ function shopAfterOpen() {   // the sheet has opened: finish what was waiting fo
     if (ps.p.ll) { setFormLoc([ps.p.ll[0], ps.p.ll[1], 0]); dropPin(ps.p.ll, ps.k); }
     if (!$('#fText').value.trim()) $('#fText').value = ps.p.n || '';
     $('#sForm').classList.remove('collapsed'); $('#fWhereBox').classList.add('open'); paintWhere(); paintWbar();
-    setTimeout(() => { burst(ps.k, placePoint(ps.k, formLoc)); toast(`${ps.p.n || 'お店'} を付けました。${placeName(ps.k)} にしました` + (ps.drop ? '（いまの位置は、はずしました）' : '') + (ps.sure ? '' : '。町だけ、たしかめてください'), 3400); }, 650);
+    setTimeout(() => { burst(ps.k, placePoint(ps.k, formLoc)); toast(`${ps.p.n || '寄ったところ'} を付けました。${placeName(ps.k)} にしました` + (ps.drop ? '（いまの位置は、はずしました）' : '') + (ps.sure ? '' : '。町だけ、たしかめてください'), 3400); }, 650);
   }
   if (pendingEdit) {
     const id = pendingEdit; pendingEdit = null;
@@ -1033,11 +1054,11 @@ async function addShopDay(d, p, host, done) {
   const res = await resolveShop(p);
   const put = k => {
     host.innerHTML = '';
-    const n = { id: newId(), k, d, at: '', t: p.n || 'お店', s: shopOut(p), ...(p.ll ? { loc: [p.ll[0], p.ll[1], 0] } : {}) };
+    const n = { id: newId(), k, d, at: '', t: p.n || '寄ったところ', s: shopOut(p), ...(p.ll ? { loc: [p.ll[0], p.ll[1], 0] } : {}) };
     Store.putNote(n);
     setTimeout(() => burst(k, placePoint(k, n.loc)), 120);
-    toast(`${n.t} を、${placeName(k) || 'この町'} にのこしました`, 2800);
     if (done) done(Store.notes.get(n.id) || n);
+    else toast(`${n.t} を、${placeName(k) || 'この町'} にのこしました`, 2800);
   };
   if (sure(res)) return put(res.key);
   // the town is not clear: most likely one you walked that day
@@ -1045,7 +1066,7 @@ async function addShopDay(d, p, host, done) {
   const ks = uniq([...dayTowns(d).filter(ins), ...(area ? [area] : []), ...dayTowns(d), ...recentTowns()]).slice(0, 10);
   if (!ks.length) { toast('町がわからなかったので、地図で町をえらんでから、メモの「場所」で付けてください', 3800); return; }
   host.innerHTML = '';
-  host.appendChild(Object.assign(document.createElement('span'), { className: 'lab', textContent: `${p.n || 'このお店'}は、どの町でしたか？` }));
+  host.appendChild(Object.assign(document.createElement('span'), { className: 'lab', textContent: `${p.n || 'そこ'}は、どの町でしたか？` }));
   ks.forEach(k => host.appendChild(mkBtn(placeName(k) || '（この町）', 'sc', () => put(k))));
   host.lastChild.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 }
@@ -1059,7 +1080,7 @@ function pickDay() {   // ＋ 日をえらんで足す: choose the day, then its
   const paint = () => { chips.innerHTML = ''; days.forEach(x => chips.appendChild(mkBtn(dayLabel(x), 'sc' + (x === d ? ' on' : ''), () => { d = x; di.value = x; paint(); }))); };
   di.onchange = () => { if (di.value) { d = di.value; paint(); } };
   const w1 = el2('div', 'okday'); w1.append(chips, di); paint();
-  routeDlg('どの日に足しますか', [el2('p', '', '写真・お店・写真のリンクを足す日をえらぶと、その日のページが開きます。'), w1],
+  routeDlg('どの日に足しますか', [el2('p', '', '写真・寄ったところ・写真のリンクを足す日をえらぶと、その日のページが開きます。'), w1],
     [['この日を開く', 'btn', () => { if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || d > today()) return toast('今日までの日をえらんでください'); closeRoute(); openWalk(d); }], ['やめる', 'btn ghost', closeRoute]]);
 }
 let theirDay = null;
@@ -1089,23 +1110,29 @@ function openTheirDay(by, d) {   // someone's shared day, to read: what they wro
   setHighlight({ kind: 'their', label: `${GR.name(by)}・${fmtDay(d)}の散歩`, keys });
   focusKeys(keys, true);
 }
-function shopAddDlg(d0, nm) {   // 記録 → ＋ お店: any day, even one with nothing written
+function shopAddDlg(d0, nm) {   // この日に足す → ＋ 寄ったところ: the day is chosen already, so one question — where?
   let d = d0 || today();
-  const di = el2('input'); di.type = 'date'; di.value = d; di.max = today(); di.setAttribute('aria-label', '日付');
-  const chips = el2('div', 'pick'), days = uniq([today(), yday(), ...walkDays()]).filter(x => x <= today()).slice(0, 4);
-  const paintDays = () => { chips.innerHTML = ''; days.forEach(x => chips.appendChild(mkBtn(dayLabel(x), 'sc' + (x === d ? ' on' : ''), () => { d = x; di.value = x; paintDays(); }))); };
-  di.onchange = () => { if (di.value) { d = di.value; paintDays(); } };
-  const pick = el2('div', 'pick'), got = el2('div', 'okshops');
+  const pick = el2('div', 'pick'), lead = el2('p', '');
+  const say = () => { lead.textContent = `${fmtDay(d)}のメモになります。Googleマップで場所を開いて「共有」→「コピー」。戻ってきたら「コピーした場所を、付ける」。`; };
+  const added = n => {   // in: back to the day's page with the new memo; one more is one tap away
+    closeRoute(); openWalk(d);
+    toast(`${n.t} を、${placeName(n.k) || 'この町'} に足しました`, 5200, ['もう1つ', () => shopAddDlg(d)]);
+  };
   const sf = shopField({ init: nm, k: () => dayTowns(d)[0] || (S.sel && S.sel.key) || recentTowns()[0] || null, ctx: () => ({ kind: 'add', d }),
-    onShop: p => { if (p) addShopDay(d, p, pick, n => { sf.clear(); got.appendChild(shopChip(n.s, n.k, 'new')); }); } });
-  const w1 = el2('div', 'okday'); w1.append(chips, di);
-  const w2 = el2('div', 'okshop'); w2.append(sf.el, pick);
-  routeDlg('お店を、あとから足す', [
-    el2('p', '', 'Googleマップでお店を開いて「共有」→「コピー」。戻ってきて「コピーしたお店を、付ける」を押すと、その日のメモになります。'),
-    okStep('1', 'いつ？', w1), okStep('2', 'どのお店？', w2), got
-  ], [['おわる', 'btn', () => { closeRoute(); if (got.children.length) openWalk(d); }]]);
+    onShop: p => { if (p) addShopDay(d, p, pick, added); } });
+  const body = [lead];
+  if (!d0) {   // not from a day's page: which day first
+    const di = el2('input'); di.type = 'date'; di.value = d; di.max = today(); di.setAttribute('aria-label', '日付');
+    const chips = el2('div', 'pick'), days = uniq([today(), yday(), ...walkDays()]).filter(x => x <= today()).slice(0, 4);
+    const paintDays = () => { chips.innerHTML = ''; days.forEach(x => chips.appendChild(mkBtn(dayLabel(x), 'sc' + (x === d ? ' on' : ''), () => { d = x; di.value = x; paintDays(); say(); }))); };
+    di.onchange = () => { if (di.value) { d = di.value; paintDays(); say(); } };
+    const w1 = el2('div', 'okday'); w1.append(chips, di); paintDays();
+    body.push(okStep('1', 'いつ？', w1));
+  }
+  const w2 = el2('div', 'okshop'); w2.append(sf.el, pick); body.push(w2);
+  say();
+  routeDlg('寄ったところを、足す', body, [['やめる', 'btn ghost', closeRoute]]);
   $('#routeDlg').classList.add('ok');
-  paintDays();
 }
 function shopFromOutside(text) {   // a map link pasted on the map (PC), or sent by a shortcut
   const p = parseShop(text);
