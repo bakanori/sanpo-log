@@ -236,8 +236,8 @@ function renderDrawer() {
     const days = walkDays();
     if (!q) {
       const ar = document.createElement('div'); ar.className = 'addrow';
-      ar.appendChild(mkBtn('＋ 日をえらんで足す', 'addq addday', () => pickDay(), '写真・お店・写真のリンクを、えらんだ日に足す（その日のページが開きます）'));
-      ar.appendChild(mkBtn('＋ 道のり（GPX）', 'addq', pickGPX, 'ほかのアプリで記録した道のり（GPXファイル）を読みこむ'));
+      ar.appendChild(mkBtn('＋ 日をえらんで足す', 'addq pickday', () => pickDay(), '写真・お店・写真のリンクを、えらんだ日に足す（その日のページが開きます）'));
+      ar.appendChild(mkBtn('＋ 道のりを足す', 'addq', pickGPX, 'ほかのアプリで記録した道のり（GPXファイル）を読みこむ'));
       frag.appendChild(ar);
       frag.appendChild(yearCal(days));
     }
@@ -716,7 +716,7 @@ const Rec = {
       return routeDlg('さんぽの道のりを、のこします', [
         '電池をほとんど使わないように、このアプリを開いている間だけ記録します。',
         '画面を消したり、ほかのアプリを開いたりしていた間は、まっすぐの線でつなぎます。',
-        el2('p', 'note', '道をきっちりのこしたい日は、記録アプリの道のり（GPX）を LOG から読みこめます。')
+        el2('p', 'note', '道をきっちりのこしたい日は、記録アプリの道のり（GPXファイル）を、ノート → 散歩 の「＋ 道のりを足す」から読みこめます。')
       ], [['はじめる', 'btn', () => { try { localStorage.setItem('sanpo-rec-seen', '1'); } catch (e) {} closeRoute(); this.start(); }], ['やめておく', 'btn ghost', closeRoute]]);
     }
     const big = el2('div', 'big2', fmtKm(this.km())); big.appendChild(el2('small', '', fmtDur(Math.round(this.mins()))));
